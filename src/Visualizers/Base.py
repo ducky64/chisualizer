@@ -1,9 +1,14 @@
 visualizer_registry = {}
-def visualizer_register(cls, name=None):
-  if name == None:
-    name = cls.__name__
-  if name in visualizer_registry:
-    raise 
+def visualizer_register(name=None):
+  def wrap(cls):
+    local_name = name
+    if local_name == None:
+      local_name = cls.__name__
+    if local_name in visualizer_registry:
+      raise NameError("Attempting to re-register a visualizer: " + local_name)
+    visualizer_registry[local_name] = cls
+    return cls
+  return wrap
 
 class Base:
   """Abstract base class for Chisel visualizer objects."""
@@ -28,21 +33,33 @@ class Base:
       return self.right
   
   @classmethod
-  def fromXml(cls, parent, node):
+  def from_xml(cls, parent, node):
     """Initializes this visualizer from a XML etree Element."""
     new = cls()
     new.root = parent.root
     new.parent = parent
     new.path_component = node.get('path', '')
     new.path = parent.path + new.path_component
+    return new
   
   def clone(self, new_parent):
-    """Recursively clones this visualizer to have a new root and parent."""
+    """Recursively clones this visualizer to have a new root and parent.
+    Mainly used for instantiation of templates.
+    """
     cloned = self.__class__()
     cloned.root = new_parent.root
     cloned.parent = new_parent
     cloned.path_component = self.path_component
     cloned.path = new_parent.path + cloned.path_component
+    return cloned
+  
+  def get_chisel_api(self):
+    """Returns the ChiselApi object used to access node values.
+    Returns None if not available or if this visualizer wasn't properly
+    instantiated."""
+    if not self.root:
+      return None
+    return self.root.get_chisel_api()
   
   def draw_cairo(self, rect, context):
     """Draw this object to the Cairo context.
@@ -50,15 +67,10 @@ class Base:
     rect indicates how much space was allocated for this object, in the
     coordinates of the given Cairo context.
     """
-    raise NotImplementedError()
+    # future implementations may have more stuff in the base class, like
+    # drawing labels or borders
+    pass
   
   def calculate_minimum_size(self):
     """Returns a tuple (x, y) of the minimum size of this object."""
     raise NotImplementedError()
-
-  def get_actual_size(self):
-    """Returns a tuple (x, y) of my actual size.
-    Only valid after a call to calculate_minimum_size.
-    """
-    raise NotImplementedError()
-  
