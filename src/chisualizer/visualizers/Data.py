@@ -1,4 +1,4 @@
-import Base
+import chisualizer.visualizers.Base as Base
 
 class Data(Base.Base):
   """Abstract base class for visualizer objects depending on node values."""

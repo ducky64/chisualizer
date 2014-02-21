@@ -1,4 +1,4 @@
-import Base
+import chisualizer.visualizers.Base as Base
 
 @Base.visualizer_register('Grid')
 class Grid(Base.Base):

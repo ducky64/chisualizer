@@ -1,6 +1,6 @@
 import subprocess
 
-from ChiselApi import ChiselApi
+from chisualizer.ChiselApi import ChiselApi
 
 class ChiselEmulatorSubprocess(ChiselApi):
   def __init__(self, emulator_path):

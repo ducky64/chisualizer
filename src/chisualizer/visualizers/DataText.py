@@ -1,5 +1,5 @@
-import Base
-import Data
+import chisualizer.visualizers.Base as Base
+import chisualizer.visualizers.Data as Data
 
 @Base.visualizer_register('DataText')
 class DataText(Data.Data):
