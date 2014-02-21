@@ -1,3 +1,9 @@
+# Temporaries
+*~
+
+# Compiled Python
+*.pyc
+
 # Compiled Object files
 *.slo
 *.lo
