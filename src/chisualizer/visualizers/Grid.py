@@ -1,6 +1,7 @@
-import chisualizer.visualizers.Base as Base
+from chisualizer.Base import Base
+from chisualizer.visualizers.VisualizerBase import VisualizerBase
 
-@Base.visualizer_register('Grid')
-class Grid(Base.Base):
+@Base.xml_register('Grid')
+class Grid(VisualizerBase):
   """Grid containing other visualizers."""
   pass

@@ -1,6 +1,6 @@
-import chisualizer.visualizers.Base as Base
+from chisualizer.visualizers.VisualizerBase import VisualizerBase
 
-class Data(Base.Base):
+class Data(VisualizerBase):
   """Abstract base class for visualizer objects depending on node values."""
   def set_node_value(self, value):
     """Sets the value of the associated node."""

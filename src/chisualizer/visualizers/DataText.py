@@ -1,7 +1,7 @@
-import chisualizer.visualizers.Base as Base
+import chisualizer.Base as Base
 import chisualizer.visualizers.Data as Data
 
-@Base.visualizer_register('DataText')
+@Base.xml_register('DataText')
 class DataText(Data.Data):
   """Visualizer for data represented as text."""
   @classmethod

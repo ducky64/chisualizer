@@ -1,16 +1,6 @@
-visualizer_registry = {}
-def visualizer_register(name=None):
-  def wrap(cls):
-    local_name = name
-    if local_name == None:
-      local_name = cls.__name__
-    if local_name in visualizer_registry:
-      raise NameError("Attempting to re-register a visualizer: " + local_name)
-    visualizer_registry[local_name] = cls
-    return cls
-  return wrap
+from chisualizer.Base import Base
 
-class Base:
+class VisualizerBase(Base):
   """Abstract base class for Chisel visualizer objects."""
   
   class rect:
@@ -34,8 +24,7 @@ class Base:
   
   @classmethod
   def from_xml(cls, parent, node):
-    """Initializes this visualizer from a XML etree Element."""
-    new = cls()
+    new = super(VisualizerBase. self).from_xml(parent, node)
     new.root = parent.root
     new.parent = parent
     new.path_component = node.get('path', '')
