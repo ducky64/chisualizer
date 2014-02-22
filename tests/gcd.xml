@@ -1,0 +1,50 @@
+<!--<MappedDisplay ref="GCD_state">
+	<Mapping key="0x0" text="idle" color="red"/>
+	<Mapping key="0x1" text="calc" color="yellow"/>
+	<Mapping key="0x2" text="done" color="green"/>
+</MappedDisplay>-->
+
+<Visualizer ref="GCD">
+	<Grid>
+		<Cell row="0" col="0">
+			<VisualizerRef ref="GCD_io" path="io">
+		</Cell>
+		<Cell row="0" col="1">
+			<DataText path=".state" display="decimal"/>
+		</Cell>
+		<Cell row="1" col="1">
+			<DataText path=".latch_A" display="decimal"/>
+		</Cell>
+		<Cell row="2" col="1">
+			<DataText path=".latch_B" display="decimal"/>
+		</Cell>
+	</Grid>
+</Visualizer>
+
+<Visualizer ref="GCD_io">
+	<Grid>
+		<Cell row="0" col="0">
+			<DataText path=".operands_bits_A" display="decimal"/>
+		</Cell>
+		<Cell row="1" col="0">
+			<DataText path=".operands_bits_B" display="decimal"/>
+		</Cell>
+		<Cell row="2" col="0">
+			<DataText path=".operands_val" display="binary"/>
+		</Cell>
+		<Cell row="3" col="0">
+			<DataText path=".operands_rdy" display="binary"/>
+		</Cell>
+		<Cell row="0" col="1">
+			<DataText path=".result_bits_data" display="decimal"/>
+		</Cell>
+		<Cell row="2" col="1">
+			<DataText path=".results_val" display="binary"/>
+		</Cell>
+		<Cell row="3" col="1">
+			<DataText path=".results_rdy" display="binary"/>
+		</Cell>
+	</Grid>
+</Visualizer>
+
+<Top ref="GCD"/>
