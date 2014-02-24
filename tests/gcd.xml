@@ -7,7 +7,7 @@
 
 <Grid ref='GCD'>
 	<Cell row="0" col="0">
-		<VisualizerRef ref="GCD_io" path=".io"/>
+		<VisualizerRef target="GCD_io" path=".io"/>
 	</Cell>
 	<Cell row="0" col="1">
 		<DataText path=".state" display="decimal"/>
@@ -44,5 +44,5 @@
 	</Cell>
 </Grid>
 
-<VisualizerRef ref="GCD"/>
+<VisualizerRef target="GCD"/>
 </root>
