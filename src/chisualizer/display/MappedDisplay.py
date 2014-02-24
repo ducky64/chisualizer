@@ -11,7 +11,7 @@ class MappedDisplay(DisplayBase):
     self.mappings = mappings
     
   @classmethod
-  def from_xml(cls, parent, node):
+  def from_xml(cls, element, **kwargs):
     # TODO IMPLEMENT ME
     raise NotImplementedError()
   

@@ -7,9 +7,9 @@ from Data import Data
 class DataText(Data):
   """Visualizer for data represented as text."""
   @classmethod
-  def from_xml_cls(cls, parent, node):
-    new = super(DataText, cls).from_xml_cls(parent, node)
-    display_ref = node.get('display', 'hexadecimal')
+  def from_xml_cls(cls, element, **kwargs):
+    new = super(DataText, cls).from_xml_cls(element, **kwargs)
+    display_ref = element.get('display', 'hexadecimal')
     new.display = DisplayBase.registry_get_display(display_ref)
     return new
   
@@ -25,3 +25,4 @@ class DataText(Data):
     super(DataText, self).draw_cairo(rect, cr)
     
     pass
+  

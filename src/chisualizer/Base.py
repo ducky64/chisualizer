@@ -17,32 +17,41 @@ def xml_register(name=None):
     return cls
   return wrap
 
-ref_registry = {}
-def ref_register(name, obj):
-  if name not in ref_registry:
-    ref_registry[name] = obj
-    logging.debug("Registered ref '%s'" % name)
-  else:
-    raise NameError("Attempting to re-register ref '%s'" % name)
+class VisualizerDescriptor(object):
+  """An visualizer descriptor file."""
+  def __init__(self, filename):
+    """Initialize this descriptor from a file."""
+    self.registry = {}
+    self.parse_from_xml(filename)
+
+  def parse_from_xml(self, filename):
+    """Parse this descriptor from an XML file."""
+    root = etree.parse(filename).getroot()
+    for child in root:
+      elt = Base.from_xml(child, container=self)
+      ref = child.get('ref', None)
+      if ref:
+        if ref not in self.registry:
+          self.registry[ref] = elt
+          logging.debug("Registered '%s'", ref)
+        else:
+          raise NameError("Found object with duplicate ref '%s'", ref)
 
 class Base(object):
   """Abstract base class for visualizer descriptor objects."""
   @staticmethod
-  def from_xml(parent, node):
-    assert isinstance(node, etree.Element)
-    if node.tag in xml_registry:
-      return xml_registry[node.tag].from_xml_cls(parent, node)
+  def from_xml(element, **kwargs):
+    assert 'container' in kwargs, "from_xml must have container argument"
+    assert isinstance(element, etree.Element)
+    if element.tag in xml_registry:
+      return xml_registry[element.tag].from_xml_cls(element, **kwargs)
     else:
-      raise NameError("Unknown class '%s'" % node.tag)
+      raise NameError("Unknown class '%s'" % element.tag)
       
   @classmethod
-  def from_xml_cls(cls, parent, node):
+  def from_xml_cls(cls, element, container=None, **kwargs):
     """Initializes this descriptor from a XML etree Element."""
     new = cls()
-    
-    # automatically register nodes with references
-    ref = node.get('ref', None)
-    if ref:
-      ref_register(ref, new)
-    
+    assert container, "from_xml_cls must have container"
+    new.container = container
     return new

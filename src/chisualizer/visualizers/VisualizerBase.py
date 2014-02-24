@@ -38,10 +38,10 @@ class VisualizerBase(Base):
       return abs(self.right() - self.left())
   
   @classmethod
-  def from_xml_cls(cls, parent, node):
-    new = super(VisualizerBase, cls).from_xml_cls(parent, node)
+  def from_xml_cls(cls, element, parent=None, **kwargs):
+    new = super(VisualizerBase, cls).from_xml_cls(element, **kwargs)
     new.parent = parent
-    new.path_component = node.get('path', '')
+    new.path_component = element.get('path', '')
     if parent:
       new.root = parent.root
       new.path = parent.path + new.path_component
@@ -56,6 +56,7 @@ class VisualizerBase(Base):
     already-instantiated object.
     """
     cloned = self.__class__()
+    cloned.container = new_parent.container
     cloned.root = new_parent.root
     cloned.parent = new_parent
     cloned.path_component = self.path_component

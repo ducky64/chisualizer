@@ -5,8 +5,9 @@ from VisualizerBase import VisualizerBase
 class Grid(VisualizerBase):
   """Grid containing other visualizers."""
   @classmethod
-  def from_xml_cls(cls, parent, node):
-    new = super(Grid, cls).from_xml_cls(parent, node)
+  def from_xml_cls(cls, element, **kwargs):
+    new = super(Grid, cls).from_xml_cls(element, **kwargs)
+    
     return new
   
   def instantiate(self, new_parent):

@@ -10,7 +10,7 @@ try:
 except ImportError:
   haveCairo = False
 
-import chisualizer.Base
+import chisualizer.Base as Base
 import chisualizer.visualizers.VisualizerBase as VisualizerBase
 
 from chisualizer.visualizers import *
@@ -56,9 +56,7 @@ class CairoPanel(wx.Panel):
 
 if haveCairo:
   logging.getLogger().setLevel(logging.DEBUG)
-  root = etree.parse('../../tests/gcd.xml').getroot()
-  for child in root:
-    elt = chisualizer.Base.Base.from_xml(None, child)
+  Base.VisualizerDescriptor('../../tests/gcd.xml')
 
   
   app = wx.App(False)

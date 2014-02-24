@@ -5,9 +5,9 @@ from VisualizerBase import VisualizerBase
 class VisualizerRef(VisualizerBase):
   """Lazy initialized reference to another visualizer"""
   @classmethod
-  def from_xml_cls(cls, parent, node):
-    new = super(VisualizerRef, cls).from_xml_cls(parent, node)
-    new.target = node.get('target', None)
+  def from_xml_cls(cls, element, **kwargs):
+    new = super(VisualizerRef, cls).from_xml_cls(element, **kwargs)
+    new.target = element.get('target', None)
     if not new.target:
       raise ValueError("VisualizerRef must have 'target' attribute") 
     return new
@@ -17,8 +17,8 @@ class VisualizerRef(VisualizerBase):
     resolving all references. Acts as clone (to a new parent) if called by an
     already-instantiated object.
     """
-    if self.target in Base.ref_registry:
-      ref_obj = Base.ref_registry[self.target]
+    if self.target in self.container.ref_registry:
+      ref_obj = self.container.ref_registry[self.target]
       if not isinstance(ref_obj, VisualizerBase):
         raise ValueError("VisualizerRef does not point to VisualizerBase-derived object: ref '%s'" % self.ref)
       new_obj = ref_obj.instantiate(self, new_parent)
