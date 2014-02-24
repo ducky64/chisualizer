@@ -16,11 +16,12 @@ def display_instantiate(name, **kwds):
 
 class DisplayBase(Base):
   """Abstract base class for Chisel visualizer displays
-  (objects that modify visualizer properties based on input data)."""
+  (objects that node visualizer properties based on input data)."""
   def apply(self, data):
     """Returns a dict of key->value mappings applied by this modifier based
     on the input data. It is up to the calling visualizer (or perhaps
-    higher-level display) to use this data accordingly."""
+    higher-level display) to use this data accordingly.
+    node is the chisualizer.visualizers.Data.Data object."""
     return {}
   
   def get_longest_text(self, chisel_api, node):

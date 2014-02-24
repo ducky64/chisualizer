@@ -31,9 +31,10 @@ class VisualizerBase(Base):
     new.path = parent.path + new.path_component
     return new
   
-  def clone(self, new_parent):
-    """Recursively clones this visualizer to have a new root and parent.
-    Mainly used for instantiation of templates.
+  def instantiate(self, new_parent):
+    """Instantiates this visualizer template by cloning the template and
+    resolving all references. Acts as clone (to a new parent) if called by an
+    already-instantiated object.
     """
     cloned = self.__class__()
     cloned.root = new_parent.root

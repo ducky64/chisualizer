@@ -9,6 +9,6 @@ class DataText(Data.Data):
     new = super(DataText, cls).from_xml(parent, node)
     return new
   
-  def clone(self, new_parent):
-    cloned = super(DataText, self).clone(new_parent)
+  def instantiate(self, new_parent):
+    cloned = super(DataText, self).instantiate(new_parent)
     return cloned
