@@ -1,3 +1,7 @@
+import logging
+import os
+import xml.etree.ElementTree as etree
+
 import wx
 try:
   import wx.lib.wxcairo
@@ -6,7 +10,11 @@ try:
 except ImportError:
   haveCairo = False
 
-import chisualizer
+import chisualizer.Base
+import chisualizer.visualizers.VisualizerBase as VisualizerBase
+
+from chisualizer.visualizers import *
+from chisualizer.display import *
 
 class MyFrame(wx.Frame):
   def __init__(self, parent, title):
@@ -47,6 +55,12 @@ class CairoPanel(wx.Panel):
     self.Refresh()
 
 if haveCairo:
+  logging.getLogger().setLevel(logging.DEBUG)
+  root = etree.parse('../../tests/gcd.xml').getroot()
+  for child in root:
+    elt = chisualizer.Base.Base.from_xml(None, child)
+
+  
   app = wx.App(False)
   theFrame = MyFrame(None, 'Chisualizer')
   app.MainLoop()

@@ -1,5 +1,5 @@
 import chisualizer.Base as Base
-from chisualizer.display.DisplayBase import DisplayBase, display_instantiate
+from DisplayBase import DisplayBase, display_instantiate
 
 @display_instantiate('bool', mappings={
                                        0: {'text':'true'},

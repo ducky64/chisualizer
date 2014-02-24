@@ -1,7 +1,7 @@
 import math
 
 from chisualizer.Base import xml_register
-from chisualizer.display.DisplayBase import DisplayBase, display_instantiate
+from DisplayBase import DisplayBase, display_instantiate
 
 @display_instantiate('binary', prefix='0b', radix=2)
 @display_instantiate('decimal', prefix='', radix=10)

@@ -9,10 +9,16 @@ def display_instantiate(name, **kwds):
   def wrap(cls):
     local_name = name
     if local_name in display_registry:
-      raise NameError("Attempting to re-register a display: " + local_name)
+      raise NameError("Attempting to re-register a display: '%s'" % local_name)
     display_registry[local_name] = cls(**kwds)
     return cls
   return wrap
+
+def registry_get_display(display_name):
+  if display_name in display_registry:
+    return display_registry[display_name]
+  else:
+    raise NameError("No display in registry: '%s'" % display_name)
 
 class DisplayBase(Base):
   """Abstract base class for Chisel visualizer displays
