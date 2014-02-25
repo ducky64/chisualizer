@@ -24,6 +24,11 @@ class VisualizerDescriptor(object):
     self.registry = {}
     self.parse_from_xml(filename)
 
+  def get_ref(self, ref):
+    if ref not in self.registry:
+      raise NameError("Unknown ref '%s'" % ref)
+    return self.registry[ref]
+
   def parse_from_xml(self, filename):
     """Parse this descriptor from an XML file."""
     root = etree.parse(filename).getroot()
@@ -36,12 +41,17 @@ class VisualizerDescriptor(object):
           logging.debug("Registered '%s'", ref)
         else:
           raise NameError("Found object with duplicate ref '%s'", ref)
+    # last element is the one visualized
+    import chisualizer.visualizers.VisualizerBase as VisualizerBase
+    if not isinstance(elt, VisualizerBase.VisualizerBase):
+      raise TypeError("Last element in XML must be Visualizer subtype.")
+    self.visualizer = elt.instantiate(None)
+    logging.debug("Instantiated visualizer")
 
 class Base(object):
   """Abstract base class for visualizer descriptor objects."""
   @staticmethod
   def from_xml(element, **kwargs):
-    assert 'container' in kwargs, "from_xml must have container argument"
     assert isinstance(element, etree.Element)
     if element.tag in xml_registry:
       return xml_registry[element.tag].from_xml_cls(element, **kwargs)
@@ -51,6 +61,7 @@ class Base(object):
   @classmethod
   def from_xml_cls(cls, element, container=None, **kwargs):
     """Initializes this descriptor from a XML etree Element."""
+    assert isinstance(element, etree.Element)
     new = cls()
     assert container, "from_xml_cls must have container"
     new.container = container

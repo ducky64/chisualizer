@@ -56,11 +56,15 @@ class VisualizerBase(Base):
     already-instantiated object.
     """
     cloned = self.__class__()
-    cloned.container = new_parent.container
-    cloned.root = new_parent.root
     cloned.parent = new_parent
     cloned.path_component = self.path_component
-    cloned.path = new_parent.path + cloned.path_component
+    cloned.container = self.container
+    if new_parent:
+      cloned.root = new_parent.root
+      cloned.path = new_parent.path + cloned.path_component
+    else:
+      cloned.root = cloned
+      cloned.path = cloned.path_component
     return cloned
   
   def get_chisel_api(self):

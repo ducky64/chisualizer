@@ -17,16 +17,13 @@ class VisualizerRef(VisualizerBase):
     resolving all references. Acts as clone (to a new parent) if called by an
     already-instantiated object.
     """
-    if self.target in self.container.ref_registry:
-      ref_obj = self.container.ref_registry[self.target]
-      if not isinstance(ref_obj, VisualizerBase):
-        raise ValueError("VisualizerRef does not point to VisualizerBase-derived object: ref '%s'" % self.ref)
-      new_obj = ref_obj.instantiate(self, new_parent)
+    target_obj = self.container.get_ref(self.target)
+    if not isinstance(target_obj, VisualizerBase):
+      raise ValueError("VisualizerRef does not point to VisualizerBase-derived object: ref '%s'" % self.ref)
+    new_obj = target_obj.instantiate(new_parent)
       
-      if self.path_component:
-        new_obj.path_component = self.path_component + new_obj.path_component
-        new_obj.path = new_obj.parent.path + new_obj.path_component
+    if self.path_component:
+      new_obj.path_component = self.path_component + new_obj.path_component
+      new_obj.path = new_obj.parent.path + new_obj.path_component
       
-      return new_obj
-    else:
-      raise ValueError("VisualizerRef not found: target '%s'" % self.target)
+    return new_obj
