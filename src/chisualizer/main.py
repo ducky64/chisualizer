@@ -16,6 +16,9 @@ import chisualizer.visualizers.VisualizerBase as VisualizerBase
 from chisualizer.visualizers import *
 from chisualizer.display import *
 
+logging.getLogger().setLevel(logging.DEBUG)
+desc = Base.VisualizerDescriptor('../../tests/gcd.xml')
+
 class MyFrame(wx.Frame):
   def __init__(self, parent, title):
     wx.Frame.__init__(self, parent, title=title, size=(640,480))
@@ -34,20 +37,12 @@ class CairoPanel(wx.Panel):
     width, height = self.GetClientSize()
     cr = wx.lib.wxcairo.ContextFromDC(dc)
 
-    #Here's actual Cairo drawing
-    size = min(width, height)
-    cr.scale(size, size)
+    # cr.scale(size, size)
     cr.set_source_rgb(0, 0, 0) #black
     cr.rectangle(0, 0, width, height)
     cr.fill()
-
-    cr.set_source_rgb(1, 1, 1) #white         
-    cr.set_line_width (0.04)
-    cr.select_font_face ("Sans", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
-    cr.set_font_size (0.07)
-    cr.move_to (0.5, 0.5)
-    cr.show_text (self.text)
-    cr.stroke ()
+    
+    desc.draw_cairo(cr)
 
   #Change what text is shown
   def SetText(self, text):
@@ -55,12 +50,9 @@ class CairoPanel(wx.Panel):
     self.Refresh()
 
 if haveCairo:
-  logging.getLogger().setLevel(logging.DEBUG)
-  Base.VisualizerDescriptor('../../tests/gcd.xml')
-
-  
   app = wx.App(False)
   theFrame = MyFrame(None, 'Chisualizer')
   app.MainLoop()
 else:
   print "Chisualizer requires PyCairo and wxCairo to run."
+  

@@ -12,7 +12,7 @@ class VisualizerRef(VisualizerBase):
       raise ValueError("VisualizerRef must have 'target' attribute") 
     return new
   
-  def instantiate(self, new_parent):
+  def instantiate(self, new_parent, **kwargs):
     """Instantiates this visualizer template by cloning the template and
     resolving all references. Acts as clone (to a new parent) if called by an
     already-instantiated object.
@@ -20,10 +20,11 @@ class VisualizerRef(VisualizerBase):
     target_obj = self.container.get_ref(self.target)
     if not isinstance(target_obj, VisualizerBase):
       raise ValueError("VisualizerRef does not point to VisualizerBase-derived object: ref '%s'" % self.ref)
-    new_obj = target_obj.instantiate(new_parent)
-      
-    if self.path_component:
-      new_obj.path_component = self.path_component + new_obj.path_component
-      new_obj.path = new_obj.parent.path + new_obj.path_component
-      
+    
+    path_prefix = self.path
+    if 'path_prefix' in kwargs:
+      path_prefix = self.path + kwargs['path_prefix']
+    
+    new_obj = target_obj.instantiate(new_parent, path_prefix=path_prefix, **kwargs)
+    
     return new_obj

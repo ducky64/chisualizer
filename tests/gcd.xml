@@ -44,5 +44,5 @@
 	</Cell>
 </Grid>
 
-<VisualizerRef target="GCD"/>
+<VisualizerRef target="GCD_io" path="top"/>
 </root>

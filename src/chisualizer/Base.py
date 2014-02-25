@@ -48,13 +48,18 @@ class VisualizerDescriptor(object):
     self.visualizer = elt.instantiate(None)
     logging.debug("Instantiated visualizer")
 
+  def draw_cairo(self, cr):
+    self.visualizer.layout_and_draw_cairo(cr)
+
 class Base(object):
   """Abstract base class for visualizer descriptor objects."""
   @staticmethod
   def from_xml(element, **kwargs):
     assert isinstance(element, etree.Element)
     if element.tag in xml_registry:
-      return xml_registry[element.tag].from_xml_cls(element, **kwargs)
+      rtn = xml_registry[element.tag].from_xml_cls(element, **kwargs)
+      logging.debug("Loaded %s" % element.tag)
+      return rtn
     else:
       raise NameError("Unknown class '%s'" % element.tag)
       

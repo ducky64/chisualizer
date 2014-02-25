@@ -13,16 +13,27 @@ class DataText(Data):
     new.display = DisplayBase.registry_get_display(display_ref)
     return new
   
-  def instantiate(self, new_parent):
-    cloned = super(DataText, self).instantiate(new_parent)
+  def instantiate(self, new_parent, **kwargs):
+    cloned = super(DataText, self).instantiate(new_parent, **kwargs)
     cloned.display = self.display
     return cloned
 
-  def calculate_cairo_minimum_size(self, cr):
-    pass
-
-  def draw_cairo(self, rect, cr):
-    super(DataText, self).draw_cairo(rect, cr)
+  def draw_cairo(self, cr, rect):
+    super(DataText, self).draw_cairo(cr, rect)
+    import logging
+    logging.warn("DataText::draw_cairo not implemented")
     
-    pass
-  
+    import cairo
+    cr.set_source_rgb(1, 1, 1) #white         
+    cr.set_line_width (1)
+    cr.select_font_face ("Sans", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
+    cr.set_font_size (10)
+    cr.move_to(rect.center_horiz(), rect.center_vert())
+    cr.show_text(self.path)
+    cr.move_to(0, 0)
+    cr.stroke ()
+    
+  def layout_cairo(self, cr):
+    return (250, 50)
+    import logging
+    logging.warn("DataText::layout_cairo not implemented")
