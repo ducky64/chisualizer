@@ -55,7 +55,8 @@ class Grid(VisualizerBase):
     return (x_total, y_total)
         
   def draw_cairo(self, cr, rect):
-    #super(Grid, self).draw_cairo(cr, rect)
+    super(Grid, self).draw_cairo(cr, rect)
+    
     origin_x = rect.left()
     origin_y = rect.top()
     pos_x = origin_x

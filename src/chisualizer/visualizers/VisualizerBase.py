@@ -100,12 +100,12 @@ class VisualizerBase(Base):
     # subclasses should make sure to chain-call the draw functions of their
     # superclasses
     cr.set_source_rgb(0.5, 0, 0)
-    cr.rectangle(rect.left(), rect.top(), rect.right(), rect.bottom())
+    cr.rectangle(rect.left(), rect.top(), rect.width(), rect.height())
     cr.stroke()
     
     size_x, size_y = self.layout_cairo(cr)
     cr.set_source_rgb(0, 0.5, 0)
     cr.rectangle(rect.center_horiz()-size_x/2, rect.center_vert()-size_y/2,
-                 rect.center_horiz()+size_x/2, rect.center_vert()+size_y/2)
+                 size_x, size_y)
     cr.stroke()
   
