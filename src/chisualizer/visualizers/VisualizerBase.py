@@ -89,9 +89,7 @@ class VisualizerBase(Base):
   
   def draw_cairo(self, cr, rect):
     """Draw this object to the Cairo context.
-    The point (0, 0) is the parent's anchor point for this object.
-    rect indicates how much space was allocated for this object, in the
-    coordinates of the given Cairo context.
+    rect indicates the area allocated for this object.
     """
     assert isinstance(cr, cairo.Context)
     assert isinstance(rect, self.Rectangle)
