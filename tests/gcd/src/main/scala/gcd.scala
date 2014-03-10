@@ -1,4 +1,4 @@
-package Work {
+package Main {
 
 import Chisel._
 import Node._
@@ -38,7 +38,7 @@ class GCD extends Module {
   io.result_bits_data := a_sub_b
   
   // external interface controller
-  val s_idle :: s_calc :: s_done :: Nil = Enum(3){UInt()}
+  val s_idle :: s_calc :: s_done :: Nil = Enum(UInt(), 3)
   val state = Reg(init = s_idle)
   when (state === s_idle) {
     when  (io.operands_val) { state := s_calc }
