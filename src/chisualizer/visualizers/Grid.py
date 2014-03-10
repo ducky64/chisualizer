@@ -62,16 +62,12 @@ class Grid(VisualizerBase):
     pos_x = origin_x
     pos_y = origin_y
     for y_row, y_size in sorted(self.y_row_sizes.iteritems()):
-      print "Y %i => %i" % (y_row, y_size)
       pos_x = origin_x
       for x_col, x_size in sorted(self.x_col_sizes.iteritems()):
-        print "X %i => %i" % (x_col, x_size) 
         if (x_col, y_row) in self.cells:
           # TODO !!! do cairo transform
           cell_rect = self.Rectangle((pos_x, pos_y),
                                      (pos_x + x_size, pos_y + y_size))
-          print "Rect %i, %i => %i, %i" % (pos_x, pos_y,
-                                     pos_x + x_size, pos_y + y_size)
           self.cells[(x_col, y_row)].draw_cairo(cr, cell_rect)
         pos_x += x_size
       pos_y += y_size
