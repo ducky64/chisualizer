@@ -22,27 +22,27 @@
 
 <Grid ref='GCD_io'>
 	<Cell row="0" col="0">
-		<DataText path=".operands_bits_A" display="decimal"/>
+		<DataText path="_operands_bits_A" display="decimal"/>
 	</Cell>
 	<Cell row="1" col="0">
-		<DataText path=".operands_bits_B" display="decimal"/>
+		<DataText path="_operands_bits_B" display="decimal"/>
 	</Cell>
 	<Cell row="2" col="0">
-		<DataText path=".operands_val" display="binary"/>
+		<DataText path="_operands_val" display="binary"/>
 	</Cell>
 	<Cell row="3" col="0">
-		<DataText path=".operands_rdy" display="binary"/>
+		<DataText path="_operands_rdy" display="binary"/>
 	</Cell>
 	<Cell row="0" col="1">
-		<DataText path=".result_bits_data" display="decimal"/>
+		<DataText path="_result_bits_data" display="decimal"/>
 	</Cell>
 	<Cell row="2" col="1">
-		<DataText path=".results_val" display="binary"/>
+		<DataText path="_result_val" display="binary"/>
 	</Cell>
 	<Cell row="3" col="1">
-		<DataText path=".results_rdy" display="binary"/>
+		<DataText path="_result_rdy" display="binary"/>
 	</Cell>
 </Grid>
 
-<VisualizerRef target="GCD" path="top"/>
+<VisualizerRef target="GCD" path="GCD"/>
 </root>

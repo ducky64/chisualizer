@@ -15,9 +15,11 @@ import chisualizer.visualizers.VisualizerBase as VisualizerBase
 
 from chisualizer.visualizers import *
 from chisualizer.display import *
+from chisualizer.ChiselEmulatorSubprocess import *
 
 logging.getLogger().setLevel(logging.DEBUG)
-desc = Base.VisualizerDescriptor('../../tests/gcd.xml')
+api = ChiselEmulatorSubprocess('../../tests/gcd/emulator/GCD-emulator')
+desc = Base.VisualizerDescriptor('../../tests/gcd/gcd.xml', api)
 
 class MyFrame(wx.Frame):
   def __init__(self, parent, title):
@@ -29,7 +31,34 @@ class CairoPanel(wx.Panel):
   def __init__(self, parent):
     wx.Panel.__init__(self, parent, style=wx.BORDER_SIMPLE)
     self.Bind(wx.EVT_PAINT, self.OnPaint)
+    self.Bind(wx.EVT_CHAR, self.OnChar)
     self.text = 'Hello World!'
+
+  def OnChar(self, evt):
+    char = evt.GetKeyCode()
+    print "char '%s'" % char
+    if char == ord('s'):
+      node_name = ""
+      while not api.has_node(node_name):
+        dlg = wx.TextEntryDialog(None,'Set node','Node name', node_name)
+        ret = dlg.ShowModal()
+        if ret != wx.ID_OK:
+          return
+        node_name = dlg.GetValue()
+      dlg = wx.TextEntryDialog(None,'Set value','Value', '')
+      ret = dlg.ShowModal()
+      if ret != wx.ID_OK:
+        return
+      try:
+        node_value = int(dlg.GetValue(), 0)
+      except ValueError:
+        return
+      api.set_node_value(node_name, node_value)
+    elif char == ord('r'):
+      api.reset(1)
+    elif char == wx.WXK_RIGHT:
+      api.clock(1)
+    self.Refresh()
 
   def OnPaint(self, evt):
     #Here we do some magic WX stuff.
@@ -43,11 +72,6 @@ class CairoPanel(wx.Panel):
     cr.fill()
     
     desc.draw_cairo(cr)
-
-  #Change what text is shown
-  def SetText(self, text):
-    self.text = text
-    self.Refresh()
 
 if haveCairo:
   app = wx.App(False)

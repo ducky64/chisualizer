@@ -4,6 +4,10 @@ class ChiselApi:
   Subclass this for particular implementations to interface with, like the
   emulator over stdin/stdout.
   """
+  def has_node(self, node):
+    """Returns whether node is API-accessible in the host."""
+    raise NotImplementedError
+    
   def get_nodes_list(self):
     """Returns a list of API-accessible nodes in the circuit.
     Depending on the optimization level during synthesis, some nodes may not
@@ -11,12 +15,12 @@ class ChiselApi:
     """
     raise NotImplementedError
   
-  def reset(self):
-    """Resets the circuit."""
+  def reset(self, cycles):
+    """Hold circuit in reset for some cycles."""
     raise NotImplementedError
   
-  def clock(self):
-    """Runs one clock cycle."""
+  def clock(self, cycles):
+    """Clocks circuit for some cycles."""
     raise NotImplementedError
   
   def get_node_type(self, node):

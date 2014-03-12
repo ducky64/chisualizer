@@ -29,7 +29,7 @@ class DataText(Data):
     cr.select_font_face ("Sans", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
     cr.set_font_size (10)
     cr.move_to(rect.center_horiz(), rect.center_vert())
-    cr.show_text(self.path)
+    cr.show_text(str(self.get_chisel_api().get_node_value(self.path)))
     cr.move_to(0, 0)
     cr.stroke ()
     

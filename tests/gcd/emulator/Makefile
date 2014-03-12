@@ -1,18 +1,20 @@
+SRC_DIR = ./generated-src
 LDFLAGS = -g
-CPPFLAGS = -g -O2 -I./generated-src
+CPPFLAGS = -g -O2 -I$(SRC_DIR)
 CPP = g++
-INCLUDES = generated-src/emulator.h generated-src/GCD.h
+CPP_FILES = $(SRC_DIR)/GCD.cpp main.cpp
+# CPP_FILES = $(wildcard $(SRC_DIR)/*.cpp)
+OBJ_FILES = $(CPP_FILES:.cpp=.o)
+# INCLUDES = $(SRC_DIR)/emulator.h $(SRC_DIR)/GCD.h
+INCLUDES = $(wildcard $(SRC_DIR)/*.h)
 
 default : all
 
-GCD.o: generated-src/GCD.cpp $(INCLUDES)
-	$(CPP) $(CPPFLAGS) -c $<
+$(SRC_DIR)/%.o: $(SRC_DIR)/%.cpp $(INCLUDES)
+	$(CPP) $(CPPFLAGS) -c -o $@ $<
 
-GCD-emulator.o: testbench/GCD-emulator.cpp $(INCLUDES)
-	$(CPP) $(CPPFLAGS) -c $<
-
-GCD-emulator: GCD-emulator.o GCD.o
-	$(CPP) $(LDFLAGS) -o $@ $+
+GCD-emulator: $(OBJ_FILES)
+	$(CPP) $(LDFLAGS) -o $@ $^
 
 run : GCD-emulator
 	./GCD-emulator
@@ -20,4 +22,5 @@ run : GCD-emulator
 all : GCD-emulator
 
 clean :
-	rm GCD-emulator.o GCD.o GCD-emulator
+	rm $(SRC_DIR)/*.o *.o GCD-emulator
+

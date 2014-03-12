@@ -19,8 +19,9 @@ def xml_register(name=None):
 
 class VisualizerDescriptor(object):
   """An visualizer descriptor file."""
-  def __init__(self, filename):
-    """Initialize this descriptor from a file."""
+  def __init__(self, filename, api):
+    """Initialize this descriptor from a file and given a ChiselApi object."""
+    self.api = api
     self.registry = {}
     self.parse_from_xml(filename)
 
@@ -46,6 +47,7 @@ class VisualizerDescriptor(object):
     if not isinstance(elt, VisualizerBase.VisualizerBase):
       raise TypeError("Last element in XML must be Visualizer subtype.")
     self.visualizer = elt.instantiate(None)
+    self.visualizer.set_chisel_api(self.api)
     logging.debug("Instantiated visualizer")
 
   def draw_cairo(self, cr):

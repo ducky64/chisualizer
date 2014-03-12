@@ -48,6 +48,7 @@ class VisualizerBase(Base):
     else:
       new.root = new
       new.path = new.path_component
+    new.api = None
     return new
   
   def instantiate(self, new_parent, path_prefix=''):
@@ -65,15 +66,17 @@ class VisualizerBase(Base):
     else:
       cloned.root = cloned
       cloned.path = cloned.path_component
+    cloned.api = None
     return cloned
+  
+  def set_chisel_api(self, api):
+    self.api = api
   
   def get_chisel_api(self):
     """Returns the ChiselApi object used to access node values.
     Returns None if not available or if this visualizer wasn't properly
     instantiated."""
-    if not self.root:
-      return None
-    return self.root.get_chisel_api()
+    return self.root.api
   
   def layout_and_draw_cairo(self, cr):
     size_x, size_y = self.layout_cairo(cr)
