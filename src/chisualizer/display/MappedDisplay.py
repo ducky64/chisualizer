@@ -1,9 +1,12 @@
+import copy
+import logging
+
 import chisualizer.Base as Base
 from DisplayBase import DisplayBase, display_instantiate
 
 @display_instantiate('bool', mappings={
-                                       0: {'text':'true'},
-                                       1: {'text':'false'},
+                                       0: {'text':'false'},
+                                       1: {'text':'true'},
                                        })
 @Base.xml_register('MappedDisplay')
 class MappedDisplay(DisplayBase):
@@ -16,9 +19,12 @@ class MappedDisplay(DisplayBase):
     raise NotImplementedError()
   
   def apply(self, node):
-    value = node.get_node_value()
-    if value in self.mapping:
-      return self.mapping[value]
+    value = node.get_value()
+    if value in self.mappings:
+      return copy.deepcopy(self.mappings[value])
+    else:
+      logging.warn("MappedDisplay: no mapping for '%s' in %s" % (value, node))
+      return {}
   
   def get_longest_text(self, chisel_api, node):
     text_list = []

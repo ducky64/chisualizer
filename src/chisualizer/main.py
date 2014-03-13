@@ -36,7 +36,6 @@ class CairoPanel(wx.Panel):
 
   def OnChar(self, evt):
     char = evt.GetKeyCode()
-    print "char '%s'" % char
     if char == ord('s'):
       node_name = ""
       while not api.has_node(node_name):
@@ -53,21 +52,22 @@ class CairoPanel(wx.Panel):
         node_value = int(dlg.GetValue(), 0)
       except ValueError:
         return
+      logging.info("Set '%s' to '%s'" % (node_name, node_value))
       api.set_node_value(node_name, node_value)
     elif char == ord('r'):
+      logging.info("Reset circuit")
       api.reset(1)
     elif char == wx.WXK_RIGHT:
+      logging.info("Clock circuit")
       api.clock(1)
     self.Refresh()
 
   def OnPaint(self, evt):
-    #Here we do some magic WX stuff.
     dc = wx.PaintDC(self)
     width, height = self.GetClientSize()
     cr = wx.lib.wxcairo.ContextFromDC(dc)
 
-    # cr.scale(size, size)
-    cr.set_source_rgb(0, 0, 0) #black
+    cr.set_source_rgb(0, 0, 0)
     cr.rectangle(0, 0, width, height)
     cr.fill()
     

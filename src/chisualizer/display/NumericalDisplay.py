@@ -25,13 +25,15 @@ class NumericalDisplay(DisplayBase):
     raise NotImplementedError()
   
   def apply(self, node):
-    value = node.get_node_value()
+    value = node.get_value()
     value_string = ''
     while value > 0:
       value_string = self.charmap[value % self.radix] + value_string
       value = value / self.radix
+    if not value_string:
+      value_string = '0'
     value_string = self.prefix + value_string
-    return {'text', value_string}
+    return {'text': value_string}
   
   def get_longest_text(self, chisel_api, node):
     width = node.get_node_width()

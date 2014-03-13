@@ -1,3 +1,22 @@
+class ChiselApiNode:
+  """Node reference abstract base class. This provides the methods in the Chisel
+  API (below) for a particular node, and possibly at a higher speed because
+  of referencing."""
+  def get_type(self):
+    raise NotImplementedError
+
+  def get_width(self):
+    raise NotImplementedError
+  
+  def get_depth(self):
+    raise NotImplementedError
+
+  def get_value(self):
+    raise NotImplementedError
+
+  def set_value(self):
+    raise NotImplementedError
+
 class ChiselApi:
   """
   API definition to interface with running Chisel RTL.
@@ -53,5 +72,11 @@ class ChiselApi:
     Value may either be an integer type or a string representation of an 
     integer (which will be parsed).
     """
+    raise NotImplementedError
+  
+  def get_node_reference(self, node):
+    """Returns a ChiselApiNode reference for the given node. The reference
+    object allows all the operations in the API, but possibly at a higher
+    speed (and more convenient format) due to referencing."""
     raise NotImplementedError
   

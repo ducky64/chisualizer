@@ -4,6 +4,32 @@ import string
 
 from chisualizer.ChiselApi import ChiselApi
 
+class ChiselSubprocessEmulatorNode:
+  def __init__(self, api, node_path):
+    assert isinstance(api, ChiselEmulatorSubprocess)
+    assert api.has_node(node_path)
+    self.api = api
+    self.node_path = node_path
+    
+  def __str__(self):
+    return "%s: %s" % (self.__class__.__name__, self.node_path)
+    
+  def get_type(self):
+    return self.api.get_node_type(self.node_path)
+
+  def get_width(self):
+    return self.api.get_node_width(self.node_path)
+  
+  def get_depth(self):
+    return self.api.get_node_depth(self.node_path)
+
+  def get_value(self):
+    return self.api.get_node_value(self.node_path)
+
+  def set_value(self):
+    return self.api.set_node_value(self.node_path)
+
+
 class ChiselEmulatorSubprocess(ChiselApi):
   def __init__(self, emulator_path):
     """Starts the emulator subprocess."""
@@ -95,3 +121,8 @@ class ChiselEmulatorSubprocess(ChiselApi):
     else:
       raise NotImplementedError("Unknown node '%s'" % node)
   
+  def get_node_reference(self, node):
+    if node in self.wires:
+      return ChiselSubprocessEmulatorNode(self, node)
+    else:
+      raise NotImplementedError("Unknown node '%s'" % node)

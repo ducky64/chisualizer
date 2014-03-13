@@ -28,19 +28,19 @@
 		<DataText path="_operands_bits_B" display="decimal"/>
 	</Cell>
 	<Cell row="2" col="0">
-		<DataText path="_operands_val" display="binary"/>
+		<DataText path="_operands_val" display="bool"/>
 	</Cell>
 	<Cell row="3" col="0">
-		<DataText path="_operands_rdy" display="binary"/>
+		<DataText path="_operands_rdy" display="bool"/>
 	</Cell>
 	<Cell row="0" col="1">
 		<DataText path="_result_bits_data" display="decimal"/>
 	</Cell>
 	<Cell row="2" col="1">
-		<DataText path="_result_val" display="binary"/>
+		<DataText path="_result_val" display="bool"/>
 	</Cell>
 	<Cell row="3" col="1">
-		<DataText path="_result_rdy" display="binary"/>
+		<DataText path="_result_rdy" display="bool"/>
 	</Cell>
 </Grid>
 

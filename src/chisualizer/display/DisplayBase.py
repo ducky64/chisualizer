@@ -27,7 +27,8 @@ class DisplayBase(Base):
     """Returns a dict of key->value mappings applied by this modifier based
     on the input data. It is up to the calling visualizer (or perhaps
     higher-level display) to use this data accordingly.
-    node is the chisualizer.visualizers.Data.Data object."""
+    node is the chisualizer.visualizers.Data.Data object.
+    The returned dict should be mutable."""
     return {}
   
   def get_longest_text(self, chisel_api, node):
