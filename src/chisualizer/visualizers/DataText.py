@@ -12,7 +12,7 @@ class DataText(Data):
   def from_xml_cls(cls, element, **kwargs):
     new = super(DataText, cls).from_xml_cls(element, **kwargs)
     display_ref = element.get('display', 'hexadecimal')
-    new.display = DisplayBase.registry_get_display(display_ref)
+    new.display = new.container.get_ref(display_ref)
     new.node = None
     return new
   

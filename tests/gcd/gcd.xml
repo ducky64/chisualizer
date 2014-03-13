@@ -1,16 +1,16 @@
 <root>
-<!--<MappedDisplay ref="GCD_state">
+<MappedDisplay ref="GCD_state">
 	<Mapping key="0x0" text="idle" color="red"/>
 	<Mapping key="0x1" text="calc" color="yellow"/>
 	<Mapping key="0x2" text="done" color="green"/>
-</MappedDisplay>-->
+</MappedDisplay>-
 
 <Grid ref='GCD'>
 	<Cell row="0" col="0">
 		<VisualizerRef target="GCD_io" path=".io"/>
 	</Cell>
 	<Cell row="0" col="1">
-		<DataText path=".state" display="decimal"/>
+		<DataText path=".state" display="GCD_state"/>
 	</Cell>
 	<Cell row="1" col="1">
 		<DataText path=".latch_A" display="decimal"/>

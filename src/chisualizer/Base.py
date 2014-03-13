@@ -26,9 +26,13 @@ class VisualizerDescriptor(object):
     self.parse_from_xml(filename)
 
   def get_ref(self, ref):
-    if ref not in self.registry:
-      raise NameError("Unknown ref '%s'" % ref)
-    return self.registry[ref]
+    from chisualizer.display.DisplayBase import display_registry
+    if ref in display_registry:
+      return display_registry[ref]
+    if ref in self.registry:
+      return self.registry[ref]
+    raise NameError("Unknown ref '%s'" % ref)
+    
 
   def parse_from_xml(self, filename):
     """Parse this descriptor from an XML file."""
@@ -60,7 +64,7 @@ class Base(object):
     assert isinstance(element, etree.Element)
     if element.tag in xml_registry:
       rtn = xml_registry[element.tag].from_xml_cls(element, **kwargs)
-      logging.debug("Loaded %s" % element.tag)
+      logging.debug("Loaded %s: '%s'", rtn.__class__.__name__, rtn.ref)
       return rtn
     else:
       raise NameError("Unknown class '%s'" % element.tag)
@@ -72,4 +76,5 @@ class Base(object):
     new = cls()
     assert container, "from_xml_cls must have container"
     new.container = container
+    new.ref = element.get('ref', '(anon)')
     return new
