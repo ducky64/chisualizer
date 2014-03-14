@@ -23,15 +23,15 @@ def registry_get_display(display_name):
 class DisplayBase(Base):
   """Abstract base class for Chisel visualizer displays
   (objects that node visualizer properties based on input data)."""
-  def apply(self, data):
+  def apply(self, node_ref):
     """Returns a dict of key->value mappings applied by this modifier based
     on the input data. It is up to the calling visualizer (or perhaps
     higher-level display) to use this data accordingly.
-    node is the chisualizer.visualizers.Data.Data object.
+    node_ref is a chisualizer.ChiselApi.ChiselApiNode object
     The returned dict should be mutable."""
     return {}
   
-  def get_longest_text(self, chisel_api, node):
+  def get_longest_text(self, node_ref):
     """Returns a list of text strings which contains the longest (by rendered
     size, for an arbitrary font and sizes) possible string if this display
     modifies the text field. This is used to size visualizers displaying text

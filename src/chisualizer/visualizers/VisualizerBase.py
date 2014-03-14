@@ -3,7 +3,6 @@ import string
 
 from chisualizer.Base import Base
 
-import wx.lib.wxcairo
 import cairo
 
 class Rectangle:
@@ -46,6 +45,17 @@ class Rectangle:
 class VisualizerBase(Base):
   """Abstract base class for Chisel visualizer objects."""
   
+  def parse_element_int(self, element, param, default):
+    got = element.get(param, None)
+    if got is None:
+      return default
+    try:
+      return int(got, 0)
+    except ValueError:
+      logging.error("Unable to parse %s='%s' into integer in %s: '%s'",
+                    param, got, self.__class__.__name__, self.ref)
+      return default
+  
   @classmethod
   def from_xml_cls(cls, element, parent=None, **kwargs):
     new = super(VisualizerBase, cls).from_xml_cls(element, **kwargs)
@@ -58,21 +68,10 @@ class VisualizerBase(Base):
       new.root = new
       new.path = new.path_component
     new.api = None
-    
-    def parse_element_int(param, default):
-      got = element.get(param, None)
-      if got is None:
-        return default
-      try:
-        return int(got, 0)
-      except ValueError:
-        logging.error("Unable to parse %s='%s' into integer in %s: '%s'",
-                      param, got, new.__class__.__name__, new.ref)
-        return default
-    new.border_size = parse_element_int('border_size', 1)
-    new.border_margin = parse_element_int('border_margin', 5)
+    new.border_size = new.parse_element_int(element, 'border_size', 1)
+    new.border_margin = new.parse_element_int(element, 'border_margin', 6)
     new.border_label = element.get('border_label', None)
-    new.border_label_size = parse_element_int('border_label_size', 10)
+    new.border_label_size = new.parse_element_int(element, 'border_label_size', 10)
     new.border_label_font = element.get('border_label_font', 'Sans')
     return new
   
@@ -129,10 +128,10 @@ class VisualizerBase(Base):
       _, _, self.label_width, _, _, _ = cr.text_extents(string.strip(self.path_component, "_. "))
     else:
       _, _, self.label_width, _, _, _ = cr.text_extents(self.border_label)
-    _, _, _, self.label_height, _, _ = cr.text_extents('X')
+    _, _, _, self.label_height, _, _ = cr.text_extents('Xy')
     
     width = max(self.element_width, self.label_width)
-    self.top_height = max(self.border_margin, self.label_height)
+    self.top_height = self.label_height + self.border_margin
     return (2 * self.border_margin + width,
             self.top_height + self.border_margin + self.element_height)
   
@@ -148,18 +147,19 @@ class VisualizerBase(Base):
                                self.border_margin,
                                self.border_margin)
     border_offset = self.border_margin / 2
+    top_offset = self.top_height / 2
     
     cr.set_source_rgb(0, 0.4, 0.5)
     cr.set_line_width(self.border_size)
     cr.rectangle(element_rect.left() - border_offset,
-                 element_rect.top() - border_offset,
+                 element_rect.top() - top_offset,
                  element_rect.width() + 2 * border_offset,
-                 element_rect.height() + 2 * border_offset)
+                 element_rect.height() + border_offset + top_offset)
     cr.stroke()
     
     cr.set_source_rgb(0, 0, 0)
     cr.rectangle(rect.left() + self.border_margin,
-                 rect.top(),
+                 rect.top() + self.border_margin / 2,
                  self.label_width,
                  self.label_height)
     cr.fill()
@@ -169,7 +169,7 @@ class VisualizerBase(Base):
                         cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
     cr.set_font_size(self.border_label_size)
     cr.move_to(rect.left() + self.border_margin,
-               rect.top() + self.top_height)
+               rect.top() + self.top_height - border_offset)
     if self.border_label is None:
       cr.show_text(string.strip(self.path_component, "_. "))
     else:

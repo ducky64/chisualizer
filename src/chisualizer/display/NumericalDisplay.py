@@ -35,7 +35,8 @@ class NumericalDisplay(DisplayBase):
     value_string = self.prefix + value_string
     return {'text': value_string}
   
-  def get_longest_text(self, chisel_api, node):
-    width = node.get_node_width()
-    digits = int(math.ceil(math.log(width, self.radix)))
+  def get_longest_text(self, node_ref):
+    width = node_ref.get_width()
+    digits = int(math.ceil(math.log(2 ** width - 1, self.radix)))
     return [self.prefix + self.charmap[0]*digits]
+  
