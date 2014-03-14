@@ -1,5 +1,5 @@
 <root>
-<MappedDisplay ref="GCD_state">
+<MappedDisplay ref="GCD_state_map">
 	<Mapping key="0x0" text="idle" color="red"/>
 	<Mapping key="0x1" text="calc" color="yellow"/>
 	<Mapping key="0x2" text="done" color="green"/>
@@ -7,20 +7,29 @@
 
 <Grid ref='GCD'>
 	<Cell row="0" col="0">
-		<VisualizerRef target="GCD_io" path=".io"/>
+		<VisualizerRef target="GCD_io_in" path=".io"/>
 	</Cell>
 	<Cell row="0" col="1">
-		<DataText path=".state" display="GCD_state"/>
+		<VisualizerRef target="GCD_state"/>
 	</Cell>
-	<Cell row="1" col="1">
+	<Cell row="0" col="2">
+		<VisualizerRef target="GCD_io_out" path=".io"/>
+	</Cell>
+</Grid>
+
+<Grid ref='GCD_state' border_label='Internal State'>
+	<Cell row="0" col="0">
+		<DataText path=".state" display="GCD_state_map"/>
+	</Cell>
+	<Cell row="1" col="0">
 		<DataText path=".latch_A" display="decimal"/>
 	</Cell>
-	<Cell row="2" col="1">
+	<Cell row="2" col="0">
 		<DataText path=".latch_B" display="decimal"/>
 	</Cell>
 </Grid>
 
-<Grid ref='GCD_io'>
+<Grid ref='GCD_io_in' border_label='IO (in)'>
 	<Cell row="0" col="0">
 		<DataText path="_operands_bits_A" display="decimal"/>
 	</Cell>
@@ -33,6 +42,9 @@
 	<Cell row="3" col="0">
 		<DataText path="_operands_rdy" display="bool"/>
 	</Cell>
+</Grid>
+
+<Grid ref='GCD_io_out' border_label='IO (out)'>
 	<Cell row="0" col="1">
 		<DataText path="_result_bits_data" display="decimal"/>
 	</Cell>

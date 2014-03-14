@@ -71,6 +71,7 @@ class CairoPanel(wx.Panel):
     cr.rectangle(0, 0, width, height)
     cr.fill()
     
+    cr.translate(0.5, 0.5)
     desc.draw_cairo(cr)
 
 if haveCairo:

@@ -1,5 +1,5 @@
 import chisualizer.Base as Base
-from VisualizerBase import VisualizerBase
+from VisualizerBase import VisualizerBase, Rectangle
 
 @Base.xml_register('Grid')
 class Grid(VisualizerBase):
@@ -37,7 +37,7 @@ class Grid(VisualizerBase):
     cloned.y_row_sizes = {}
     return cloned
   
-  def layout_cairo(self, cr):
+  def layout_element_cairo(self, cr):
     self.x_col_sizes = {}
     self.y_row_sizes = {}
     for coords, vis in self.cells.iteritems():
@@ -50,24 +50,21 @@ class Grid(VisualizerBase):
       self.x_col_sizes[x_col] = max(self.x_col_sizes[x_col], vis_x)
       self.y_row_sizes[y_row] = max(self.y_row_sizes[y_row], vis_y)
       
-    x_total = reduce(lambda x, y: x+y, self.x_col_sizes.itervalues())
-    y_total = reduce(lambda x, y: x+y, self.y_row_sizes.itervalues())
-    return (x_total, y_total)
+    self.x_total = reduce(lambda x, y: x+y, self.x_col_sizes.itervalues())
+    self.y_total = reduce(lambda x, y: x+y, self.y_row_sizes.itervalues())
+    return (self.x_total, self.y_total)
         
-  def draw_cairo(self, cr, rect):
-    super(Grid, self).draw_cairo(cr, rect)
-    
-    origin_x = rect.left()
-    origin_y = rect.top()
+  def draw_element_cairo(self, cr, rect):
+    origin_x = rect.center_horiz() - self.x_total / 2
+    origin_y = rect.center_vert() - self.y_total / 2
     pos_x = origin_x
     pos_y = origin_y
     for y_row, y_size in sorted(self.y_row_sizes.iteritems()):
       pos_x = origin_x
       for x_col, x_size in sorted(self.x_col_sizes.iteritems()):
         if (x_col, y_row) in self.cells:
-          # TODO !!! do cairo transform
-          cell_rect = self.Rectangle((pos_x, pos_y),
-                                     (pos_x + x_size, pos_y + y_size))
+          cell_rect = Rectangle((pos_x, pos_y),
+                                (pos_x + x_size, pos_y + y_size))
           self.cells[(x_col, y_row)].draw_cairo(cr, cell_rect)
         pos_x += x_size
       pos_y += y_size

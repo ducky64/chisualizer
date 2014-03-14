@@ -22,9 +22,7 @@ class DataText(Data):
     cloned.node = None
     return cloned
 
-  def draw_cairo(self, cr, rect):
-    super(DataText, self).draw_cairo(cr, rect)
-    
+  def draw_element_cairo(self, cr, rect):
     if not self.node:
       self.node = self.get_chisel_api().get_node_reference(self.path)
     
@@ -48,10 +46,8 @@ class DataText(Data):
     cr.set_font_size (10)
     cr.move_to(rect.center_horiz(), rect.center_vert())
     cr.show_text(text)
-    cr.move_to(0, 0)
-    cr.stroke ()
     
-  def layout_cairo(self, cr):
+  def layout_element_cairo(self, cr):
     return (250, 50)
     
     logging.warn("DataText::layout_cairo not implemented")
