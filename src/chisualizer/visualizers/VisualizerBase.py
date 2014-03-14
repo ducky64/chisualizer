@@ -128,7 +128,7 @@ class VisualizerBase(Base):
       _, _, self.label_width, _, _, _ = cr.text_extents(string.strip(self.path_component, "_. "))
     else:
       _, _, self.label_width, _, _, _ = cr.text_extents(self.border_label)
-    _, _, _, self.label_height, _, _ = cr.text_extents('Xy')
+    _, _, _, self.label_height, _, _ = cr.text_extents('X')
     
     width = max(self.element_width, self.label_width)
     self.top_height = self.label_height + self.border_margin
@@ -159,7 +159,7 @@ class VisualizerBase(Base):
     
     cr.set_source_rgb(0, 0, 0)
     cr.rectangle(rect.left() + self.border_margin,
-                 rect.top() + self.border_margin / 2,
+                 rect.top() + border_offset,
                  self.label_width,
                  self.label_height)
     cr.fill()
