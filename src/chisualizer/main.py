@@ -75,7 +75,7 @@ class CairoPanel(wx.Panel):
   def OnMouseRight(self, evt):
     x, y = self.device_to_visualizer_coordinates(evt.GetPosition())
     elements = self.get_mouseover_elements(x, y)
-    elements = sorted(elements, key = lambda element: element[0])
+    elements = sorted(elements, key = lambda element: element[0], reverse=True)
     
     menu = wx.Menu()
     populated = False

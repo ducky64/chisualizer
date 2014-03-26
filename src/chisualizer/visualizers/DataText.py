@@ -108,4 +108,3 @@ class DataText(Data):
         logging.info("Set '%s' to '%s'" % (self.path, curr_value))
         return
     
-    

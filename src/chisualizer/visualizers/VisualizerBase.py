@@ -5,6 +5,8 @@ from chisualizer.Base import Base
 
 import cairo
 
+import wx
+
 class Rectangle:
   def __init__(self, point1, point2):
     self._left = min(point1[0], point2[0])
@@ -62,6 +64,9 @@ class VisualizerBase(Base):
       logging.error("Unable to parse %s='%s' into integer in %s: '%s'",
                     param, got, self.__class__.__name__, self.ref)
       return default
+  
+  def __init__(self):
+    self.collapsed = False
   
   @classmethod
   def from_xml_cls(cls, element, parent=None, **kwargs):
@@ -126,7 +131,10 @@ class VisualizerBase(Base):
     Returns a tuple (width, height) of the minimum size of this object.
     This may differ per frame, and should be called before draw_cairo."""
     assert isinstance(cr, cairo.Context)
-    self.element_width, self.element_height = self.layout_element_cairo(cr)
+    if self.collapsed:
+      self.element_width, self.element_height = (0, 0)
+    else:
+      self.element_width, self.element_height = self.layout_element_cairo(cr)
     
     cr.select_font_face(self.border_label_font,
                         cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
@@ -186,7 +194,10 @@ class VisualizerBase(Base):
     else:
       cr.show_text(self.border_label)
     
-    elements = self.draw_element_cairo(cr, element_rect, depth)
+    if self.collapsed:
+      elements = []
+    else:
+      elements = self.draw_element_cairo(cr, element_rect, depth)
     elements.append((depth, rect, self))
     return elements
   
@@ -206,5 +217,20 @@ class VisualizerBase(Base):
   def wx_popupmenu_populate(self, menu):
     """Adds items relevant to this visualizer to the argument menu.
     Return True if items were added, False otherwise."""
-    return False
+    if self.collapsed:
+      item = wx.MenuItem(menu, wx.NewId(), "%s: Expand" % self.path)
+      menu.AppendItem(item)
+      menu.Bind(wx.EVT_MENU, self.wx_popupmenu_expand, item)
+    else:
+      item = wx.MenuItem(menu, wx.NewId(), "%s: Collapse" % self.path)
+      menu.AppendItem(item)
+      menu.Bind(wx.EVT_MENU, self.wx_popupmenu_collapse, item)
+
+    return True
+
+  def wx_popupmenu_expand(self, evt):
+    self.collapsed = False
+    
+  def wx_popupmenu_collapse(self, evt):
+    self.collapsed = True
     
