@@ -69,3 +69,14 @@ class MappedDisplay(DisplayBase):
         text_list.append(mapping['text'])
     return text_list
   
+  def set_from_text(self, node_ref, in_text):
+    if super(MappedDisplay, self).set_from_text(node_ref, in_text):
+      return True
+    
+    for mapping_key, mapping_val in self.mappings:
+      if 'text' in mapping_val and mapping_val['text'] == in_text:
+        node_ref.set_value(mapping_key)
+        return True
+      
+    return False
+      

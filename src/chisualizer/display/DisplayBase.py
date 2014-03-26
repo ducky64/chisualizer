@@ -44,3 +44,19 @@ class DisplayBase(Base):
     should not alter the emulator state.
     """
     return []
+
+  def set_from_text(self, node_ref, in_text):
+    """Sets the node's value from the input text. The specific translation from
+    input text to integer value is dependent on the display, with the general
+    idea being that you should be able to type in what text is shown.
+    Returns True if set correctly, and False if the input was not able to be
+    parsed. This should be chain-called, trying the base displays first.
+    The default implementation attempts Python's built-in integer parsing.
+    """
+    try:
+      val = int(in_text, 0)
+      node_ref.set_value(val)
+      return True
+    except ValueError:
+      return False
+    
