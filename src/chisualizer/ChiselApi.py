@@ -3,18 +3,41 @@ class ChiselApiNode:
   API (below) for a particular node, and possibly at a higher speed because
   of referencing."""
   def get_type(self):
+    """Returns the Chisel type of a node."""
     raise NotImplementedError
 
   def get_width(self):
+    """Returns the bit-width of a node. Raises a ValueError for non-node types
+    (like modules).
+    """
     raise NotImplementedError
   
   def get_depth(self):
+    """Returns the depth of a node for subscriptable nodes (like memories).
+    Raises a ValueError for non-subscriptable nodes.
+    """
     raise NotImplementedError
 
   def get_value(self):
+    """Returns the current value of a node in the circuit as a integer type.
+    This can be used to access an memory array by subscripting the address
+    in brackets.
+    """
     raise NotImplementedError
 
   def set_value(self):
+    """Sets a node's value, and propagates it through the circuit.
+    Only meaningful on registers, as other values will be overridden when
+    propagation occurs.
+    Value may either be an integer type or a string representation of an 
+    integer (which will be parsed).
+    """
+    raise NotImplementedError
+
+  def get_subscript_reference(self, subscript):
+    raise NotImplementedError
+  
+  def get_child_reference(self, child_name):
     raise NotImplementedError
 
 class ChiselApi:
@@ -40,38 +63,6 @@ class ChiselApi:
   
   def clock(self, cycles):
     """Clocks circuit for some cycles."""
-    raise NotImplementedError
-  
-  def get_node_type(self, node):
-    """Returns the Chisel type of a node."""
-    raise NotImplementedError
-  
-  def get_node_width(self, node):
-    """Returns the bit-width of a node. Raises a ValueError for non-node types
-    (like modules).
-    """
-    raise NotImplementedError
-  
-  def get_node_depth(self, node):
-    """Returns the depth of a node for subscriptable nodes (like memories).
-    Raises a ValueError for non-subscriptable nodes.
-    """
-    raise NotImplementedError
-  
-  def get_node_value(self, node):
-    """Returns the current value of a node in the circuit as a integer type.
-    This can be used to access an memory array by subscripting the address
-    in brackets.
-    """
-    raise NotImplementedError
-  
-  def set_node_value(self, node, value):
-    """Sets a node's value, and propagates it through the circuit.
-    Only meaningful on registers, as other values will be overridden when
-    propagation occurs.
-    Value may either be an integer type or a string representation of an 
-    integer (which will be parsed).
-    """
     raise NotImplementedError
   
   def get_node_reference(self, node):

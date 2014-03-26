@@ -74,10 +74,12 @@ class CairoPanel(wx.Panel):
     cr.translate(0.5, 0.5)
     desc.draw_cairo(cr)
 
-if haveCairo:
-  app = wx.App(False)
-  theFrame = MyFrame(None, 'Chisualizer')
-  app.MainLoop()
-else:
-  print "Chisualizer requires PyCairo and wxCairo to run."
-  
+def run():
+  if haveCairo:
+    app = wx.App(False)
+    theFrame = MyFrame(None, 'Chisualizer')
+    app.MainLoop()
+  else:
+    print "Chisualizer requires PyCairo and wxCairo to run."
+
+run()
