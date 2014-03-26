@@ -15,7 +15,7 @@ def result_to_int(res):
   except ValueError:
     raise ValueError("Expected int, got '%s'" % res)
 
-def result_to_bool(self, res):
+def result_to_bool(res):
   if res == "true":
     return True
   elif res == "false":

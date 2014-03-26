@@ -42,6 +42,13 @@ class Rectangle:
                      (self.right() - right,
                       self.bottom() - bottom))
 
+  def contains(self, point_x, point_y):
+    if (self._left <= point_x and self._right >= point_x and 
+        self._top <= point_y and self._bottom >= point_y):
+      return True
+    else:
+      return False 
+
 class VisualizerBase(Base):
   """Abstract base class for Chisel visualizer objects."""
   
@@ -112,7 +119,7 @@ class VisualizerBase(Base):
   def layout_and_draw_cairo(self, cr):
     size_x, size_y = self.layout_cairo(cr)
     rect = Rectangle((0, 0), (size_x, size_y))
-    self.draw_cairo(cr, rect)
+    return self.draw_cairo(cr, rect, 0)
   
   def layout_cairo(self, cr):
     """Computes (and stores) the layout for this object when drawing with Cairo.
@@ -135,9 +142,13 @@ class VisualizerBase(Base):
     return (2 * self.border_margin + width,
             self.top_height + self.border_margin + self.element_height)
   
-  def draw_cairo(self, cr, rect):
+  def draw_cairo(self, cr, rect, depth):
     """Draw this object (with borders and labels) to the Cairo context.
     rect indicates the area allocated for this object.
+    Returns a list elements drawn: tuple (depth, rect, visualizer)
+    Depth indicates the drawing depth, with a higher number meaning deeper
+    (further nested). This is used to calculate UI events, like mouseover 
+    and clicks.
     """
     assert isinstance(cr, cairo.Context)
     assert isinstance(rect, Rectangle)
@@ -174,9 +185,10 @@ class VisualizerBase(Base):
       cr.show_text(string.strip(self.path_component, "_. "))
     else:
       cr.show_text(self.border_label)
-      
     
-    self.draw_element_cairo(cr, element_rect)
+    elements = self.draw_element_cairo(cr, element_rect, depth)
+    elements.append((depth, rect, self))
+    return elements
   
   def layout_element_cairo(self, cr):
     """Computes (and stores) the layout for this object when drawing with Cairo.
@@ -184,9 +196,15 @@ class VisualizerBase(Base):
     This may differ per frame, and should be called before draw_cairo."""
     raise NotImplementedError()
   
-  def draw_element_cairo(self, cr, rect):
+  def draw_element_cairo(self, cr, rect, depth):
     """Draw this object to the Cairo context.
     rect indicates the area allocated for this object.
+    Returns the same as draw_cairo.
     """
     raise NotImplementedError()
+
+  def wx_popupmenu_populate(self, menu):
+    """Adds items relevant to this visualizer to the argument menu.
+    Return True if items were added, False otherwise."""
+    return False
     

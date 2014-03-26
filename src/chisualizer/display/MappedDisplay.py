@@ -73,7 +73,7 @@ class MappedDisplay(DisplayBase):
     if super(MappedDisplay, self).set_from_text(node_ref, in_text):
       return True
     
-    for mapping_key, mapping_val in self.mappings:
+    for mapping_key, mapping_val in self.mappings.iteritems():
       if 'text' in mapping_val and mapping_val['text'] == in_text:
         node_ref.set_value(mapping_key)
         return True

@@ -55,7 +55,7 @@ class VisualizerDescriptor(object):
     logging.debug("Instantiated visualizer")
 
   def draw_cairo(self, cr):
-    self.visualizer.layout_and_draw_cairo(cr)
+    return self.visualizer.layout_and_draw_cairo(cr)
 
 class Base(object):
   """Abstract base class for visualizer descriptor objects."""

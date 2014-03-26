@@ -1,6 +1,7 @@
 import logging
 import os
 import xml.etree.ElementTree as etree
+import time
 
 import wx
 try:
@@ -31,53 +32,136 @@ class CairoPanel(wx.Panel):
   def __init__(self, parent):
     wx.Panel.__init__(self, parent, style=wx.BORDER_SIMPLE)
     self.Bind(wx.EVT_PAINT, self.OnPaint)
+    self.Bind(wx.EVT_SIZE, self.OnSize)
     self.Bind(wx.EVT_CHAR, self.OnChar)
-    self.text = 'Hello World!'
+    self.Bind(wx.EVT_MOUSEWHEEL, self.OnMouseWheel)
+    self.Bind(wx.EVT_MOTION, self.OnMouseMotion)
+    self.Bind(wx.EVT_RIGHT_UP, self.OnMouseRight)
+    
+    self.scale = 1
+    self.mouse = (0, 0)
+    
+    self.need_visualizer_refresh = False
+    self.elements = []
 
   def OnChar(self, evt):
     char = evt.GetKeyCode()
-    if char == ord('s'):
-      node_name = ""
-      while not api.has_node(node_name):
-        dlg = wx.TextEntryDialog(None,'Set node','Node name', node_name)
-        ret = dlg.ShowModal()
-        if ret != wx.ID_OK:
-          return
-        node_name = dlg.GetValue()
-      dlg = wx.TextEntryDialog(None,'Set value','Value', '')
-      ret = dlg.ShowModal()
-      if ret != wx.ID_OK:
-        return
-      try:
-        node_value = int(dlg.GetValue(), 0)
-      except ValueError:
-        return
-      logging.info("Set '%s' to '%s'" % (node_name, node_value))
-      api.set_node_value(node_name, node_value)
-    elif char == ord('r'):
+    if char == ord('r'):
       logging.info("Reset circuit")
       api.reset(1)
+      self.need_visualizer_refresh = True
+      
     elif char == wx.WXK_RIGHT:
       logging.info("Clock circuit")
       api.clock(1)
+      self.need_visualizer_refresh = True
+      
     self.Refresh()
 
+  def OnSize(self, evt):
+    self.need_visualizer_refresh = True
+    self.Refresh()
+
+  def OnMouseWheel(self, evt):
+    delta = evt.GetWheelRotation() / evt.GetWheelDelta()
+    self.scale = self.scale * (1.2 ** delta)
+    self.need_visualizer_refresh = True
+    self.Refresh()
+
+  def OnMouseMotion(self, evt):
+    self.mouse = self.device_to_visualizer_coordinates((evt.GetX(), evt.GetY()))
+    self.Refresh()
+
+  def OnMouseRight(self, evt):
+    x, y = self.device_to_visualizer_coordinates(evt.GetPosition())
+    elements = self.get_mouseover_elements(x, y)
+    elements = sorted(elements, key = lambda element: element[0])
+    
+    menu = wx.Menu()
+    populated = False
+    for element in elements:
+      assert isinstance(element[1], VisualizerBase.VisualizerBase)
+      this_populated = element[1].wx_popupmenu_populate(menu)
+      populated = populated or this_populated
+    if populated:
+      self.PopupMenu(menu, evt.GetPosition())
+    menu.Destroy()
+    
+    self.need_visualizer_refresh = True
+    self.Refresh()
+    
   def OnPaint(self, evt):
     dc = wx.PaintDC(self)
     width, height = self.GetClientSize()
-    cr = wx.lib.wxcairo.ContextFromDC(dc)
+    dc.Blit(0, 0, width, height, 
+            self.get_visualizer_dc(self.GetClientSize()), 
+            0, 0)
 
+    # Per-frame elements
+    cr = wx.lib.wxcairo.ContextFromDC(dc)
+    cr.set_source_rgb(255, 255, 255)
+    cr.select_font_face('Sans',
+                        cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
+    cr.set_font_size(10)
+    cr.move_to(0, height - 35)
+    cr.show_text("Scale: %.2f" % (self.scale))
+    cr.move_to(0, height - 25)
+    cr.show_text("Mouse: %d, %d" % self.mouse)
+    cr.move_to(0, height - 15)
+    elements = self.get_mouseover_elements(*self.mouse)
+    elements = map(lambda element: element[1].path, elements)
+    cr.show_text(str(elements))
+
+  def device_to_visualizer_coordinates(self, pos):
+    x, y = pos
+    x = x / self.scale
+    y = y / self.scale
+    return (x, y) 
+
+  def get_mouseover_elements(self, x, y):
+    elements = []
+    for (depth, rect, visualizer) in self.elements:
+      if rect.contains(x, y):
+        elements.append((depth, visualizer))
+    return elements
+
+  def get_visualizer_dc(self, size):
+    if self.need_visualizer_refresh:
+      self.visualizer_dc = self.draw_visualizer(self.GetClientSize())
+      
+    self.need_visualizer_refresh = False
+    return self.visualizer_dc
+
+  def draw_visualizer(self, size):
+    width, height = size
+    dc = wx.MemoryDC(wx.EmptyBitmap(width, height))
+    cr = wx.lib.wxcairo.ContextFromDC(dc)
+    
     cr.set_source_rgb(0, 0, 0)
     cr.rectangle(0, 0, width, height)
     cr.fill()
     
     cr.translate(0.5, 0.5)
-    desc.draw_cairo(cr)
+    cr.save()
+    cr.scale(self.scale, self.scale)
+    timer = time.time()
+    self.elements = desc.draw_cairo(cr)
+    timer = time.time() - timer
+    cr.restore()
+    
+    cr.move_to(0, height - 5)
+    cr.set_source_rgb(255, 255, 255)
+    cr.select_font_face('Sans',
+                        cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
+    cr.set_font_size(10)
+    cr.show_text("Rendered (visualizer): %.2f ms" % (timer*1000))
 
+    return dc
+    
 def run():
   if haveCairo:
     app = wx.App(False)
-    theFrame = MyFrame(None, 'Chisualizer')
+    MyFrame(None, 'Chisualizer')
     app.MainLoop()
   else:
     print "Chisualizer requires PyCairo and wxCairo to run."

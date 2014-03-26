@@ -1,6 +1,7 @@
 import logging
 
 import cairo 
+import wx
 
 import chisualizer.Base as Base
 import chisualizer.display.DisplayBase as DisplayBase
@@ -30,17 +31,25 @@ class DataText(Data):
     cloned.node = None
     return cloned
 
-  def draw_element_cairo(self, cr, rect):
+  def get_node(self):
+    """Returns the Chisel API node reference object for this visualizer's target
+    node.
+    self.node is lazy-initialized because the API is not ready at instantiation
+    time.
+    TODO: FIX THIS DIRTY HACK
+    """
     if not self.node:
       self.node = self.get_chisel_api().get_node_reference(self.path)
-    
+    return self.node    
+
+  def draw_element_cairo(self, cr, rect, depth):
     cr.set_source_rgb(1, 1, 1)
     cr.set_line_width (1)
     cr.select_font_face(self.display_font,
                         cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
     cr.set_font_size(self.display_size)
     
-    modifiers = self.display.apply(self.node)
+    modifiers = self.display.apply(self.get_node())
     if 'text' in modifiers:
       text = modifiers['text']
       del modifiers['text']
@@ -59,10 +68,10 @@ class DataText(Data):
     cr.move_to(rect.left(), rect.center_vert() + self.text_max_height / 2)
     cr.show_text(text)
     
+    return []
+  
   def layout_element_cairo(self, cr):
-    if not self.node:
-      self.node = self.get_chisel_api().get_node_reference(self.path)
-    texts = self.display.get_longest_text(self.node)
+    texts = self.display.get_longest_text(self.get_node())
     self.text_max_width = 0
     cr.set_line_width (1)
     cr.select_font_face(self.display_font,
@@ -73,3 +82,30 @@ class DataText(Data):
       self.text_max_width = max(self.text_max_width, text_width)
     _, _, _, self.text_max_height, _, _ = cr.text_extents('X')
     return (self.text_max_width, self.text_max_height)
+  
+  def wx_popupmenu_populate(self, menu):
+    item = wx.MenuItem(menu, wx.NewId(), "%s: Set" % self.path)
+    menu.AppendItem(item)
+    menu.Bind(wx.EVT_MENU, self.wx_popupmenu_set, item)
+    
+    super(DataText, self).wx_popupmenu_populate(menu)
+    
+    return True
+    
+  def wx_popupmenu_set(self, evt):
+    curr_value = ""
+    modifiers = self.display.apply(self.get_node())
+    if 'text' in modifiers:
+      curr_value = modifiers['text']
+      
+    dlg = wx.TextEntryDialog(None, self.path, 'New Value', curr_value)
+    while True:
+      ret = dlg.ShowModal()
+      if ret != wx.ID_OK:
+        return
+      curr_value = dlg.GetValue()
+      if self.display.set_from_text(self.get_node(), curr_value):
+        logging.info("Set '%s' to '%s'" % (self.path, curr_value))
+        return
+    
+    

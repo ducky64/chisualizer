@@ -54,18 +54,20 @@ class Grid(VisualizerBase):
     self.y_total = reduce(lambda x, y: x+y, self.y_row_sizes.itervalues())
     return (self.x_total, self.y_total)
         
-  def draw_element_cairo(self, cr, rect):
+  def draw_element_cairo(self, cr, rect, depth):
     origin_x = rect.center_horiz() - self.x_total / 2
     origin_y = rect.center_vert() - self.y_total / 2
     pos_x = origin_x
     pos_y = origin_y
+    elements = []
     for y_row, y_size in sorted(self.y_row_sizes.iteritems()):
       pos_x = origin_x
       for x_col, x_size in sorted(self.x_col_sizes.iteritems()):
         if (x_col, y_row) in self.cells:
           cell_rect = Rectangle((pos_x, pos_y),
                                 (pos_x + x_size, pos_y + y_size))
-          self.cells[(x_col, y_row)].draw_cairo(cr, cell_rect)
+          elements.extend(self.cells[(x_col, y_row)].draw_cairo(cr, cell_rect,
+                                                                depth + 1))
         pos_x += x_size
       pos_y += y_size
-    
+    return elements
