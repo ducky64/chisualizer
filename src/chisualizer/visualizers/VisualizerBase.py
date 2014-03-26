@@ -82,9 +82,9 @@ class VisualizerBase(Base):
     new.api = None
     new.border_size = new.parse_element_int(element, 'border_size', 1)
     new.border_margin = new.parse_element_int(element, 'border_margin', 6)
-    new.border_label = element.get('border_label', None)
-    new.border_label_size = new.parse_element_int(element, 'border_label_size', 10)
-    new.border_label_font = element.get('border_label_font', 'Sans')
+    new.label = element.get('label', None)
+    new.label_size = new.parse_element_int(element, 'label_size', 10)
+    new.label_font = element.get('label_font', 'Sans')
     return new
   
   def instantiate(self, new_parent, path_prefix=''):
@@ -106,9 +106,9 @@ class VisualizerBase(Base):
     
     cloned.border_size = self.border_size
     cloned.border_margin = self.border_margin
-    cloned.border_label = self.border_label
-    cloned.border_label_font = self.border_label_font
-    cloned.border_label_size = self.border_label_size
+    cloned.label = self.label
+    cloned.label_font = self.label_font
+    cloned.label_size = self.label_size
     
     return cloned
   
@@ -136,13 +136,13 @@ class VisualizerBase(Base):
     else:
       self.element_width, self.element_height = self.layout_element_cairo(cr)
     
-    cr.select_font_face(self.border_label_font,
+    cr.select_font_face(self.label_font,
                         cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
-    cr.set_font_size(self.border_label_size)
-    if self.border_label is None:
+    cr.set_font_size(self.label_size)
+    if self.label is None:
       _, _, self.label_width, _, _, _ = cr.text_extents(string.strip(self.path_component, "_. "))
     else:
-      _, _, self.label_width, _, _, _ = cr.text_extents(self.border_label)
+      _, _, self.label_width, _, _, _ = cr.text_extents(self.label)
     _, _, _, self.label_height, _, _ = cr.text_extents('X')
     
     width = max(self.element_width, self.label_width)
@@ -184,15 +184,15 @@ class VisualizerBase(Base):
     cr.fill()
     
     cr.set_source_rgb(0, 0.4, 0.5)
-    cr.select_font_face(self.border_label_font,
+    cr.select_font_face(self.label_font,
                         cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
-    cr.set_font_size(self.border_label_size)
+    cr.set_font_size(self.label_size)
     cr.move_to(rect.left() + self.border_margin,
                rect.top() + self.top_height - border_offset)
-    if self.border_label is None:
+    if self.label is None:
       cr.show_text(string.strip(self.path_component, "_. "))
     else:
-      cr.show_text(self.border_label)
+      cr.show_text(self.label)
     
     if self.collapsed:
       elements = []

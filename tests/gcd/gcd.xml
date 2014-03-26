@@ -17,7 +17,7 @@
 	</Cell>
 </Grid>
 
-<Grid ref='GCD_state' border_label='internal'>
+<Grid ref='GCD_state' label='internal'>
 	<Cell row="0" col="0">
 		<DataText path=".state" display="GCD_state_map"/>
 	</Cell>
@@ -29,7 +29,7 @@
 	</Cell>
 </Grid>
 
-<Grid ref='GCD_io_in' border_label='io (in)'>
+<Grid ref='GCD_io_in' label='io (in)'>
 	<Cell row="0" col="0">
 		<DataText path="_operands_bits_A" display="decimal"/>
 	</Cell>
@@ -44,7 +44,7 @@
 	</Cell>
 </Grid>
 
-<Grid ref='GCD_io_out' border_label='io (out)'>
+<Grid ref='GCD_io_out' label='io (out)'>
 	<Cell row="0" col="1">
 		<DataText path="_result_bits_data" display="decimal"/>
 	</Cell>
