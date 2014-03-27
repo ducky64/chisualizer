@@ -18,7 +18,7 @@ class DataText(Data):
     new.display = new.container.get_ref(display_ref)
     
     new.display_size = new.parse_element_int(element, 'display_size', 14)
-    new.display_font = element.get('display_font', 'Sans')
+    new.display_font = element.get('display_font', 'Mono')
     
     new.node = None
     return new
@@ -84,7 +84,7 @@ class DataText(Data):
     return (self.text_max_width, self.text_max_height)
   
   def wx_popupmenu_populate(self, menu):
-    item = wx.MenuItem(menu, wx.NewId(), "%s: Set" % self.path)
+    item = wx.MenuItem(menu, wx.NewId(), "%s: Set" % self.wx_prefix())
     menu.AppendItem(item)
     menu.Bind(wx.EVT_MENU, self.wx_popupmenu_set, item)
     

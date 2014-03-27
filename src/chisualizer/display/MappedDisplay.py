@@ -15,6 +15,8 @@ class MappedDisplay(DisplayBase):
             'cyan': (0, 1, 1),
             'blue': (0, 0, 1),
             'pink': (1, 0, 1),
+            'white': (1, 1, 1),
+            'grey': (.5, .5, .5),
             }
   def __init__(self, mappings=None):
     self.mappings = mappings

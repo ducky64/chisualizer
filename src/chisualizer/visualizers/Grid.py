@@ -50,8 +50,8 @@ class Grid(VisualizerBase):
       self.x_col_sizes[x_col] = max(self.x_col_sizes[x_col], vis_x)
       self.y_row_sizes[y_row] = max(self.y_row_sizes[y_row], vis_y)
       
-    self.x_total = reduce(lambda x, y: x+y, self.x_col_sizes.itervalues())
-    self.y_total = reduce(lambda x, y: x+y, self.y_row_sizes.itervalues())
+    self.x_total = reduce(lambda x, y: x+y, self.x_col_sizes.itervalues(), 0)
+    self.y_total = reduce(lambda x, y: x+y, self.y_row_sizes.itervalues(), 0)
     return (self.x_total, self.y_total)
         
   def draw_element_cairo(self, cr, rect, depth):

@@ -84,7 +84,7 @@ class VisualizerBase(Base):
     new.border_margin = new.parse_element_int(element, 'border_margin', 6)
     new.label = element.get('label', None)
     new.label_size = new.parse_element_int(element, 'label_size', 10)
-    new.label_font = element.get('label_font', 'Sans')
+    new.label_font = element.get('label_font', 'Mono')
     return new
   
   def instantiate(self, new_parent, path_prefix=''):
@@ -214,15 +214,21 @@ class VisualizerBase(Base):
     """
     raise NotImplementedError()
 
+  def wx_prefix(self):
+    prefix = self.path
+    if self.label:
+      prefix = "%s (%s)" % (prefix, self.label)
+    return prefix
+      
   def wx_popupmenu_populate(self, menu):
     """Adds items relevant to this visualizer to the argument menu.
     Return True if items were added, False otherwise."""
     if self.collapsed:
-      item = wx.MenuItem(menu, wx.NewId(), "%s: Expand" % self.path)
+      item = wx.MenuItem(menu, wx.NewId(), "%s: Expand" % self.wx_prefix())
       menu.AppendItem(item)
       menu.Bind(wx.EVT_MENU, self.wx_popupmenu_expand, item)
     else:
-      item = wx.MenuItem(menu, wx.NewId(), "%s: Collapse" % self.path)
+      item = wx.MenuItem(menu, wx.NewId(), "%s: Collapse" % self.wx_prefix())
       menu.AppendItem(item)
       menu.Bind(wx.EVT_MENU, self.wx_popupmenu_collapse, item)
 

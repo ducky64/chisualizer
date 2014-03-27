@@ -1,0 +1,149 @@
+<root>
+<Grid ref="top" label="Top IO">
+	<Cell col="0" row="0">
+		<DataText path=".reset_signal" display="bool"/>
+	</Cell>
+</Grid>
+
+<Grid ref="control">
+</Grid>
+
+<Grid ref="datapath">
+	<Cell col="-2" row="0">
+		<VisualizerRef target="datapath_imem" path=".io_imem"/>
+	</Cell>
+	<Cell col="-1" row="0">
+		<VisualizerRef target="datapath_pc"/>
+	</Cell>
+	<Cell col="0" row="0">
+		<VisualizerRef target="datapath_inst"/>
+	</Cell>
+	<Cell col="1" row="0">
+		<VisualizerRef target="datapath_register"/>
+	</Cell>
+	<Cell col="2" row="0">
+		<VisualizerRef target="datapath_alu"/>
+	</Cell>
+</Grid>
+
+<Grid ref="datapath_imem" label="imem">
+	<Cell col="0" row="0">
+		<DataText path="_req_bits_addr" display="hexadecimal"/>
+	</Cell>
+	<Cell col="0" row="1">
+		<DataText path="_resp_valid" display="bool"/>
+	</Cell>
+	<Cell col="0" row="2">
+		<DataText path="_resp_bits_data" display="hexadecimal"/>
+	</Cell>
+</Grid>
+
+<MappedDisplay ref="PC_sel">
+	<Mapping key="0" text="+4" color="green"/>
+	<Mapping key="1" text="BR" color="yellow"/>
+	<Mapping key="2" text="J" color="yellow"/>
+	<Mapping key="3" text="JR" color="yellow"/>
+	<Mapping key="4" text="EXC" color="cyan"/>
+</MappedDisplay>
+
+<Grid ref="datapath_pc" label="PC">
+	<Cell col="0" row="0">
+		<DataText path=".pc_reg" display="hexadecimal"/>
+	</Cell>
+	<Cell col="0" row="1">
+		<DataText path=".io_ctl_stall" display="bool"/>
+	</Cell>
+	<Cell col="0" row="2">
+		<DataText path=".io_ctl_pc_sel" display="PC_sel"/>
+	</Cell>
+	<Cell col="0" row="3">
+		<DataText path=".pc_next" display="hexadecimal"/>
+	</Cell>
+</Grid>
+
+<Grid ref="datapath_inst" label="Inst">
+	<Cell col="0" row="0">
+		<DataText path=".inst" display="hexadecimal"/>
+	</Cell>
+	<Cell col="0" row="1">
+		<DataText path=".rs1_addr" display="hexadecimal"/>
+	</Cell>
+	<Cell col="0" row="2">
+		<DataText path=".rs2_addr" display="hexadecimal"/>
+	</Cell>
+	<Cell col="0" row="3">
+		<DataText path=".io_ctl_rf_wen" display="bool"/>
+	</Cell>
+	<Cell col="0" row="4">
+		<DataText path=".wb_addr" display="hexadecimal"/>
+	</Cell>
+</Grid>
+
+<Grid ref="datapath_register" label="Registers">
+
+	<Cell col="2" row="0"> <Grid label="data">
+		<Cell col="0" row="0">
+			<DataText path=".rs1_data" display="hexadecimal"/>
+		</Cell>
+		<Cell col="0" row="1">
+			<DataText path=".rs2_data" display="hexadecimal"/>
+		</Cell>
+		<Cell col="0" row="4">
+			<DataText path=".wb_data" display="hexadecimal"/>
+		</Cell>
+	</Grid> </Cell>
+</Grid>
+
+<MappedDisplay ref="ALU_op">
+	<Mapping key="0" text="x" color="grey"/>
+	<Mapping key="1" text="add" color="green"/>
+	<Mapping key="2" text="sub" color="green"/>
+	<Mapping key="3" text="sll" color="green"/>
+	<Mapping key="4" text="srl" color="green"/>
+	<Mapping key="5" text="sra" color="green"/>
+	<Mapping key="6" text="and" color="green"/>
+	<Mapping key="7" text="or" color="green"/>
+	<Mapping key="8" text="xor" color="green"/>
+	<Mapping key="9" text="slt" color="green"/>
+	<Mapping key="10" text="sltu" color="green"/>
+	<Mapping key="11" text="copy2" color="green"/>
+</MappedDisplay>
+
+<Grid ref="datapath_alu" label="ALU">
+	<Cell col="0" row="0"> <Grid label="in">
+		<Cell col="0" row="0">
+			<DataText path=".io_ctl_alu_fun" display="ALU_op"/>
+		</Cell>
+		<Cell col="0" row="1">
+			<DataText path=".alu_op1" display="decimal"/>
+		</Cell>
+		<Cell col="0" row="2">
+			<DataText path=".alu_op2" display="decimal"/>
+		</Cell>
+	</Grid> </Cell>
+	<Cell col="1" row="0">
+		<DataText path=".alu_out" display="decimal"/>
+	</Cell>
+</Grid>
+
+<Grid ref="core">
+	<Cell col="0" row="0">
+		<VisualizerRef target="control" path=".c"/>
+	</Cell>
+	<Cell col="0" row="1">
+		<VisualizerRef target="datapath" path=".d"/>
+	</Cell>
+</Grid>
+
+<Grid ref="Top">
+	<Cell col="0" row="0">
+		<VisualizerRef target="top"/>
+	</Cell>
+	<Cell col="0" row="1">
+		<VisualizerRef target="datapath" path=".tile.core.d"/>
+	</Cell>
+</Grid>
+
+<VisualizerRef target="Top" path="Top"/>
+</root>
+

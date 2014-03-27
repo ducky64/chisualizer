@@ -118,7 +118,7 @@ class ChiselSubprocessEmulatorMemElement:
                                            value))
 
 class ChiselEmulatorSubprocess(ChiselApi):
-  def __init__(self, emulator_path):
+  def __init__(self, emulator_path, reset=True):
     """Starts the emulator subprocess."""
     self.p = subprocess.Popen(emulator_path,
                               stdin=subprocess.PIPE, stdout=subprocess.PIPE,
@@ -129,8 +129,9 @@ class ChiselEmulatorSubprocess(ChiselApi):
     logging.debug("Found wires: %s" % self.wires)
     logging.debug("Found mems: %s" % self.mems)
     
-    self.reset(1)
-    logging.debug("Reset circuit")
+    if reset:
+      self.reset(1)
+      logging.debug("Reset circuit")
 
   def command(self, op, *args):
     """Sends a command to the emulator, and returns the output string."""
@@ -141,13 +142,13 @@ class ChiselEmulatorSubprocess(ChiselApi):
       cmd += ' ' + str(arg)
     if cmd.find('\n') != -1:
       raise ValueError("Command contains unexpected newline: '%s'" % cmd)
-    cmd += "\n"
         
-    self.p.stdin.write(cmd)
+    self.p.stdin.write(cmd + '\n')
     self.p.stdin.flush();
     out = self.p.stdout.readline().strip()
     if out.startswith('error'):
       raise ValueError("Command '%s' returned error: '%s'" % (cmd, out))
+    logging.debug("API: '%s' -> '%s'", cmd, out)
     return out;
 
   def has_node(self, node):
@@ -172,4 +173,3 @@ class ChiselEmulatorSubprocess(ChiselApi):
       return ChiselSubprocessEmulatorMem(self, node)
     else:
       raise NotImplementedError("Unknown node '%s'" % node)
-    

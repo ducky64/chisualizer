@@ -19,12 +19,20 @@ from chisualizer.display import *
 from chisualizer.ChiselEmulatorSubprocess import *
 
 logging.getLogger().setLevel(logging.DEBUG)
-api = ChiselEmulatorSubprocess('../../tests/gcd/emulator/GCD-emulator')
-desc = Base.VisualizerDescriptor('../../tests/gcd/gcd.xml', api)
+#api = ChiselEmulatorSubprocess('../../tests/gcd/emulator/GCD-emulator')
+#desc = Base.VisualizerDescriptor('../../tests/gcd/gcd.xml', api)
+
+api = ChiselEmulatorSubprocess(['../../../riscv-sodor/emulator/rv32_1stage/emulator',
+                                '+max-cycles=30000',
+                                '+api', 
+                                '+loadmem=../../../riscv-sodor/emulator/rv32_1stage/output/riscv-v1_addi.hex'],
+                                #'+loadmem=../../../riscv-sodor/emulator/rv32_1stage/output/riscv-v2_and.hex'],
+                               reset=False)
+desc = Base.VisualizerDescriptor('../../tests/sodor/riscv_1stage.xml', api)
 
 class MyFrame(wx.Frame):
   def __init__(self, parent, title):
-    wx.Frame.__init__(self, parent, title=title, size=(640,480))
+    wx.Frame.__init__(self, parent, title=title, size=(1280,800))
     self.canvas = CairoPanel(self)
     self.Show()
 
@@ -100,11 +108,11 @@ class CairoPanel(wx.Panel):
     # Per-frame elements
     cr = wx.lib.wxcairo.ContextFromDC(dc)
     cr.set_source_rgb(255, 255, 255)
-    cr.select_font_face('Sans',
+    cr.select_font_face('Mono',
                         cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
     cr.set_font_size(10)
     cr.move_to(0, height - 35)
-    cr.show_text("Scale: %.2f" % (self.scale))
+    cr.show_text("Scale: %.2f" % self.scale)
     cr.move_to(0, height - 25)
     cr.show_text("Mouse: %d, %d" % self.mouse)
     cr.move_to(0, height - 15)
@@ -151,7 +159,7 @@ class CairoPanel(wx.Panel):
     
     cr.move_to(0, height - 5)
     cr.set_source_rgb(255, 255, 255)
-    cr.select_font_face('Sans',
+    cr.select_font_face('Mono',
                         cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
     cr.set_font_size(10)
     cr.show_text("Rendered (visualizer): %.2f ms" % (timer*1000))
