@@ -22,59 +22,74 @@ class VisualizerDescriptor(object):
   def __init__(self, filename, api):
     """Initialize this descriptor from a file and given a ChiselApi object."""
     self.api = api
-    self.registry = {}
     self.parse_from_xml(filename)
-
-  def get_ref(self, ref):
-    from chisualizer.display.DisplayBase import display_registry
-    if ref in display_registry:
-      return display_registry[ref]
-    if ref in self.registry:
-      return self.registry[ref]
-    raise NameError("Unknown ref '%s'" % ref)
-    
 
   def parse_from_xml(self, filename):
     """Parse this descriptor from an XML file."""
-    root = etree.parse(filename).getroot()
-    for child in root:
-      elt = Base.from_xml(child, container=self)
-      ref = child.get('ref', None)
-      if ref:
-        if ref not in self.registry:
-          self.registry[ref] = elt
-          logging.debug("Registered '%s'", ref)
-        else:
-          raise NameError("Found object with duplicate ref '%s'", ref)
-    # last element is the one visualized
-    import chisualizer.visualizers.VisualizerBase as VisualizerBase
-    if not isinstance(elt, VisualizerBase.VisualizerBase):
-      raise TypeError("Last element in XML must be Visualizer subtype.")
-    self.visualizer = elt.instantiate(None)
-    self.visualizer.set_chisel_api(self.api)
-    logging.debug("Instantiated visualizer")
+    from chisualizer.visualizers.VisualizerRoot import VisualizerRoot
+    xml_root = etree.parse(filename).getroot()
+    vis_root = VisualizerRoot(self.api)
+    vis_root.parse_children(xml_root)
+    vis_root.instantiate_visualizer()
+    self.visualizer = vis_root
 
   def draw_cairo(self, cr):
     return self.visualizer.layout_and_draw_cairo(cr)
 
+class VisualizerParseError(BaseException):
+  pass
+
 class Base(object):
   """Abstract base class for visualizer descriptor objects."""
+  def parse_warning(self, msg):
+    """Emits a warning message for XML parsing, automatically prepending
+    the class name and reference."""
+    logging.warning("Parsing warning for %s: '%s': %s" % 
+                    (self.__class__.__name__, self.ref, msg))
+  def parse_error(self, msg):
+    """Emits an error message for XML parsing, automatically prepending
+    the class name and reference and throwing an exception"""
+    logging.warning("Parsing ERROR for %s: '%s': %s" % 
+                    (self.__class__.__name__, self.ref, msg))
+    raise VisualizerParseError(msg) 
+    
+  def parse_element_int(self, element, param, default):
+    got = element.get(param, None)
+    if got is None:
+      return default
+    try:
+      return int(got, 0)
+    except ValueError:
+      self.parse_warning("unable to convert %s='%s' to int, default to %s" %
+                         (param, got, default))
+      return default
+    
+  def get_chisel_api(self):
+    """Returns the ChiselApi object used to access node values.
+    Returns None if not available or if this visualizer wasn't properly
+    instantiated."""
+    return self.root.get_chisel_api()
+  
+  def get_ref(self, ref):
+    """Returns the container VisualizerDescriptor object."""
+    return self.root.get_ref(ref)
+    
   @staticmethod
-  def from_xml(element, **kwargs):
+  def from_xml(element, parent):
     assert isinstance(element, etree.Element)
     if element.tag in xml_registry:
-      rtn = xml_registry[element.tag].from_xml_cls(element, **kwargs)
+      rtn = xml_registry[element.tag].from_xml_cls(element, parent)
       logging.debug("Loaded %s: '%s'", rtn.__class__.__name__, rtn.ref)
       return rtn
     else:
       raise NameError("Unknown class '%s'" % element.tag)
       
   @classmethod
-  def from_xml_cls(cls, element, container=None, **kwargs):
+  def from_xml_cls(cls, element, parent):
     """Initializes this descriptor from a XML etree Element."""
     assert isinstance(element, etree.Element)
     new = cls()
-    assert container, "from_xml_cls must have container"
-    new.container = container
+    new.parent = parent
+    new.root = parent.root
     new.ref = element.get('ref', '(anon)')
     return new

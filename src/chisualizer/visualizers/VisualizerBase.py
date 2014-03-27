@@ -51,49 +51,17 @@ class Rectangle:
     else:
       return False 
 
-class VisualizerParseError(BaseException):
-  pass
-
 class VisualizerBase(Base):
   """Abstract base class for Chisel visualizer objects."""
-  def parse_warning(self, msg):
-    """Emits a warning message for XML parsing, automatically prepending
-    the class name and reference."""
-    logging.warning("Parsing warning for %s: '%s': %s" % 
-                    (self.__class__.__name__, self.ref, msg))
-  def parse_error(self, msg):
-    """Emits an error message for XML parsing, automatically prepending
-    the class name and reference and throwing an exception"""
-    logging.warning("Parsing ERROR for %s: '%s': %s" % 
-                    (self.__class__.__name__, self.ref, msg))
-    raise VisualizerParseError(msg) 
-    
-  def parse_element_int(self, element, param, default):
-    got = element.get(param, None)
-    if got is None:
-      return default
-    try:
-      return int(got, 0)
-    except ValueError:
-      self.parse_warning("unable to convert %s='%s' to int, default to %s" %
-                         (param, got, default))
-      return default
-  
   def __init__(self):
     self.collapsed = False
   
   @classmethod
-  def from_xml_cls(cls, element, parent=None, **kwargs):
-    new = super(VisualizerBase, cls).from_xml_cls(element, **kwargs)
-    new.parent = parent
+  def from_xml_cls(cls, element, parent):
+    new = super(VisualizerBase, cls).from_xml_cls(element, parent)
     new.path_component = element.get('path', '')
-    if parent:
-      new.root = parent.root
-      new.path = parent.path + new.path_component
-    else:
-      new.root = new
-      new.path = new.path_component
-    new.api = None
+    new.path = parent.path + new.path_component
+
     new.border_size = new.parse_element_int(element, 'border_size', 1)
     new.border_margin = new.parse_element_int(element, 'border_margin', 6)
     new.label = element.get('label', None)
@@ -109,15 +77,9 @@ class VisualizerBase(Base):
     cloned = self.__class__()
     cloned.parent = new_parent
     cloned.path_component = path_prefix + self.path_component
-    cloned.container = self.container
-    if new_parent:
-      cloned.root = new_parent.root
-      cloned.path = new_parent.path + cloned.path_component
-    else:
-      cloned.root = cloned
-      cloned.path = cloned.path_component
-    cloned.api = None
-    
+    cloned.root = new_parent.root
+    cloned.path = new_parent.path + cloned.path_component
+
     cloned.border_size = self.border_size
     cloned.border_margin = self.border_margin
     cloned.label = self.label
@@ -125,21 +87,7 @@ class VisualizerBase(Base):
     cloned.label_size = self.label_size
     
     return cloned
-  
-  def set_chisel_api(self, api):
-    self.api = api
-  
-  def get_chisel_api(self):
-    """Returns the ChiselApi object used to access node values.
-    Returns None if not available or if this visualizer wasn't properly
-    instantiated."""
-    return self.root.api
-  
-  def layout_and_draw_cairo(self, cr):
-    size_x, size_y = self.layout_cairo(cr)
-    rect = Rectangle((0, 0), (size_x, size_y))
-    return self.draw_cairo(cr, rect, 0)
-  
+    
   def layout_cairo(self, cr):
     """Computes (and stores) the layout for this object when drawing with Cairo.
     Returns a tuple (width, height) of the minimum size of this object.

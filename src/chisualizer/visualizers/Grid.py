@@ -5,10 +5,8 @@ from VisualizerBase import VisualizerBase, Rectangle
 class Grid(VisualizerBase):
   """Grid containing other visualizers."""
   @classmethod
-  def from_xml_cls(cls, element, **kwargs):
-    assert 'container' in kwargs
-    
-    new = super(Grid, cls).from_xml_cls(element, **kwargs)
+  def from_xml_cls(cls, element, parent):
+    new = super(Grid, cls).from_xml_cls(element, parent)
     new.cells = {}  # mapping of (x_col, y_row) to VisualizerBase-derived object
     for child_cell in element:
       if child_cell.tag != "Cell":
@@ -20,7 +18,7 @@ class Grid(VisualizerBase):
       x_col = int(x_col)
       y_row = int(y_row)
       for child_vis in child_cell:
-        vis = Base.Base.from_xml(child_vis, container=kwargs['container'])
+        vis = Base.Base.from_xml(child_vis, parent=new)
         if (x_col, y_row) in new.cells:
           new.parse_warning("duplicate cell in (%s, %s), overwriting" %
                             (x_col, y_row))

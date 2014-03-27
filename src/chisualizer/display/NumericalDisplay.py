@@ -20,7 +20,7 @@ class NumericalDisplay(DisplayBase):
     self.charmap = charmap
   
   @classmethod
-  def from_xml(cls, element, **kwargs):
+  def from_xml_cls(cls, element, parent):
     # TODO IMPLEMENT ME
     raise NotImplementedError()
   

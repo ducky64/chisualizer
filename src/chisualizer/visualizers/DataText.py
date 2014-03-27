@@ -11,10 +11,10 @@ from Data import Data
 class DataText(Data):
   """Visualizer for data represented as text."""
   @classmethod
-  def from_xml_cls(cls, element, **kwargs):
-    new = super(DataText, cls).from_xml_cls(element, **kwargs)
+  def from_xml_cls(cls, element, parent):
+    new = super(DataText, cls).from_xml_cls(element, parent)
     display_ref = element.get('display', 'hexadecimal')
-    new.display = new.container.get_ref(display_ref)
+    new.display = new.get_ref(display_ref)
     
     new.display_size = new.parse_element_int(element, 'display_size', 14)
     new.display_font = element.get('display_font', 'Mono')

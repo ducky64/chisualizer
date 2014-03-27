@@ -29,8 +29,8 @@ class MappedDisplay(DisplayBase):
                     color_str, self.__class__.__name__, self.ref)
     
   @classmethod
-  def from_xml_cls(cls, element, **kwargs):
-    new = super(MappedDisplay, cls).from_xml_cls(element, **kwargs)
+  def from_xml_cls(cls, element, parent):
+    new = super(MappedDisplay, cls).from_xml_cls(element, parent)
     new.mappings = {}
     for child in element:
       if child.tag != 'Mapping':
