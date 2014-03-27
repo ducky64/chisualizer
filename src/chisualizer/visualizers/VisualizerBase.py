@@ -51,9 +51,23 @@ class Rectangle:
     else:
       return False 
 
+class VisualizerParseError(BaseException):
+  pass
+
 class VisualizerBase(Base):
   """Abstract base class for Chisel visualizer objects."""
-  
+  def parse_warning(self, msg):
+    """Emits a warning message for XML parsing, automatically prepending
+    the class name and reference."""
+    logging.warning("Parsing warning for %s: '%s': %s" % 
+                    (self.__class__.__name__, self.ref, msg))
+  def parse_error(self, msg):
+    """Emits an error message for XML parsing, automatically prepending
+    the class name and reference and throwing an exception"""
+    logging.warning("Parsing ERROR for %s: '%s': %s" % 
+                    (self.__class__.__name__, self.ref, msg))
+    raise VisualizerParseError(msg) 
+    
   def parse_element_int(self, element, param, default):
     got = element.get(param, None)
     if got is None:
@@ -61,8 +75,8 @@ class VisualizerBase(Base):
     try:
       return int(got, 0)
     except ValueError:
-      logging.error("Unable to parse %s='%s' into integer in %s: '%s'",
-                    param, got, self.__class__.__name__, self.ref)
+      self.parse_warning("unable to convert %s='%s' to int, default to %s" %
+                         (param, got, default))
       return default
   
   def __init__(self):

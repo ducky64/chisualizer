@@ -18,7 +18,7 @@ from chisualizer.visualizers import *
 from chisualizer.display import *
 from chisualizer.ChiselEmulatorSubprocess import *
 
-logging.getLogger().setLevel(logging.DEBUG)
+logging.getLogger().setLevel(logging.INFO)
 #api = ChiselEmulatorSubprocess('../../tests/gcd/emulator/GCD-emulator')
 #desc = Base.VisualizerDescriptor('../../tests/gcd/gcd.xml', api)
 

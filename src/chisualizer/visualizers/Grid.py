@@ -12,15 +12,18 @@ class Grid(VisualizerBase):
     new.cells = {}  # mapping of (x_col, y_row) to VisualizerBase-derived object
     for child_cell in element:
       if child_cell.tag != "Cell":
-        raise TypeError("Grid children must be Cell, got '%s'" % child_cell.tag)
+        new.parse_error("Grid children must be 'Cell', got '%s'" % child_cell.tag)
       x_col = child_cell.get('col', None)
       y_row = child_cell.get('row', None)
-      if x_col is None or y_row is None:
-        raise ValueError("Grid Cell must specify both x and y positions")
+      if x_col is None: new.parse_error("cell missing col (x) position")
+      if y_row is None: new.parse_error("cell missing row (y) position")
       x_col = int(x_col)
       y_row = int(y_row)
       for child_vis in child_cell:
         vis = Base.Base.from_xml(child_vis, container=kwargs['container'])
+        if (x_col, y_row) in new.cells:
+          new.parse_warning("duplicate cell in (%s, %s), overwriting" %
+                            (x_col, y_row))
         new.cells[(x_col, y_row)] = vis
     
     new.x_col_sizes = {}

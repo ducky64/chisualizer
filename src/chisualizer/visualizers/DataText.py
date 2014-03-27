@@ -4,7 +4,6 @@ import cairo
 import wx
 
 import chisualizer.Base as Base
-import chisualizer.display.DisplayBase as DisplayBase
 
 from Data import Data
 
@@ -78,7 +77,7 @@ class DataText(Data):
                         cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
     cr.set_font_size(self.display_size)
     for text in texts:
-      _, _, text_width, text_height, _, _ = cr.text_extents(text)
+      _, _, text_width, _, _, _ = cr.text_extents(text)
       self.text_max_width = max(self.text_max_width, text_width)
     _, _, _, self.text_max_height, _, _ = cr.text_extents('X')
     return (self.text_max_width, self.text_max_height)
