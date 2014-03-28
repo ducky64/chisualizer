@@ -18,8 +18,7 @@ class DataText(Data):
     
     new.display_size = new.parse_element_int(element, 'display_size', 14)
     new.display_font = element.get('display_font', 'Mono')
-    
-    new.node = None
+
     return new
   
   def instantiate(self, new_parent):
@@ -27,19 +26,7 @@ class DataText(Data):
     cloned.display = self.display
     cloned.display_size = self.display_size
     cloned.display_font = self.display_font
-    cloned.node = None
     return cloned
-
-  def get_node(self):
-    """Returns the Chisel API node reference object for this visualizer's target
-    node.
-    self.node is lazy-initialized because the API is not ready at instantiation
-    time.
-    TODO: FIX THIS DIRTY HACK
-    """
-    if not self.node:
-      self.node = self.get_chisel_api().get_node_reference(self.path)
-    return self.node    
 
   def draw_element_cairo(self, cr, rect, depth):
     cr.set_source_rgb(1, 1, 1)
@@ -48,7 +35,7 @@ class DataText(Data):
                         cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
     cr.set_font_size(self.display_size)
     
-    modifiers = self.display.apply(self.get_node())
+    modifiers = self.display.apply(self.node)
     if 'text' in modifiers:
       text = modifiers['text']
       del modifiers['text']
@@ -70,7 +57,7 @@ class DataText(Data):
     return []
   
   def layout_element_cairo(self, cr):
-    texts = self.display.get_longest_text(self.get_node())
+    texts = self.display.get_longest_text(self.node)
     self.text_max_width = 0
     cr.set_line_width (1)
     cr.select_font_face(self.display_font,
@@ -93,7 +80,7 @@ class DataText(Data):
     
   def wx_popupmenu_set(self, evt):
     curr_value = ""
-    modifiers = self.display.apply(self.get_node())
+    modifiers = self.display.apply(self.node)
     if 'text' in modifiers:
       curr_value = modifiers['text']
       
@@ -103,7 +90,7 @@ class DataText(Data):
       if ret != wx.ID_OK:
         return
       curr_value = dlg.GetValue()
-      if self.display.set_from_text(self.get_node(), curr_value):
+      if self.display.set_from_text(self.node, curr_value):
         logging.info("Set '%s' to '%s'" % (self.path, curr_value))
         return
     

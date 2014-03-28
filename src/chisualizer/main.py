@@ -19,7 +19,8 @@ from chisualizer.display import *
 from chisualizer.ChiselEmulatorSubprocess import *
 
 logging.getLogger().setLevel(logging.INFO)
-TARGET="GCD"
+#TARGET="GCD"
+TARGET="rv1s"
 
 if TARGET=="GCD":
   api = ChiselEmulatorSubprocess('../../tests/gcd/emulator/GCD-emulator')
