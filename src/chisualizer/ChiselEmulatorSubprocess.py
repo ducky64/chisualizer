@@ -55,24 +55,24 @@ class ChiselSubprocessEmulatorWire:
     raise ValueError("Cannot get child of wire")
 
 class ChiselSubprocessEmulatorMem:
-  def __init__(self, api, node_path):
+  def __init__(self, api, array_path):
     assert isinstance(api, ChiselEmulatorSubprocess)
-    assert api.has_node(node_path)
+    assert api.has_node(array_path)
     self.api = api
-    self.node_path = node_path
+    self.array_path = array_path
     self.depth = self.get_depth()
     
   def __str__(self):
-    return "%s: %s" % (self.__class__.__name__, self.node_path)
+    return "%s: %s" % (self.__class__.__name__, self.array_path)
 
   def get_type(self):
     raise NotImplementedError("Memory types not yet implemented")
 
   def get_width(self):
-    return result_to_int(self.api.command('mem_width', self.node_path))
+    return result_to_int(self.api.command('mem_width', self.array_path))
   
   def get_depth(self):
-    return result_to_int(self.api.command('mem_depth', self.node_path))
+    return result_to_int(self.api.command('mem_depth', self.array_path))
   
   def get_value(self):
     raise ValueError("Cannot peek entire memory array")

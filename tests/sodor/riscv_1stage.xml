@@ -80,7 +80,11 @@
 </Grid>
 
 <Grid ref="datapath_register" label="Registers">
-
+	<Cell col="1" row="0">
+		<MemoryArray path=".regfile" cols='4' rows='8'>
+			<DataText display="hexadecimal"/>
+		</MemoryArray>
+	</Cell>
 	<Cell col="2" row="0"> <Grid label="data">
 		<Cell col="0" row="0">
 			<DataText path=".rs1_data" display="hexadecimal"/>

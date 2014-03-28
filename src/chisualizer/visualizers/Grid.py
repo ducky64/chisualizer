@@ -72,3 +72,4 @@ class Grid(VisualizerBase):
         pos_x += x_size
       pos_y += y_size
     return elements
+  
