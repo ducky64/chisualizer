@@ -23,7 +23,7 @@ class MemoryArray(Data):
     if not new.cell:
       new.parse_error("MemoryArray missing cell")
 
-    new.cells = []  # list of rows of cells (each element is a list of cells)
+    new.cells = []  # list of cols of cells (each element is a list of cells)
 
     return new
   
@@ -84,8 +84,7 @@ class MemoryArray(Data):
     pos_x = origin_x
     pos_y = origin_y
     elements = []
-    
-    #TODO consistent rows/cols with instantiation
+
     for x_col_ary in self.cells:
       pos_y = origin_y
       for cell in x_col_ary:
