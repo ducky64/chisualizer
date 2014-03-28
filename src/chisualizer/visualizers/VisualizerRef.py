@@ -17,19 +17,9 @@ class VisualizerRef(VisualizerBase):
     resolving all references. Acts as clone (to a new parent) if called by an
     already-instantiated object.
     """
-    cloned = super(VisualizerRef, self).instantiate(new_parent)
-    
     target_obj = self.get_ref(self.target)
+    target_obj.path_component = self.path_component + target_obj.path_component
     if not isinstance(target_obj, VisualizerBase):
       raise ValueError("VisualizerRef does not point to VisualizerBase-derived object: ref '%s'" % self.ref)
     
-    cloned.target = target_obj.instantiate(cloned)
-    
-    return cloned
-
-  def layout_element_cairo(self, cr):
-    return self.target.layout_element_cairo(cr)
-  
-  def draw_element_cairo(self, cr, rect, depth):
-    return self.target.draw_element_cairo(cr, rect, depth)
-  
+    return target_obj.instantiate(new_parent)
