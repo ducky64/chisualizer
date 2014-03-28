@@ -81,7 +81,7 @@
 
 <Grid ref="datapath_register" label="Registers">
 	<Cell col="1" row="0">
-		<MemoryArray path=".regfile" cols='4' rows='8'>
+		<MemoryArray path=".regfile" offset='3' cols='4' rows='8' step='row'>
 			<DataText display="hexadecimal"/>
 		</MemoryArray>
 	</Cell>
