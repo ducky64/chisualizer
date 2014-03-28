@@ -1,42 +1,24 @@
 <root>
-<Grid ref="top" label="Top IO">
-	<Cell col="0" row="0">
-		<DataText path=".reset_signal" display="bool"/>
-	</Cell>
-</Grid>
+<AutoGrid ref="top" label="Top IO" step='row'>
+	<DataText path=".reset_signal" display="bool"/>
+</AutoGrid>
 
-<Grid ref="control">
-</Grid>
+<AutoGrid ref="control" step='row'>
+</AutoGrid>
 
-<Grid ref="datapath">
-	<Cell col="-2" row="0">
-		<VisualizerRef target="datapath_imem" path=".io_imem"/>
-	</Cell>
-	<Cell col="-1" row="0">
-		<VisualizerRef target="datapath_pc"/>
-	</Cell>
-	<Cell col="0" row="0">
-		<VisualizerRef target="datapath_inst"/>
-	</Cell>
-	<Cell col="1" row="0">
-		<VisualizerRef target="datapath_register"/>
-	</Cell>
-	<Cell col="2" row="0">
-		<VisualizerRef target="datapath_alu"/>
-	</Cell>
-</Grid>
+<AutoGrid ref="datapath" step='row'>
+	<VisualizerRef target="datapath_imem" path=".io_imem"/>
+	<VisualizerRef target="datapath_pc"/>
+	<VisualizerRef target="datapath_inst"/>
+	<VisualizerRef target="datapath_register"/>
+	<VisualizerRef target="datapath_alu"/>
+</AutoGrid>
 
-<Grid ref="datapath_imem" label="imem">
-	<Cell col="0" row="0">
-		<DataText path="_req_bits_addr" display="hexadecimal"/>
-	</Cell>
-	<Cell col="0" row="1">
-		<DataText path="_resp_valid" display="bool"/>
-	</Cell>
-	<Cell col="0" row="2">
-		<DataText path="_resp_bits_data" display="hexadecimal"/>
-	</Cell>
-</Grid>
+<AutoGrid ref="datapath_imem" label="imem" step='col'>
+	<DataText path="_req_bits_addr" display="hexadecimal"/>
+	<DataText path="_resp_valid" display="bool"/>
+	<DataText path="_resp_bits_data" display="hexadecimal"/>
+</AutoGrid>
 
 <MappedDisplay ref="PC_sel">
 	<Mapping key="0" text="+4" color="green"/>
@@ -46,57 +28,30 @@
 	<Mapping key="4" text="EXC" color="cyan"/>
 </MappedDisplay>
 
-<Grid ref="datapath_pc" label="PC">
-	<Cell col="0" row="0">
-		<DataText path=".pc_reg" display="hexadecimal"/>
-	</Cell>
-	<Cell col="0" row="1">
-		<DataText path=".io_ctl_stall" display="bool"/>
-	</Cell>
-	<Cell col="0" row="2">
-		<DataText path=".io_ctl_pc_sel" display="PC_sel"/>
-	</Cell>
-	<Cell col="0" row="3">
-		<DataText path=".pc_next" display="hexadecimal"/>
-	</Cell>
-</Grid>
+<AutoGrid ref="datapath_pc" label="PC" step='col'>
+	<DataText path=".pc_reg" display="hexadecimal"/>
+	<DataText path=".io_ctl_stall" display="bool"/>
+	<DataText path=".io_ctl_pc_sel" display="PC_sel"/>
+	<DataText path=".pc_next" display="hexadecimal"/>
+</AutoGrid>
 
-<Grid ref="datapath_inst" label="Inst">
-	<Cell col="0" row="0">
-		<DataText path=".inst" display="hexadecimal"/>
-	</Cell>
-	<Cell col="0" row="1">
-		<DataText path=".rs1_addr" display="hexadecimal"/>
-	</Cell>
-	<Cell col="0" row="2">
-		<DataText path=".rs2_addr" display="hexadecimal"/>
-	</Cell>
-	<Cell col="0" row="3">
-		<DataText path=".io_ctl_rf_wen" display="bool"/>
-	</Cell>
-	<Cell col="0" row="4">
-		<DataText path=".wb_addr" display="hexadecimal"/>
-	</Cell>
-</Grid>
+<AutoGrid ref="datapath_inst" label="Inst" step='col'>
+	<DataText path=".inst" display="hexadecimal"/>
+	<DataText path=".rs1_addr" display="hexadecimal"/>
+	<DataText path=".rs2_addr" display="hexadecimal"/>
+	<DataText path=".io_ctl_rf_wen" display="bool"/>
+	<DataText path=".wb_addr" display="hexadecimal"/>
+</AutoGrid>
 
-<Grid ref="datapath_register" label="Registers">
-	<Cell col="1" row="0">
-		<MemoryArray path=".regfile" offset='3' cols='4' rows='8' step='row'>
-			<DataText display="hexadecimal"/>
-		</MemoryArray>
-	</Cell>
-	<Cell col="2" row="0"> <Grid label="data">
-		<Cell col="0" row="0">
-			<DataText path=".rs1_data" display="hexadecimal"/>
-		</Cell>
-		<Cell col="0" row="1">
-			<DataText path=".rs2_data" display="hexadecimal"/>
-		</Cell>
-		<Cell col="0" row="4">
-			<DataText path=".wb_data" display="hexadecimal"/>
-		</Cell>
-	</Grid> </Cell>
-</Grid>
+<AutoGrid ref="datapath_register" label="Registers" step='col'>
+	<MemoryArray path=".regfile" offset='3' cols='4' rows='8' step='row'>
+		<DataText display="hexadecimal"/>
+	</MemoryArray>
+	<Break/>
+	<DataText path=".rs1_data" display="hexadecimal"/>
+	<DataText path=".rs2_data" display="hexadecimal"/>
+	<DataText path=".wb_data" display="hexadecimal"/>
+</AutoGrid>
 
 <MappedDisplay ref="ALU_op">
 	<Mapping key="0" text="x" color="grey"/>
@@ -113,40 +68,23 @@
 	<Mapping key="11" text="copy2" color="green"/>
 </MappedDisplay>
 
-<Grid ref="datapath_alu" label="ALU">
-	<Cell col="0" row="0"> <Grid label="in">
-		<Cell col="0" row="0">
-			<DataText path=".io_ctl_alu_fun" display="ALU_op"/>
-		</Cell>
-		<Cell col="0" row="1">
-			<DataText path=".alu_op1" display="decimal"/>
-		</Cell>
-		<Cell col="0" row="2">
-			<DataText path=".alu_op2" display="decimal"/>
-		</Cell>
-	</Grid> </Cell>
-	<Cell col="1" row="0">
-		<DataText path=".alu_out" display="decimal"/>
-	</Cell>
-</Grid>
+<AutoGrid ref="datapath_alu" label="ALU" step='col'>
+	<DataText path=".io_ctl_alu_fun" display="ALU_op"/>
+	<DataText path=".alu_op1" display="decimal"/>
+	<DataText path=".alu_op2" display="decimal"/>
+	<Break/>
+	<DataText path=".alu_out" display="decimal"/>
+</AutoGrid>
 
-<Grid ref="core">
-	<Cell col="0" row="0">
-		<VisualizerRef target="control" path=".c"/>
-	</Cell>
-	<Cell col="0" row="1">
-		<VisualizerRef target="datapath" path=".d"/>
-	</Cell>
-</Grid>
+<AutoGrid ref="core" step='col'>
+	<VisualizerRef target="control" path=".c"/>
+	<VisualizerRef target="datapath" path=".d"/>
+</AutoGrid>
 
-<Grid ref="Top">
-	<Cell col="0" row="0">
-		<VisualizerRef target="top"/>
-	</Cell>
-	<Cell col="0" row="1">
-		<VisualizerRef target="datapath" path=".tile.core.d"/>
-	</Cell>
-</Grid>
+<AutoGrid ref="Top" step='col'>
+	<VisualizerRef target="top"/>
+	<VisualizerRef target="datapath" path=".tile.core.d"/>
+</AutoGrid>
 
 <VisualizerRef target="Top" path="Top"/>
 </root>
