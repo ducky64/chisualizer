@@ -19,17 +19,22 @@ from chisualizer.display import *
 from chisualizer.ChiselEmulatorSubprocess import *
 
 logging.getLogger().setLevel(logging.INFO)
-#api = ChiselEmulatorSubprocess('../../tests/gcd/emulator/GCD-emulator')
-#desc = Base.VisualizerDescriptor('../../tests/gcd/gcd.xml', api)
+TARGET="GCD"
 
-api = ChiselEmulatorSubprocess(['../../../riscv-sodor/emulator/rv32_1stage/emulator',
-                                '+max-cycles=30000',
-                                '+api', 
-                                '+loadmem=../../../riscv-sodor/emulator/rv32_1stage/output/riscv-v1_addi.hex'],
-                                #'+loadmem=../../../riscv-sodor/emulator/rv32_1stage/output/riscv-v2_and.hex'],
-                               reset=False)
-desc = Base.VisualizerDescriptor('../../tests/sodor/riscv_1stage.xml', api)
-
+if TARGET=="GCD":
+  api = ChiselEmulatorSubprocess('../../tests/gcd/emulator/GCD-emulator')
+  desc = Base.VisualizerDescriptor('../../tests/gcd/gcd.xml', api)
+elif TARGET=="rv1s":
+  api = ChiselEmulatorSubprocess(['../../../riscv-sodor/emulator/rv32_1stage/emulator',
+                                  '+max-cycles=30000',
+                                  '+api', 
+                                  '+loadmem=../../../riscv-sodor/emulator/rv32_1stage/output/riscv-v1_addi.hex'],
+                                  #'+loadmem=../../../riscv-sodor/emulator/rv32_1stage/output/riscv-v2_and.hex'],
+                                 reset=False)
+  desc = Base.VisualizerDescriptor('../../tests/sodor/riscv_1stage.xml', api)
+else:
+  raise ValueError("No visualization TARGET")
+  
 class MyFrame(wx.Frame):
   def __init__(self, parent, title):
     wx.Frame.__init__(self, parent, title=title, size=(1280,800))

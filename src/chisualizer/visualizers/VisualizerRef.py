@@ -12,19 +12,24 @@ class VisualizerRef(VisualizerBase):
       raise ValueError("VisualizerRef must have 'target' attribute") 
     return new
   
-  def instantiate(self, new_parent, **kwargs):
+  def instantiate(self, new_parent):
     """Instantiates this visualizer template by cloning the template and
     resolving all references. Acts as clone (to a new parent) if called by an
     already-instantiated object.
     """
+    cloned = super(VisualizerRef, self).instantiate(new_parent)
+    
     target_obj = self.get_ref(self.target)
     if not isinstance(target_obj, VisualizerBase):
       raise ValueError("VisualizerRef does not point to VisualizerBase-derived object: ref '%s'" % self.ref)
     
-    path_prefix = self.path
-    if 'path_prefix' in kwargs:
-      path_prefix = self.path + kwargs['path_prefix']
+    cloned.target = target_obj.instantiate(cloned)
     
-    new_obj = target_obj.instantiate(new_parent, path_prefix=path_prefix, **kwargs)
-    
-    return new_obj
+    return cloned
+
+  def layout_element_cairo(self, cr):
+    return self.target.layout_element_cairo(cr)
+  
+  def draw_element_cairo(self, cr, rect, depth):
+    return self.target.draw_element_cairo(cr, rect, depth)
+  

@@ -69,14 +69,14 @@ class VisualizerBase(Base):
     new.label_font = element.get('label_font', 'Mono')
     return new
   
-  def instantiate(self, new_parent, path_prefix=''):
+  def instantiate(self, new_parent):
     """Instantiates this visualizer template by cloning the template and
     resolving all references. Acts as clone (to a new parent) if called by an
     already-instantiated object.
     """
     cloned = self.__class__()
     cloned.parent = new_parent
-    cloned.path_component = path_prefix + self.path_component
+    cloned.path_component = self.path_component
     cloned.root = new_parent.root
     cloned.path = new_parent.path + cloned.path_component
 

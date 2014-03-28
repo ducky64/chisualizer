@@ -22,8 +22,8 @@ class DataText(Data):
     new.node = None
     return new
   
-  def instantiate(self, new_parent, **kwargs):
-    cloned = super(DataText, self).instantiate(new_parent, **kwargs)
+  def instantiate(self, new_parent):
+    cloned = super(DataText, self).instantiate(new_parent)
     cloned.display = self.display
     cloned.display_size = self.display_size
     cloned.display_font = self.display_font

@@ -29,8 +29,8 @@ class Grid(VisualizerBase):
     
     return new
   
-  def instantiate(self, new_parent, **kwargs):
-    cloned = super(Grid, self).instantiate(new_parent, **kwargs)
+  def instantiate(self, new_parent):
+    cloned = super(Grid, self).instantiate(new_parent)
     cloned.cells = {}
     for coords, vis in self.cells.iteritems():
       cloned.cells[coords] = vis.instantiate(cloned)
