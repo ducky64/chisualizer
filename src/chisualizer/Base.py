@@ -1,5 +1,7 @@
-import xml.etree.ElementTree as etree
 import logging
+import xml.etree.ElementTree as etree
+
+from chisualizer.util import Rectangle
 
 # a registry of all visualization descriptors which can be instantiated
 # indexed by name which it can be instantiated under.
@@ -31,10 +33,15 @@ class VisualizerDescriptor(object):
     vis_root = VisualizerRoot(self.api)
     vis_root.parse_children(xml_root)
     vis_root.instantiate_visualizer()
-    self.visualizer = vis_root
+    self.vis_root = vis_root
+    self.visualizer = vis_root.visualizer
 
-  def draw_cairo(self, cr):
-    return self.visualizer.layout_and_draw_cairo(cr)
+  def layout_cairo(self, cr):
+    size_x, size_y = self.visualizer.layout_cairo(cr)
+    return Rectangle((0, 0), (size_x, size_y))
+  
+  def draw_cairo(self, cr, rect):
+    return self.visualizer.draw_cairo(cr, rect, 0)
 
 class VisualizerParseError(BaseException):
   pass

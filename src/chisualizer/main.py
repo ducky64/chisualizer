@@ -158,9 +158,15 @@ class CairoPanel(wx.Panel):
     cr.translate(0.5, 0.5)
     cr.save()
     cr.scale(self.scale, self.scale)
-    timer = time.time()
-    self.elements = desc.draw_cairo(cr)
-    timer = time.time() - timer
+    
+    timer_lay = time.time()
+    layout = desc.layout_cairo(cr)
+    timer_lay = time.time() - timer_lay
+    
+    timer_draw = time.time()
+    self.elements = desc.draw_cairo(cr, layout)
+    timer_draw = time.time() - timer_draw
+    
     cr.restore()
     
     cr.move_to(0, height - 5)
@@ -168,7 +174,8 @@ class CairoPanel(wx.Panel):
     cr.select_font_face('Mono',
                         cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
     cr.set_font_size(10)
-    cr.show_text("Rendered (visualizer): %.2f ms" % (timer*1000))
+    cr.show_text("Render: (layout) %.2f ms (draw) %.2f ms" %
+                 (timer_lay*1000, timer_draw*1000))
 
     return dc
     

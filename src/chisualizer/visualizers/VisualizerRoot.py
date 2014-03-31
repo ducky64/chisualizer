@@ -1,12 +1,6 @@
 import logging
-import string
 
 from chisualizer.Base import Base
-from chisualizer.visualizers.VisualizerBase import VisualizerBase, Rectangle
-
-import cairo
-
-import wx
 
 class VisualizerRoot(Base):
   """Visualizer Root, maintains data structures to interface between the
@@ -51,9 +45,4 @@ class VisualizerRoot(Base):
   
   def get_chisel_api(self):
     return self.chisel_api
-  
-  def layout_and_draw_cairo(self, cr):
-    size_x, size_y = self.visualizer.layout_cairo(cr)
-    rect = Rectangle((0, 0), (size_x, size_y))
-    return self.visualizer.draw_cairo(cr, rect, 0)
   
