@@ -47,6 +47,8 @@ class MemoryArray(Data):
     def inst_cell(num):
         inst = cell.instantiate(self)
         inst.set_node(self.node.get_subscript_reference(num))
+        inst.path_component = inst.path_component + "[%i]" % num
+        inst.path = inst.path + "[%i]" % num
         if inst.label is None: inst.label = str(num)
         return inst      
       

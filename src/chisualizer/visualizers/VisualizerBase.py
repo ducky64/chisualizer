@@ -102,9 +102,9 @@ class VisualizerBase(Base):
                         cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
     cr.set_font_size(self.label_size)
     if self.label is None:
-      _, _, self.label_width, _, _, _ = cr.text_extents(string.strip(self.path_component, "_. "))
+      _, _, _, _, self.label_width, _ = cr.text_extents(string.strip(self.path_component, "_. "))
     else:
-      _, _, self.label_width, _, _, _ = cr.text_extents(self.label)
+      _, _, _, _, self.label_width, _ = cr.text_extents(self.label)
     _, _, _, self.label_height, _, _ = cr.text_extents('X')
     
     width = max(self.element_width, self.label_width)

@@ -7,14 +7,13 @@
 </AutoGrid>
 
 <AutoGrid ref="datapath" step='row'>
-	<VisualizerRef target="datapath_imem" path=".io_imem"/>
 	<VisualizerRef target="datapath_pc"/>
 	<VisualizerRef target="datapath_inst"/>
 	<VisualizerRef target="datapath_register"/>
 	<VisualizerRef target="datapath_alu"/>
 </AutoGrid>
 
-<AutoGrid ref="datapath_imem" label="imem" step='col'>
+-<AutoGrid ref="datapath_imem" label="imem" step='col'>
 	<DataText path="_req_bits_addr" display="hexadecimal"/>
 	<DataText path="_resp_valid" display="bool"/>
 	<DataText path="_resp_bits_data" display="hexadecimal"/>
@@ -44,7 +43,7 @@
 </AutoGrid>
 
 <AutoGrid ref="datapath_register" label="Registers" step='col'>
-	<MemoryArray path=".regfile" offset='3' cols='4' rows='8' step='row'>
+	<MemoryArray path=".regfile" cols='4' rows='8' step='row'>
 		<DataText display="hexadecimal"/>
 	</MemoryArray>
 	<Break/>
