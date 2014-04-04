@@ -166,13 +166,13 @@ class ChiselEmulatorSubprocess(ChiselApi):
     out = []
     out.extend(self.wires)
     out.extend(self.mems)
-    raise NotImplementedError
+    return out
   
   def reset(self, cycles):
-    self.command("reset", cycles)
+    return result_to_int(self.command("reset", cycles))
   
   def clock(self, cycles):
-    self.command("clock", cycles)
+    return result_to_int(self.command("clock", cycles))
   
   def get_node_reference(self, node):
     if node in self.wires:

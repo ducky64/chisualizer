@@ -20,8 +20,8 @@ from chisualizer.ChiselEmulatorSubprocess import *
 
 logging.getLogger().setLevel(logging.INFO)
 #logging.getLogger().setLevel(logging.DEBUG)
-#TARGET="GCD"
-TARGET="rv1s"
+TARGET="GCD"
+#TARGET="rv1s"
 
 if TARGET=="GCD":
   api = ChiselEmulatorSubprocess('../../tests/gcd/emulator/emulator')
@@ -60,6 +60,7 @@ class CairoPanel(wx.Panel):
     self.elements = []
     
     self.cycle = 0
+    self.snapshots = []
 
   def OnChar(self, evt):
     char = evt.GetKeyCode()
@@ -67,21 +68,41 @@ class CairoPanel(wx.Panel):
       logging.info("Reset circuit")
       api.reset(1)
       self.cycle = 0
+      self.snapshots = []
       self.need_visualizer_refresh = True
       
     elif char == wx.WXK_RIGHT:
       logging.info("Clock circuit")
       api.snapshot_save(str(self.cycle))
-      api.clock(1)
-      self.cycle += 1
+      self.snapshots.append(self.cycle)
+      self.cycle += api.clock(1)
       self.need_visualizer_refresh = True
       
     elif char == wx.WXK_LEFT:
       logging.info("Revert circuit")
-      if self.cycle > 0:
-        self.cycle -= 1
+      if self.snapshots:
+        self.cycle = self.snapshots.pop()
         api.snapshot_restore(str(self.cycle))
         self.need_visualizer_refresh = True
+    
+    elif char == ord('s'):
+      logging.info("Clock circuit")
+      cur_val = -1
+      dlg = wx.TextEntryDialog(None, 'Step', 'Cycles to step', "1")
+      while cur_val < 1:
+        ret = dlg.ShowModal()
+        if ret != wx.ID_OK:
+          return
+        dlg_val = dlg.GetValue()
+        try:
+          cur_val = int(dlg_val)
+        except:
+          pass
+        
+      api.snapshot_save(str(self.cycle))
+      self.snapshots.append(self.cycle)
+      self.cycle += api.clock(cur_val)
+      self.need_visualizer_refresh = True
       
     self.Refresh()
 
