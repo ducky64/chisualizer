@@ -71,3 +71,15 @@ class ChiselApi:
     speed (and more convenient format) due to referencing."""
     raise NotImplementedError
   
+  def snapshot_save(self, name):
+    """Saves a snapshot of the current state under name"""
+    raise NotImplementedError
+  
+  def snapshot_restore(self, name):
+    """Restores a previously saved snapshot under name to the current state.
+    Raises an exception if not successful."""
+    raise NotImplementedError
+  
+  def close(self):
+    """Quits the emulator."""
+    raise NotImplementedError

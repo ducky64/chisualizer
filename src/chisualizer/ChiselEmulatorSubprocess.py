@@ -23,6 +23,12 @@ def result_to_bool(res):
   else:
     raise ValueError("Expected int, got '%s'" % res)
 
+def result_ok(res):
+  if res == "ok":
+    return True
+  else:
+    return False
+
 class ChiselSubprocessEmulatorWire:
   def __init__(self, api, node_path):
     assert isinstance(api, ChiselEmulatorSubprocess)
@@ -46,7 +52,8 @@ class ChiselSubprocessEmulatorWire:
     return result_to_int(self.api.command('wire_peek', self.node_path))
 
   def set_value(self, value):
-    return result_to_bool(self.api.command('wire_poke', self.node_path, value))
+    return (result_ok(self.api.command('wire_poke', self.node_path, value))
+        and result_ok(self.api.command('propagate')))
 
   def get_subscript_reference(self, subscript):
     raise NotImplementedError("Wire subscripting not yet implemented")
@@ -113,10 +120,11 @@ class ChiselSubprocessEmulatorMemElement:
                                           self.array_path, self.element_num))
 
   def set_value(self, value):
-    return result_to_bool(self.api.command('mem_poke',
+    return (result_ok(self.api.command('mem_poke',
                                            self.array_path, self.element_num,
                                            value))
-
+        and result_ok(self.api.command('propagate')))
+        
 class ChiselEmulatorSubprocess(ChiselApi):
   def __init__(self, emulator_path, reset=True):
     """Starts the emulator subprocess."""
@@ -173,3 +181,13 @@ class ChiselEmulatorSubprocess(ChiselApi):
       return ChiselSubprocessEmulatorMem(self, node)
     else:
       raise NotImplementedError("Unknown node '%s'" % node)
+
+  def snapshot_save(self, name):
+    self.command("referenced_snapshot_save", name)
+  
+  def snapshot_restore(self, name):
+    self.command("referenced_snapshot_restore", name)
+    
+  def close(self):
+    self.command("quit")
+    

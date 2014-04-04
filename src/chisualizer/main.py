@@ -19,11 +19,12 @@ from chisualizer.display import *
 from chisualizer.ChiselEmulatorSubprocess import *
 
 logging.getLogger().setLevel(logging.INFO)
+#logging.getLogger().setLevel(logging.DEBUG)
 #TARGET="GCD"
 TARGET="rv1s"
 
 if TARGET=="GCD":
-  api = ChiselEmulatorSubprocess('../../tests/gcd/emulator/GCD-emulator')
+  api = ChiselEmulatorSubprocess('../../tests/gcd/emulator/emulator')
   desc = Base.VisualizerDescriptor('../../tests/gcd/gcd.xml', api)
 elif TARGET=="rv1s":
   api = ChiselEmulatorSubprocess(['../../../riscv-sodor/emulator/rv32_1stage/emulator',
@@ -35,7 +36,7 @@ elif TARGET=="rv1s":
   desc = Base.VisualizerDescriptor('../../tests/sodor/riscv_1stage.xml', api)
 else:
   raise ValueError("No visualization TARGET")
-  
+
 class MyFrame(wx.Frame):
   def __init__(self, parent, title):
     wx.Frame.__init__(self, parent, title=title, size=(1280,800))
@@ -57,18 +58,30 @@ class CairoPanel(wx.Panel):
     
     self.need_visualizer_refresh = False
     self.elements = []
+    
+    self.cycle = 0
 
   def OnChar(self, evt):
     char = evt.GetKeyCode()
     if char == ord('r'):
       logging.info("Reset circuit")
       api.reset(1)
+      self.cycle = 0
       self.need_visualizer_refresh = True
       
     elif char == wx.WXK_RIGHT:
       logging.info("Clock circuit")
+      api.snapshot_save(str(self.cycle))
       api.clock(1)
+      self.cycle += 1
       self.need_visualizer_refresh = True
+      
+    elif char == wx.WXK_LEFT:
+      logging.info("Revert circuit")
+      if self.cycle > 0:
+        self.cycle -= 1
+        api.snapshot_restore(str(self.cycle))
+        self.need_visualizer_refresh = True
       
     self.Refresh()
 
@@ -174,8 +187,8 @@ class CairoPanel(wx.Panel):
     cr.select_font_face('Mono',
                         cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
     cr.set_font_size(10)
-    cr.show_text("Render: (layout) %.2f ms (draw) %.2f ms" %
-                 (timer_lay*1000, timer_draw*1000))
+    cr.show_text("Cycle %i, render: (layout) %.2f ms (draw) %.2f ms" %
+                 (self.cycle, timer_lay*1000, timer_draw*1000))
 
     return dc
     
@@ -188,3 +201,6 @@ def run():
     print "Chisualizer requires PyCairo and wxCairo to run."
 
 run()
+
+api.close()
+logging.info("Done")
