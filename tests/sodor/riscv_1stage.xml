@@ -34,7 +34,10 @@
 	<DataText path=".pc_next" display="hexadecimal"/>
 </AutoGrid>
 
+<SubprocessDisplay ref="rv32_asm" length="30" subprocess="/opt/riscv/bin/riscv-dis" cmd_to_text="DASM(0x%x)"/>
+
 <AutoGrid ref="datapath_inst" label="Inst" step='col'>
+	<DataText path=".inst" display="rv32_asm"/>
 	<DataText path=".inst" display="hexadecimal"/>
 	<DataText path=".rs1_addr" display="hexadecimal"/>
 	<DataText path=".rs2_addr" display="hexadecimal"/>

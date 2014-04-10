@@ -8,7 +8,7 @@ from DisplayBase import DisplayBase, display_instantiate
 @display_instantiate('hexadecimal', prefix='0x', radix=16)
 @xml_register('NumericalDisplay')
 class NumericalDisplay(DisplayBase):
-  def __init__(self, prefix='', radix=0, charmap='01234567890abcdefghijklmnopqrstuvwxyz'):
+  def __init__(self, prefix='', radix=0, charmap='0123456789abcdefghijklmnopqrstuvwxyz'):
     assert isinstance(prefix, basestring), "prefix must be string"
     assert isinstance(radix, int), "radix must be int"
     assert radix > 0, "radix must be > 0"

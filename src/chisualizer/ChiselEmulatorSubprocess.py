@@ -121,8 +121,8 @@ class ChiselSubprocessEmulatorMemElement:
 
   def set_value(self, value):
     return (result_ok(self.api.command('mem_poke',
-                                           self.array_path, self.element_num,
-                                           value))
+                                       self.array_path, self.element_num,
+                                       value))
         and result_ok(self.api.command('propagate')))
         
 class ChiselEmulatorSubprocess(ChiselApi):

@@ -81,5 +81,7 @@ class ChiselApi:
     raise NotImplementedError
   
   def close(self):
-    """Quits the emulator."""
+    """Closes the connection to the API host. If this is the only user of the
+    host, the host should terminate."""
     raise NotImplementedError
+  
