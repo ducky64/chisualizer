@@ -18,9 +18,6 @@ from chisualizer.visualizers import *
 from chisualizer.display import *
 from chisualizer.ChiselEmulatorSubprocess import *
 
-logging.getLogger().setLevel(logging.INFO)
-#logging.getLogger().setLevel(logging.DEBUG)
-
 class ChisualizerFrame(wx.Frame):
   def __init__(self, parent, title, api, desc):
     wx.Frame.__init__(self, parent, title=title, size=(1280,800))
@@ -212,7 +209,7 @@ class CairoPanel(wx.Panel):
     self.elements = self.desc.draw_cairo(cr, layout)
     timer_draw = time.time() - timer_draw
     
-    logging.info("draw_visualizer: layout time: %.2f ms, draw time: %.2f ms" %
+    logging.debug("draw_visualizer: layout time: %.2f ms, draw time: %.2f ms" %
                  (timer_lay*1000, timer_draw*1000))
     
   def save_svg(self, filename):
@@ -238,15 +235,31 @@ def run():
     sys.exit(1)
     
   parser = argparse.ArgumentParser(description="Chisualizer, a block-diagram-style RTL visualizer")
-  parser.add_argument('emulator_cmd',
-                      help="command to invoke the Chisel API compliant emulator with, with arguments to be passed in to the emulator to be separated by spaces")
-  parser.add_argument('visualizer_desc',
-                      help="path to the visualizer descriptor XML file")
+  parser.add_argument('--emulator', '-e', required=True,
+                      help="Command to invoke the Chisel API compliant emulator with.")
+  parser.add_argument('--emulator_args', '-a', nargs='*',
+                      help="Arguments to pass into the emulator.")
+  parser.add_argument('--visualizer_desc', '-d', required=True,
+                      help="Path to the visualizer descriptor XML file.")
   parser.add_argument('--emulator_reset', metavar='-r', type=bool, default=True,
-                      help="whether or not to reset the emulator circuit on start")
+                      help="Whether or not to reset the emulator circuit on start.")
+  parser.add_argument('--log_level', metavar='-l', default="info",
+                      choices=['error', 'warning', 'info', 'debug'],
+                      help="Logging verbosity level.")
   args = parser.parse_args()
   
-  emulator_cmd_list = args.emulator_cmd.split(' ')
+  if args.log_level == 'error':
+    logging.getLogger().setLevel(logging.ERROR)
+  elif args.log_level == 'warning':  
+    logging.getLogger().setLevel(logging.WARNING)
+  elif args.log_level == 'info':
+    logging.getLogger().setLevel(logging.INFO)
+  elif args.log_level == 'debug':
+    logging.getLogger().setLevel(logging.DEBUG)
+    
+  emulator_cmd_list = [args.emulator]
+  if args.emulator_args:
+    emulator_cmd_list.extend(args.emulator_args)
   
   api = ChiselEmulatorSubprocess(emulator_cmd_list, reset=args.emulator_reset)
   desc = Base.VisualizerDescriptor(args.visualizer_desc, api)
