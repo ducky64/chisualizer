@@ -1,50 +1,34 @@
+import argparse
 import logging
 import os
-import xml.etree.ElementTree as etree
+import sys
 import time
+import xml.etree.ElementTree as etree
 
-import wx
 try:
+  import wx
   import wx.lib.wxcairo
   import cairo
-  haveCairo = True
+  haveWxCairo = True
 except ImportError:
-  haveCairo = False
+  haveWxCairo = False
 
 import chisualizer.Base as Base
-import chisualizer.visualizers.VisualizerBase as VisualizerBase
-
 from chisualizer.visualizers import *
 from chisualizer.display import *
 from chisualizer.ChiselEmulatorSubprocess import *
 
 logging.getLogger().setLevel(logging.INFO)
 logging.getLogger().setLevel(logging.DEBUG)
-TARGET="GCD"
-#TARGET="rv1s"
 
-if TARGET=="GCD":
-  api = ChiselEmulatorSubprocess('../../tests/gcd/emulator/emulator')
-  desc = Base.VisualizerDescriptor('../../tests/gcd/gcd.xml', api)
-elif TARGET=="rv1s":
-  api = ChiselEmulatorSubprocess(['../../../riscv-sodor/emulator/rv32_1stage/emulator',
-                                  '+max-cycles=30000',
-                                  '+api', 
-                                  '+loadmem=../../../riscv-sodor/emulator/rv32_1stage/output/riscv-v1_addi.hex'],
-                                  #'+loadmem=../../../riscv-sodor/emulator/rv32_1stage/output/riscv-v2_and.hex'],
-                                 reset=False)
-  desc = Base.VisualizerDescriptor('../../tests/sodor/riscv_1stage.xml', api)
-else:
-  raise ValueError("No visualization TARGET")
-
-class MyFrame(wx.Frame):
-  def __init__(self, parent, title):
+class ChisualizerFrame(wx.Frame):
+  def __init__(self, parent, title, api, desc):
     wx.Frame.__init__(self, parent, title=title, size=(1280,800))
-    self.canvas = CairoPanel(self)
+    self.canvas = CairoPanel(self, api, desc)
     self.Show()
 
 class CairoPanel(wx.Panel):
-  def __init__(self, parent):
+  def __init__(self, parent, api, desc):
     wx.Panel.__init__(self, parent, style=wx.BORDER_SIMPLE)
     self.Bind(wx.EVT_PAINT, self.OnPaint)
     self.Bind(wx.EVT_SIZE, self.OnSize)
@@ -52,6 +36,9 @@ class CairoPanel(wx.Panel):
     self.Bind(wx.EVT_MOUSEWHEEL, self.OnMouseWheel)
     self.Bind(wx.EVT_MOTION, self.OnMouseMotion)
     self.Bind(wx.EVT_RIGHT_UP, self.OnMouseRight)
+    
+    self.api = api
+    self.desc = desc
     
     self.scale = 1
     self.mouse = (0, 0)
@@ -66,27 +53,26 @@ class CairoPanel(wx.Panel):
     char = evt.GetKeyCode()
     if char == ord('r'):
       logging.info("Reset circuit")
-      api.reset(1)
+      self.api.reset(1)
       self.cycle = 0
       self.snapshots = []
       self.need_visualizer_refresh = True
       
     elif char == wx.WXK_RIGHT:
       logging.info("Clock circuit")
-      api.snapshot_save(str(self.cycle))
+      self.api.snapshot_save(str(self.cycle))
       self.snapshots.append(self.cycle)
-      self.cycle += api.clock(1)
+      self.cycle += self.api.clock(1)
       self.need_visualizer_refresh = True
       
     elif char == wx.WXK_LEFT:
       logging.info("Revert circuit")
       if self.snapshots:
         self.cycle = self.snapshots.pop()
-        api.snapshot_restore(str(self.cycle))
+        self.api.snapshot_restore(str(self.cycle))
         self.need_visualizer_refresh = True
     
     elif char == ord('s'):
-      logging.info("Clock circuit")
       cur_val = -1
       dlg = wx.TextEntryDialog(None, 'Step', 'Cycles to step', "1")
       while cur_val < 1:
@@ -99,13 +85,19 @@ class CairoPanel(wx.Panel):
         except:
           pass
         
-      api.snapshot_save(str(self.cycle))
+      logging.info("Clock circuit (%i cycles)" % cur_val)
+        
+      self.api.snapshot_save(str(self.cycle))
       self.snapshots.append(self.cycle)
-      self.cycle += api.clock(cur_val)
+      self.cycle += self.api.clock(cur_val)
       self.need_visualizer_refresh = True
       
     elif char == ord('p'):
-      self.save_svg("%s_%i.svg" % (TARGET, self.cycle))
+      self.save_svg("%s_%i.svg" % ("chisualizer", self.cycle))
+    
+    elif char == ord('q'):
+      logging.info("Exit")
+      sys.exit()
       
     self.Refresh()
 
@@ -150,15 +142,15 @@ class CairoPanel(wx.Panel):
 
     # Per-frame elements
     cr = wx.lib.wxcairo.ContextFromDC(dc)
-    cr.set_source_rgba(*desc.get_theme().default_color())
+    cr.set_source_rgba(*self.desc.get_theme().default_color())
     cr.select_font_face('Mono',
                         cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
     cr.set_font_size(10)
-    cr.move_to(0, height - 35)
+    cr.move_to(0, height - 45)
     cr.show_text("Scale: %.2f" % self.scale)
-    cr.move_to(0, height - 25)
+    cr.move_to(0, height - 35)
     cr.show_text("Mouse: %d, %d" % self.mouse)
-    cr.move_to(0, height - 15)
+    cr.move_to(0, height - 25)
     elements = self.get_mouseover_elements(*self.mouse)
     elements = map(lambda element: element[1].path, elements)
     cr.show_text(str(elements))
@@ -182,7 +174,7 @@ class CairoPanel(wx.Panel):
       dc = wx.MemoryDC(wx.EmptyBitmap(width, height))
       cr = wx.lib.wxcairo.ContextFromDC(dc)
     
-      cr.set_source_rgba(*desc.get_theme().background_color())
+      cr.set_source_rgba(*self.desc.get_theme().background_color())
       cr.rectangle(0, 0, width, height)
       cr.fill()
     
@@ -196,13 +188,15 @@ class CairoPanel(wx.Panel):
 
       cr.restore()
       
-      cr.move_to(0, height - 5)
-      cr.set_source_rgba(*desc.get_theme().default_color())
+      cr.set_source_rgba(*self.desc.get_theme().default_color())
       cr.select_font_face('Mono',
                           cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
       cr.set_font_size(10)
+      cr.move_to(0, height - 15)
       cr.show_text("Cycle %i, render: %.2f ms" %
                    (self.cycle, timer_draw*1000))
+      cr.move_to(0, height - 5)
+      cr.show_text("(<-) back one cycle, (->) forward one cycle, (s) variable cycle step, (r) cycle in reset, (mousewheel) zoom, (p) save to SVG")
       
       self.visualizer_dc = dc
       
@@ -211,11 +205,11 @@ class CairoPanel(wx.Panel):
 
   def draw_visualizer(self, cr):
     timer_lay = time.time()
-    layout = desc.layout_cairo(cr)
+    layout = self.desc.layout_cairo(cr)
     timer_lay = time.time() - timer_lay
     
     timer_draw = time.time()
-    self.elements = desc.draw_cairo(cr, layout)
+    self.elements = self.desc.draw_cairo(cr, layout)
     timer_draw = time.time() - timer_draw
     
     logging.info("draw_visualizer: layout time: %.2f ms, draw time: %.2f ms" %
@@ -225,7 +219,7 @@ class CairoPanel(wx.Panel):
     # TODO: refactor to avoid calling desc.layout here
     surface_test = cairo.ImageSurface(cairo.FORMAT_A8, 1, 1)  # dummy surface to get layout size
     cr_test = cairo.Context(surface_test)
-    layout = desc.layout_cairo(cr_test)
+    layout = self.desc.layout_cairo(cr_test)
     
     f = file(filename, 'w')
     surface = cairo.SVGSurface(f, layout.width()+2, layout.height()+2)
@@ -237,16 +231,26 @@ class CairoPanel(wx.Panel):
     surface.finish()
     
     logging.info("Rendered visualizer to SVG '%s'" % filename)
+
+if __name__ == '__main__':
+  if not haveWxCairo:
+    print "Chisualizer requires wxPython, PyCairo, and wxCairo to run."
+    sys.exit(1)
     
-def run():
-  if haveCairo:
-    app = wx.App(False)
-    MyFrame(None, 'Chisualizer')
-    app.MainLoop()
-  else:
-    print "Chisualizer requires PyCairo and wxCairo to run."
-
-run()
-
-api.close()
-logging.info("Done")
+  parser = argparse.ArgumentParser(description="Chisualizer")
+  parser.add_argument('--emulator_cmd', metavar='-e',
+                      help="command to invoke the Chisel API compliant emulator with, with arguments to be passed in to the emulator to be separated by spaces")
+  parser.add_argument('--visualizer_desc', metavar='-d',
+                      help="path to the visualizer descriptor XML file")
+  parser.add_argument('--emulator_reset', metavar='-r', type=bool, default=True,
+                      help="whether or not to reset the emulator circuit on start")
+  args = parser.parse_args()
+  
+  emulator_cmd_list = args.emulator_cmd.split(' ')
+  
+  api = ChiselEmulatorSubprocess(emulator_cmd_list, reset=args.emulator_reset)
+  desc = Base.VisualizerDescriptor(args.visualizer_desc, api)
+    
+  app = wx.App(False)
+  ChisualizerFrame(None, 'Chisualizer', api, desc)
+  app.MainLoop()

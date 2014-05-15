@@ -16,7 +16,7 @@ class VisualizerRoot(Base):
     self.root = self
     self.registry = {}
     
-    self.theme = LightTheme()
+    self.theme = DarkTheme()
     
     self.path = ""
     
