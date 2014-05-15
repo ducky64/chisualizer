@@ -43,6 +43,10 @@ class VisualizerDescriptor(object):
   def draw_cairo(self, cr, rect):
     return self.visualizer.draw_cairo(cr, rect, 0)
 
+  def get_theme(self):
+    # TODO refactor this, probably makes more sense to set themes here
+    return self.vis_root.get_theme()
+
 class VisualizerParseError(BaseException):
   pass
 

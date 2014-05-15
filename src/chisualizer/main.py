@@ -150,7 +150,7 @@ class CairoPanel(wx.Panel):
 
     # Per-frame elements
     cr = wx.lib.wxcairo.ContextFromDC(dc)
-    cr.set_source_rgb(255, 255, 255)
+    cr.set_source_rgba(*desc.get_theme().default_color())
     cr.select_font_face('Mono',
                         cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
     cr.set_font_size(10)
@@ -182,7 +182,7 @@ class CairoPanel(wx.Panel):
       dc = wx.MemoryDC(wx.EmptyBitmap(width, height))
       cr = wx.lib.wxcairo.ContextFromDC(dc)
     
-      cr.set_source_rgb(0, 0, 0)
+      cr.set_source_rgba(*desc.get_theme().background_color())
       cr.rectangle(0, 0, width, height)
       cr.fill()
     
@@ -197,7 +197,7 @@ class CairoPanel(wx.Panel):
       cr.restore()
       
       cr.move_to(0, height - 5)
-      cr.set_source_rgb(255, 255, 255)
+      cr.set_source_rgba(*desc.get_theme().default_color())
       cr.select_font_face('Mono',
                           cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
       cr.set_font_size(10)

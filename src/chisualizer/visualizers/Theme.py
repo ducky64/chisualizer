@@ -46,7 +46,7 @@ class DarkTheme(Theme):
     return (1, 1, 1, 1)
   
   def color(self, desc):
-    theme_dict = {'border': (0, 0.4, 0.5),
+    theme_dict = {'border': (0, 0.4, 0.6),
                   
                   'bool_0': (1, .7, .7, 1),
                   'bool_1': (.7, 1, .7, 1),
@@ -55,4 +55,23 @@ class DarkTheme(Theme):
       return theme_dict[desc]
     else:
       return super(DarkTheme, self).color(desc)
+    
+class LightTheme(Theme):
+  """Theme for use with white backgrounds."""
+  def background_color(self):
+    return (1, 1, 1, 1)
+  
+  def default_color(self):
+    return (0, 0, 0, 1)
+  
+  def color(self, desc):
+    theme_dict = {'border': (.2, .5, .8),
+                  
+                  'bool_0': (.7, 0, 0, 1),
+                  'bool_1': (0, .7, 0, 1),
+                  }
+    if desc in theme_dict:
+      return theme_dict[desc]
+    else:
+      return super(LightTheme, self).color(desc)
     

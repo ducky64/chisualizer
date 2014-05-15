@@ -1,7 +1,7 @@
 import logging
 
 from chisualizer.Base import Base
-from chisualizer.visualizers.Theme import DarkTheme
+from chisualizer.visualizers.Theme import *
 
 class VisualizerRoot(Base):
   """Visualizer Root, maintains data structures to interface between the
@@ -16,7 +16,7 @@ class VisualizerRoot(Base):
     self.root = self
     self.registry = {}
     
-    self.theme = DarkTheme()
+    self.theme = LightTheme()
     
     self.path = ""
     
