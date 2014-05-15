@@ -13,7 +13,7 @@
 	<VisualizerRef target="datapath_alu"/>
 </AutoGrid>
 
--<AutoGrid ref="datapath_imem" label="imem" step='col'>
+<AutoGrid ref="datapath_imem" label="imem" step='col'>
 	<DataText path="_req_bits_addr" display="hexadecimal"/>
 	<DataText path="_resp_valid" display="bool"/>
 	<DataText path="_resp_bits_data" display="hexadecimal"/>
