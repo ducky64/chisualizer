@@ -21,7 +21,7 @@ from chisualizer.ChiselEmulatorSubprocess import *
 logging.getLogger().setLevel(logging.INFO)
 logging.getLogger().setLevel(logging.DEBUG)
 TARGET="GCD"
-TARGET="rv1s"
+#TARGET="rv1s"
 
 if TARGET=="GCD":
   api = ChiselEmulatorSubprocess('../../tests/gcd/emulator/emulator')
@@ -104,6 +104,9 @@ class CairoPanel(wx.Panel):
       self.cycle += api.clock(cur_val)
       self.need_visualizer_refresh = True
       
+    elif char == ord('p'):
+      self.save_svg("%s_%i.svg" % (TARGET, self.cycle))
+      
     self.Refresh()
 
   def OnSize(self, evt):
@@ -175,24 +178,38 @@ class CairoPanel(wx.Panel):
 
   def get_visualizer_dc(self, size):
     if self.need_visualizer_refresh:
-      self.visualizer_dc = self.draw_visualizer(self.GetClientSize())
+      width, height = size
+      dc = wx.MemoryDC(wx.EmptyBitmap(width, height))
+      cr = wx.lib.wxcairo.ContextFromDC(dc)
+    
+      cr.set_source_rgb(0, 0, 0)
+      cr.rectangle(0, 0, width, height)
+      cr.fill()
+    
+      cr.translate(0.5, 0.5)
+      cr.save()
+      cr.scale(self.scale, self.scale)
+
+      timer_draw = time.time()
+      self.draw_visualizer(cr)
+      timer_draw = time.time() - timer_draw
+
+      cr.restore()
+      
+      cr.move_to(0, height - 5)
+      cr.set_source_rgb(255, 255, 255)
+      cr.select_font_face('Mono',
+                          cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
+      cr.set_font_size(10)
+      cr.show_text("Cycle %i, render: %.2f ms" %
+                   (self.cycle, timer_draw*1000))
+      
+      self.visualizer_dc = dc
       
     self.need_visualizer_refresh = False
     return self.visualizer_dc
 
-  def draw_visualizer(self, size):
-    width, height = size
-    dc = wx.MemoryDC(wx.EmptyBitmap(width, height))
-    cr = wx.lib.wxcairo.ContextFromDC(dc)
-    
-    cr.set_source_rgb(0, 0, 0)
-    cr.rectangle(0, 0, width, height)
-    cr.fill()
-    
-    cr.translate(0.5, 0.5)
-    cr.save()
-    cr.scale(self.scale, self.scale)
-    
+  def draw_visualizer(self, cr):
     timer_lay = time.time()
     layout = desc.layout_cairo(cr)
     timer_lay = time.time() - timer_lay
@@ -201,17 +218,25 @@ class CairoPanel(wx.Panel):
     self.elements = desc.draw_cairo(cr, layout)
     timer_draw = time.time() - timer_draw
     
-    cr.restore()
+    logging.info("draw_visualizer: layout time: %.2f ms, draw time: %.2f ms" %
+                 (timer_lay*1000, timer_draw*1000))
     
-    cr.move_to(0, height - 5)
-    cr.set_source_rgb(255, 255, 255)
-    cr.select_font_face('Mono',
-                        cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
-    cr.set_font_size(10)
-    cr.show_text("Cycle %i, render: (layout) %.2f ms (draw) %.2f ms" %
-                 (self.cycle, timer_lay*1000, timer_draw*1000))
-
-    return dc
+  def save_svg(self, filename):
+    # TODO: refactor to avoid calling desc.layout here
+    surface_test = cairo.ImageSurface(cairo.FORMAT_A8, 1, 1)  # dummy surface to get layout size
+    cr_test = cairo.Context(surface_test)
+    layout = desc.layout_cairo(cr_test)
+    
+    f = file(filename, 'w')
+    surface = cairo.SVGSurface(f, layout.width()+2, layout.height()+2)
+    cr = cairo.Context(surface)
+    cr.translate(1, 1)
+    cr.save()
+    self.draw_visualizer(cr)
+    
+    surface.finish()
+    
+    logging.info("Rendered visualizer to SVG '%s'" % filename)
     
 def run():
   if haveCairo:

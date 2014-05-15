@@ -85,21 +85,25 @@ class VisualizerBase(Base):
     border_offset = self.border_margin / 2
     top_offset = self.top_height / 2
     
+    # draw border rectangle
     cr.set_source_rgb(0, 0.4, 0.5)
     cr.set_line_width(self.border_size)
-    cr.rectangle(element_rect.left() - border_offset,
-                 element_rect.top() - top_offset,
-                 element_rect.width() + 2 * border_offset,
-                 element_rect.height() + border_offset + top_offset)
+    cr.move_to(rect.left() + self.border_margin,      # top left, where label begins
+               element_rect.top() - top_offset)
+    cr.line_to(element_rect.left() - border_offset,   # top left
+               element_rect.top() - top_offset)
+    cr.line_to(element_rect.left() - border_offset,   # bottom left
+               element_rect.bottom() + border_offset)
+    cr.line_to(element_rect.right() + border_offset,  # bottom right
+               element_rect.bottom() + border_offset)
+    cr.line_to(element_rect.right() + border_offset,  # top right
+               element_rect.top() - top_offset)
+    cr.line_to(rect.left() + self.border_margin + self.label_width,  # top right, where label ends
+               element_rect.top() - top_offset)
+
     cr.stroke()
     
-    cr.set_source_rgb(0, 0, 0)
-    cr.rectangle(rect.left() + self.border_margin,
-                 rect.top() + border_offset,
-                 self.label_width,
-                 self.label_height)
-    cr.fill()
-    
+    # draw label text
     cr.set_source_rgb(0, 0.4, 0.5)
     cr.select_font_face(self.label_font,
                         cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
@@ -111,6 +115,7 @@ class VisualizerBase(Base):
     else:
       cr.show_text(self.label)
     
+    # draw the actual element
     if self.collapsed:
       elements = []
     else:
