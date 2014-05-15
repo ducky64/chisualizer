@@ -232,15 +232,15 @@ class CairoPanel(wx.Panel):
     
     logging.info("Rendered visualizer to SVG '%s'" % filename)
 
-if __name__ == '__main__':
+def run():
   if not haveWxCairo:
     print "Chisualizer requires wxPython, PyCairo, and wxCairo to run."
     sys.exit(1)
     
-  parser = argparse.ArgumentParser(description="Chisualizer")
-  parser.add_argument('--emulator_cmd', metavar='-e',
+  parser = argparse.ArgumentParser(description="Chisualizer, a block-diagram-style RTL visualizer")
+  parser.add_argument('emulator_cmd',
                       help="command to invoke the Chisel API compliant emulator with, with arguments to be passed in to the emulator to be separated by spaces")
-  parser.add_argument('--visualizer_desc', metavar='-d',
+  parser.add_argument('visualizer_desc',
                       help="path to the visualizer descriptor XML file")
   parser.add_argument('--emulator_reset', metavar='-r', type=bool, default=True,
                       help="whether or not to reset the emulator circuit on start")
@@ -254,3 +254,6 @@ if __name__ == '__main__':
   app = wx.App(False)
   ChisualizerFrame(None, 'Chisualizer', api, desc)
   app.MainLoop()
+
+if __name__ == "__main__":
+  run()

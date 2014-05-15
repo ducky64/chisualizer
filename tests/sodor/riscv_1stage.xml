@@ -7,9 +7,10 @@
 </AutoGrid>
 
 <AutoGrid ref="datapath" step='row'>
+	<VisualizerRef target="datapath_register"/>
+	<Break/>
 	<VisualizerRef target="datapath_pc"/>
 	<VisualizerRef target="datapath_inst"/>
-	<VisualizerRef target="datapath_register"/>
 	<VisualizerRef target="datapath_alu"/>
 </AutoGrid>
 
@@ -37,12 +38,8 @@
 <SubprocessDisplay ref="rv32_asm" length="30" subprocess="/opt/riscv/bin/riscv-dis" cmd_to_text="DASM(0x%x)"/>
 
 <AutoGrid ref="datapath_inst" label="Inst" step='col'>
-	<DataText path=".inst" display="rv32_asm"/>
 	<DataText path=".inst" display="hexadecimal"/>
-	<DataText path=".rs1_addr" display="hexadecimal"/>
-	<DataText path=".rs2_addr" display="hexadecimal"/>
-	<DataText path=".io_ctl_rf_wen" display="bool"/>
-	<DataText path=".wb_addr" display="hexadecimal"/>
+	<DataText path=".inst" display="rv32_asm"/>
 </AutoGrid>
 
 <AutoGrid ref="datapath_register" label="Registers" step='col'>
@@ -50,8 +47,12 @@
 		<DataText display="hexadecimal"/>
 	</MemoryArray>
 	<Break/>
+	<DataText path=".rs1_addr" display="hexadecimal"/>
 	<DataText path=".rs1_data" display="hexadecimal"/>
+	<DataText path=".rs2_addr" display="hexadecimal"/>
 	<DataText path=".rs2_data" display="hexadecimal"/>
+	<DataText path=".io_ctl_rf_wen" display="bool"/>
+	<DataText path=".wb_addr" display="hexadecimal"/>
 	<DataText path=".wb_data" display="hexadecimal"/>
 </AutoGrid>
 
@@ -84,7 +85,7 @@
 </AutoGrid>
 
 <AutoGrid ref="Top" step='col'>
-	<VisualizerRef target="top"/>
+	<!--<VisualizerRef target="top"/>-->
 	<VisualizerRef target="datapath" path=".tile.core.d"/>
 </AutoGrid>
 
