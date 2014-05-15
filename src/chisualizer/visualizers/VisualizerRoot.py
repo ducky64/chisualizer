@@ -48,6 +48,9 @@ class VisualizerRoot(Base):
   
   def get_chisel_api(self):
     return self.chisel_api
+
+  def set_theme(self, theme):
+    self.theme = theme
   
   def get_theme(self):
     return self.theme

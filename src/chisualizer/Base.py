@@ -47,6 +47,10 @@ class VisualizerDescriptor(object):
     # TODO refactor this, probably makes more sense to set themes here
     return self.vis_root.get_theme()
 
+  def set_theme(self, theme):
+    # TODO: is persisrent theme state really the best idea?
+    self.vis_root.set_theme(theme)
+
 class VisualizerParseError(BaseException):
   pass
 

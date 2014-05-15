@@ -1,6 +1,5 @@
 import argparse
 import logging
-import os
 import sys
 import time
 import xml.etree.ElementTree as etree
@@ -17,6 +16,7 @@ import chisualizer.Base as Base
 from chisualizer.visualizers import *
 from chisualizer.display import *
 from chisualizer.ChiselEmulatorSubprocess import *
+from chisualizer.visualizers.Theme import *
 
 class ChisualizerFrame(wx.Frame):
   def __init__(self, parent, title, api, desc):
@@ -167,6 +167,8 @@ class CairoPanel(wx.Panel):
 
   def get_visualizer_dc(self, size):
     if self.need_visualizer_refresh:
+      self.desc.set_theme(DarkTheme())
+      
       width, height = size
       dc = wx.MemoryDC(wx.EmptyBitmap(width, height))
       cr = wx.lib.wxcairo.ContextFromDC(dc)
@@ -214,9 +216,14 @@ class CairoPanel(wx.Panel):
     
   def save_svg(self, filename):
     # TODO: refactor to avoid calling desc.layout here
-    surface_test = cairo.ImageSurface(cairo.FORMAT_A8, 1, 1)  # dummy surface to get layout size
+    self.desc.set_theme(LightTheme())
+      
+    f = file(filename, 'w')
+    surface_test = cairo.SVGSurface(f, 1, 1)  # dummy surface to get layout size
+    # TODO make cross platform, 
     cr_test = cairo.Context(surface_test)
     layout = self.desc.layout_cairo(cr_test)
+    surface_test.finish()
     
     f = file(filename, 'w')
     surface = cairo.SVGSurface(f, layout.width()+2, layout.height()+2)
@@ -226,6 +233,7 @@ class CairoPanel(wx.Panel):
     self.draw_visualizer(cr)
     
     surface.finish()
+    f.close()
     
     logging.info("Rendered visualizer to SVG '%s'" % filename)
 
