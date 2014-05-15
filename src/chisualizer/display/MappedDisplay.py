@@ -4,30 +4,14 @@ import logging
 import chisualizer.Base as Base
 from DisplayBase import DisplayBase, display_instantiate
 
-@display_instantiate('bool', mappings={0: {'text':'false', 'color':(1, .7, .7)},
-                                       1: {'text':'true',  'color':(.7, 1, .7)},
+@display_instantiate('bool', mappings={0: {'text':'false', 'color':'bool_0'},
+                                       1: {'text':'true',  'color':'bool_1'},
                                        })
 @Base.xml_register('MappedDisplay')
 class MappedDisplay(DisplayBase):
-  colormap={'red': (1, 0, 0),
-            'yellow': (1, 1, 0),
-            'green': (0, 1, 0),
-            'cyan': (0, 1, 1),
-            'blue': (0, 0, 1),
-            'pink': (1, 0, 1),
-            'white': (1, 1, 1),
-            'grey': (.5, .5, .5),
-            }
   def __init__(self, mappings=None):
     self.mappings = mappings
 
-  def parse_color(self, color_str):
-    if color_str in self.colormap:
-      return self.colormap[color_str]
-    else:
-      logging.error("Unknown color '%s' in %s: '%s",
-                    color_str, self.__class__.__name__, self.ref)
-    
   @classmethod
   def from_xml_cls(cls, element, parent):
     new = super(MappedDisplay, cls).from_xml_cls(element, parent)
@@ -49,10 +33,7 @@ class MappedDisplay(DisplayBase):
                       new.__class__.__name__, new.ref, mapping_key)
       for key in child.keys():
         if key != 'key':
-          if key == 'color':
-            mapping_val[key] = new.parse_color(child.get(key))
-          else:
-            mapping_val[key] = child.get(key)
+          mapping_val[key] = child.get(key)
       new.mappings[mapping_key] = mapping_val
     return new
   

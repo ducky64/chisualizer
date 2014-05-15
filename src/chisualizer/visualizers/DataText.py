@@ -29,7 +29,7 @@ class DataText(Data):
     return cloned
 
   def draw_element_cairo(self, cr, rect, depth):
-    cr.set_source_rgb(1, 1, 1)
+    cr.set_source_rgba(*self.get_theme().default_color())
     cr.set_line_width (1)
     cr.select_font_face(self.display_font,
                         cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
@@ -45,7 +45,11 @@ class DataText(Data):
       cr.set_source_rgb(1, 0, 0)
     
     if 'color' in modifiers:
-      cr.set_source_rgb(*modifiers['color'])
+      color = modifiers['color']
+      if type(color) is tuple:
+        cr.set_source_rgba(*color)
+      else:
+        cr.set_source_rgba(*self.get_theme().color(color))
       del modifiers['color']
     
     if modifiers:

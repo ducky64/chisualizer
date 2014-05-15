@@ -1,6 +1,7 @@
 import logging
 
 from chisualizer.Base import Base
+from chisualizer.visualizers.Theme import DarkTheme
 
 class VisualizerRoot(Base):
   """Visualizer Root, maintains data structures to interface between the
@@ -14,6 +15,8 @@ class VisualizerRoot(Base):
     self.parent = self
     self.root = self
     self.registry = {}
+    
+    self.theme = DarkTheme()
     
     self.path = ""
     
@@ -46,3 +49,6 @@ class VisualizerRoot(Base):
   def get_chisel_api(self):
     return self.chisel_api
   
+  def get_theme(self):
+    return self.theme
+    

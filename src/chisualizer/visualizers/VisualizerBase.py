@@ -85,8 +85,9 @@ class VisualizerBase(Base):
     border_offset = self.border_margin / 2
     top_offset = self.top_height / 2
     
+    cr.set_source_rgba(*self.get_theme().color('border'))
+    
     # draw border rectangle
-    cr.set_source_rgb(0, 0.4, 0.5)
     cr.set_line_width(self.border_size)
     cr.move_to(rect.left() + self.border_margin,      # top left, where label begins
                element_rect.top() - top_offset)
@@ -104,7 +105,6 @@ class VisualizerBase(Base):
     cr.stroke()
     
     # draw label text
-    cr.set_source_rgb(0, 0.4, 0.5)
     cr.select_font_face(self.label_font,
                         cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
     cr.set_font_size(self.label_size)

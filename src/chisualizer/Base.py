@@ -77,6 +77,10 @@ class Base(object):
     instantiated."""
     return self.root.get_chisel_api()
   
+  def get_theme(self):
+    """Returns a Theme object, mapping descriptions to numerical colors."""
+    return self.root.get_theme()
+  
   def get_ref(self, ref):
     """Returns the container VisualizerDescriptor object."""
     return self.root.get_ref(ref)
