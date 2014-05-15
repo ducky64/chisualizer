@@ -19,7 +19,7 @@ from chisualizer.display import *
 from chisualizer.ChiselEmulatorSubprocess import *
 
 logging.getLogger().setLevel(logging.INFO)
-logging.getLogger().setLevel(logging.DEBUG)
+#logging.getLogger().setLevel(logging.DEBUG)
 
 class ChisualizerFrame(wx.Frame):
   def __init__(self, parent, title, api, desc):
@@ -146,11 +146,11 @@ class CairoPanel(wx.Panel):
     cr.select_font_face('Mono',
                         cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
     cr.set_font_size(10)
-    cr.move_to(0, height - 45)
+    cr.move_to(0, height - 50)
     cr.show_text("Scale: %.2f" % self.scale)
-    cr.move_to(0, height - 35)
+    cr.move_to(0, height - 40)
     cr.show_text("Mouse: %d, %d" % self.mouse)
-    cr.move_to(0, height - 25)
+    cr.move_to(0, height - 30)
     elements = self.get_mouseover_elements(*self.mouse)
     elements = map(lambda element: element[1].path, elements)
     cr.show_text(str(elements))
