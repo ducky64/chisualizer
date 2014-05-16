@@ -1,34 +1,134 @@
 <root>
-<MappedDisplay ref="GCD_state_map">
-	<Mapping key="0x0" text="idle" color="pink"/>
-	<Mapping key="0x1" text="calc" color="yellow"/>
-	<Mapping key="0x2" text="done" color="green"/>
-</MappedDisplay>-
 
-<AutoGrid ref='GCD' step='row'>
-	<VisualizerRef target="GCD_io_in" path=".io"/>
-	<VisualizerRef target="GCD_state"/>
-	<VisualizerRef target="GCD_io_out" path=".io"/>
+<!-- ALU -->
+<MappedDisplay ref="FixOp">
+	<Mapping key="0" text="NOP" color="grey"/>
+	<Mapping key="1" text="RST" color="red"/>
+	<Mapping key="2" text="LIT" color="blue"/>
+	<Mapping key="3" text="LITH" color="blue"/>
+	<Mapping key="4" text="RND" color="blue"/>
+	<Mapping key="5" text="EAT" color="blue"/>
+	<Mapping key="6" text="NOT" color="blue"/>
+	<Mapping key="7" text="AND" color="blue"/>
+	<Mapping key="8" text="OR" color="blue"/>
+	<Mapping key="9" text="XOR" color="blue"/>
+	<Mapping key="10" text="EQ" color="blue"/>
+	<Mapping key="11" text="NEQ" color="blue"/>
+	<Mapping key="12" text="MUX" color="blue"/>
+	<Mapping key="13" text="LSH" color="blue"/>
+	<Mapping key="14" text="RSH" color="blue"/>
+	<Mapping key="15" text="ARSH" color="blue"/>
+	<Mapping key="16" text="MSK" color="blue"/>
+	<Mapping key="17" text="CAT" color="blue"/>
+	<Mapping key="18" text="ADD" color="blue"/>
+	<Mapping key="19" text="SUB" color="blue"/>
+	<Mapping key="20" text="LT" color="blue"/>
+	<Mapping key="21" text="GTE" color="blue"/>
+	<Mapping key="22" text="MUL" color="blue"/>
+	<Mapping key="23" text="LOG2" color="blue"/>
+	<Mapping key="24" text="LD" color="blue"/>
+	<Mapping key="25" text="ST" color="blue"/>
+	<Mapping key="26" text="LDI" color="blue"/>
+	<Mapping key="27" text="STI" color="blue"/>
+</MappedDisplay>
+
+<AutoGrid ref='FixAlu' step='col'>
+	<DataText path=".io_op" display="FixOp"/>
+	<DataText path=".io_lit" display="hexadecimal"/>
+	<DataText path=".io_x" display="hexadecimal"/>
+	<DataText path=".io_y" display="hexadecimal"/>
+	<DataText path=".io_z" display="hexadecimal"/>
+	<Break/>
+	<DataText path=".io_result" display="hexadecimal"/>
+	<DataText path=".io_cond" display="bool"/>
 </AutoGrid>
 
-<AutoGrid ref='GCD_state' label='internal' step='col'>
-	<DataText path=".state" display="GCD_state_map"/>
-	<DataText path=".latch_A" display="decimal"/>
-	<DataText path=".latch_B" display="decimal"/>
+<!-- Host Interface -->
+<MappedDisplay ref="FixHostOp">
+	<Mapping key="0" text="NOP" color="grey"/>
+	<Mapping key="1" text="PEEK" color="green"/>
+	<Mapping key="2" text="POKE" color="cyan"/>
+</MappedDisplay>
+
+<MappedDisplay ref="FixHostTarget">
+	<Mapping key="0" text="REG"/>
+	<Mapping key="1" text="CODE"/>
+	<Mapping key="2" text="DATA"/>
+	<Mapping key="3" text="RESET"/>
+	<Mapping key="4" text="NUM_INST"/>
+	<Mapping key="5" text="NUM_TC"/>
+	<Mapping key="6" text="NUM_HC"/>
+	<Mapping key="7" text="CLKHI_OFFS"/>
+</MappedDisplay>
+
+<AutoGrid ref='FixHostIo' step='col'>
+	<DataText path=".io_hostIn_ready" display="bool"/>
+	<DataText path=".io_hostIn_valid" display="bool"/>
+	<DataText path=".io_hostIn_bits_dst_x" display="decimal"/>
+	<DataText path=".io_hostIn_bits_dst_y" display="decimal"/>
+	<DataText path=".io_hostIn_bits_op" display="FixHostOp"/>
+	<DataText path=".io_hostIn_bits_target" display="FixHostTarget"/>
+	<DataText path=".io_hostIn_bits_addr" display="decimal"/>
+	<DataText path=".io_hostIn_bits_data" display="hexadecimal"/>
+	<Break/>
+	<DataText path=".io_hostOut_ready" display="bool"/>
+	<DataText path=".io_hostOut_valid" display="bool"/>
+	<DataText path=".io_hostOut_bits_dst_x" display="decimal"/>
+	<DataText path=".io_hostOut_bits_dst_y" display="decimal"/>
+	<DataText path=".io_hostOut_bits_op" display="FixHostOp"/>
+	<DataText path=".io_hostOut_bits_target" display="FixHostTarget"/>
+	<DataText path=".io_hostOut_bits_addr" display="decimal"/>
+	<DataText path=".io_hostOut_bits_data" display="hexadecimal"/>
 </AutoGrid>
 
-<AutoGrid ref='GCD_io_in' label='io (in)' step='col'>
-	<DataText path="_operands_bits_A" display="decimal"/>
-	<DataText path="_operands_bits_B" display="decimal"/>
-	<DataText path="_operands_val" display="bool"/>
-	<DataText path="_operands_rdy" display="bool"/>
+<!-- Memories -->
+
+<AutoGrid ref='MuxedMemoryPort' step='col'>
+	<DataText path="_is" display="bool"/>
+	<DataText path="_adr" display="decimal"/>
+	<DataText path="_dat" display="hexadecimal"/>
 </AutoGrid>
 
-<AutoGrid ref='GCD_io_out' label='io (out)' step='col'>
-	<DataText path="_result_bits_data" display="decimal"/>
-	<DataText path="_result_val" display="bool"/>
-	<DataText path="_result_rdy" display="bool"/>
+<AutoGrid ref='MuxedMemoryPortNoEnable' step='col'>
+	<DataText path="_adr" display="decimal"/>
+	<DataText path="_dat" display="hexadecimal"/>
 </AutoGrid>
 
-<VisualizerRef target="GCD" path="GCD"/>
+<AutoGrid ref='Regfile' step='row'>
+	<MemoryArray path=".mem" cols='4' rows='8' step='col'>
+		<DataText display="hexadecimal"/>
+	</MemoryArray>
+	<Break/>
+	<VisualizerRef target="MuxedMemoryPortNoEnable" path=".io_reads_0"/>
+	<VisualizerRef target="MuxedMemoryPortNoEnable" path=".io_reads_1"/>
+	<VisualizerRef target="MuxedMemoryPortNoEnable" path=".io_reads_2"/>
+	<VisualizerRef target="MuxedMemoryPort" path=".io_reads_3"/>
+	<Break/>
+	<VisualizerRef target="MuxedMemoryPort" path=".io_writes_0"/>
+	<VisualizerRef target="MuxedMemoryPort" path=".io_writes_1"/>
+</AutoGrid>
+
+<AutoGrid ref='LargeMemory' step='row'>
+	<MemoryArray path=".mem" cols='4' rows='8' step='col'>
+		<DataText display="hexadecimal"/>
+	</MemoryArray>
+	<Break/>
+	<VisualizerRef target="MuxedMemoryPort" path=".io_reads_0"/>
+	<VisualizerRef target="MuxedMemoryPort" path=".io_reads_1"/>
+	<VisualizerRef target="MuxedMemoryPort" path=".io_writes_0"/>
+</AutoGrid>
+
+<!-- Top-Level -->
+
+<AutoGrid ref='Fix3Stage' step='col'>
+	<VisualizerRef target="LargeMemory" path=".code_mem"/>
+	<VisualizerRef target="LargeMemory" path=".data_mem"/>
+	<Break/>
+	<VisualizerRef target="Regfile" path=".regfile"/>
+	<VisualizerRef target="FixHostIo" label="Host Interface"/>
+	<Break/>
+	<VisualizerRef target="FixAlu" path=".alu"/>
+</AutoGrid>
+
+<VisualizerRef target="Fix3Stage" path="Fix3Stage"/>
 </root>

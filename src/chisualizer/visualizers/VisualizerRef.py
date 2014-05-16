@@ -26,6 +26,11 @@ class VisualizerRef(VisualizerBase):
     target_obj.path_component = self.path_component + target_obj.path_component
     instantiated = target_obj.instantiate(new_parent)
     
+    if self.label and instantiated.label:
+      instantiated.label = self.label + instantiated.label
+    elif self.label:
+      instantiated.label = self.label
+    
     target_obj.path_component = old_path_component
     
     return instantiated
