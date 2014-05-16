@@ -1,0 +1,34 @@
+<root>
+<MappedDisplay ref="GCD_state_map">
+	<Mapping key="0x0" text="idle" color="pink"/>
+	<Mapping key="0x1" text="calc" color="yellow"/>
+	<Mapping key="0x2" text="done" color="green"/>
+</MappedDisplay>-
+
+<AutoGrid ref='GCD' step='row'>
+	<VisualizerRef target="GCD_io_in" path=".io"/>
+	<VisualizerRef target="GCD_state"/>
+	<VisualizerRef target="GCD_io_out" path=".io"/>
+</AutoGrid>
+
+<AutoGrid ref='GCD_state' label='internal' step='col'>
+	<DataText path=".state" display="GCD_state_map"/>
+	<DataText path=".latch_A" display="decimal"/>
+	<DataText path=".latch_B" display="decimal"/>
+</AutoGrid>
+
+<AutoGrid ref='GCD_io_in' label='io (in)' step='col'>
+	<DataText path="_operands_bits_A" display="decimal"/>
+	<DataText path="_operands_bits_B" display="decimal"/>
+	<DataText path="_operands_val" display="bool"/>
+	<DataText path="_operands_rdy" display="bool"/>
+</AutoGrid>
+
+<AutoGrid ref='GCD_io_out' label='io (out)' step='col'>
+	<DataText path="_result_bits_data" display="decimal"/>
+	<DataText path="_result_val" display="bool"/>
+	<DataText path="_result_rdy" display="bool"/>
+</AutoGrid>
+
+<VisualizerRef target="GCD" path="GCD"/>
+</root>
