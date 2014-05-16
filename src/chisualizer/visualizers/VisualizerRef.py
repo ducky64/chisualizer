@@ -18,8 +18,14 @@ class VisualizerRef(VisualizerBase):
     already-instantiated object.
     """
     target_obj = self.get_ref(self.target)
-    target_obj.path_component = self.path_component + target_obj.path_component
     if not isinstance(target_obj, VisualizerBase):
       raise ValueError("VisualizerRef does not point to VisualizerBase-derived object: ref '%s'" % self.ref)
     
-    return target_obj.instantiate(new_parent)
+    # TODO: FIXME make this less hacky
+    old_path_component = target_obj.path_component 
+    target_obj.path_component = self.path_component + target_obj.path_component
+    instantiated = target_obj.instantiate(new_parent)
+    
+    target_obj.path_component = old_path_component
+    
+    return instantiated

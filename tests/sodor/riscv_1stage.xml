@@ -1,23 +1,12 @@
 <root>
-<AutoGrid ref="top" label="Top IO" step='row'>
-	<DataText path=".reset_signal" display="bool"/>
-</AutoGrid>
-
-<AutoGrid ref="control" step='row'>
-</AutoGrid>
-
 <AutoGrid ref="datapath" step='row'>
 	<VisualizerRef target="datapath_register"/>
 	<Break/>
+	<VisualizerRef target="datapath_control"/>
 	<VisualizerRef target="datapath_pc"/>
 	<VisualizerRef target="datapath_inst"/>
 	<VisualizerRef target="datapath_alu"/>
-</AutoGrid>
-
-<AutoGrid ref="datapath_imem" label="imem" step='col'>
-	<DataText path="_req_bits_addr" display="hexadecimal"/>
-	<DataText path="_resp_valid" display="bool"/>
-	<DataText path="_resp_bits_data" display="hexadecimal"/>
+	<VisualizerRef target="datapath_dmem"/>
 </AutoGrid>
 
 <MappedDisplay ref="PC_sel">
@@ -28,9 +17,13 @@
 	<Mapping key="4" text="EXC" color="cyan"/>
 </MappedDisplay>
 
+<AutoGrid ref="datapath_control" label="Control" step='col'>
+	<DataText path=".io_ctl_stall" label="stall" display="bool"/>
+	<DataText path=".io_ctl_exception" label="exception" display="bool"/>
+</AutoGrid>
+
 <AutoGrid ref="datapath_pc" label="PC" step='col'>
 	<DataText path=".pc_reg" display="hexadecimal"/>
-	<DataText path=".io_ctl_stall" display="bool"/>
 	<DataText path=".io_ctl_pc_sel" display="PC_sel"/>
 	<DataText path=".pc_next" display="hexadecimal"/>
 </AutoGrid>
@@ -47,17 +40,21 @@
 		<DataText display="hexadecimal"/>
 	</MemoryArray>
 	<Break/>
-	<DataText path=".rs1_addr" display="hexadecimal"/>
-	<DataText path=".rs1_data" display="hexadecimal"/>
-	<DataText path=".rs2_addr" display="hexadecimal"/>
-	<DataText path=".rs2_data" display="hexadecimal"/>
-	<DataText path=".io_ctl_rf_wen" display="bool"/>
-	<DataText path=".wb_addr" display="hexadecimal"/>
-	<DataText path=".wb_data" display="hexadecimal"/>
+	<AutoGrid label="inputs" step='col'>
+		<DataText path=".rs1_addr" display="decimal"/>
+		<DataText path=".rs2_addr" display="decimal"/>
+		<DataText path=".io_ctl_rf_wen" display="bool"/>
+		<DataText path=".wb_addr" display="decimal"/>
+		<DataText path=".wb_data" display="hexadecimal"/>
+	</AutoGrid>
+	<AutoGrid label="outputs" step='col'>
+		<DataText path=".rs1_data" display="hexadecimal"/>
+		<DataText path=".rs2_data" display="hexadecimal"/>
+	</AutoGrid>
 </AutoGrid>
 
 <MappedDisplay ref="ALU_op">
-	<Mapping key="0" text="x" color="grey"/>
+	<Mapping key="0" text="none" color="grey"/>
 	<Mapping key="1" text="add" color="green"/>
 	<Mapping key="2" text="sub" color="green"/>
 	<Mapping key="3" text="sll" color="green"/>
@@ -72,11 +69,17 @@
 </MappedDisplay>
 
 <AutoGrid ref="datapath_alu" label="ALU" step='col'>
-	<DataText path=".io_ctl_alu_fun" display="ALU_op"/>
+	<DataText path=".io_ctl_alu_fun" label="function" display="ALU_op"/>
 	<DataText path=".alu_op1" display="decimal"/>
 	<DataText path=".alu_op2" display="decimal"/>
 	<Break/>
 	<DataText path=".alu_out" display="decimal"/>
+</AutoGrid>
+
+<AutoGrid ref="datapath_dmem" label="DMEM" step='col'>
+	<DataText path=".io_dmem_req_bits_addr" label="req addr" display="hexadecimal"/>
+	<DataText path=".io_ctl_debug_dmem_val" label="valid" display="bool"/>
+	<DataText path=".io_dmem_resp_bits_data" label="resp data" display="hexadecimal"/>
 </AutoGrid>
 
 <AutoGrid ref="core" step='col'>
@@ -85,7 +88,6 @@
 </AutoGrid>
 
 <AutoGrid ref="Top" step='col'>
-	<!--<VisualizerRef target="top"/>-->
 	<VisualizerRef target="datapath" path=".tile.core.d"/>
 </AutoGrid>
 

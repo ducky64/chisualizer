@@ -41,7 +41,7 @@ class VisualizerRoot(Base):
       elt = Base.from_xml(child, self)
       ref = child.get('ref', None)
       if ref:
-        if ref in self.registry: raise NameError("Duplicate ref '%s'", ref)
+        if ref in self.registry: raise NameError("Duplicate ref '%s'" % ref)
         self.registry[ref] = elt
         logging.debug("Registered '%s'", ref)
     self.visualizer = elt

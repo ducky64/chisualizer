@@ -1,0 +1,78 @@
+<root>
+
+<!-- Generic blocks -->
+<MappedDisplay ref="ReadyIoDisplay">
+	<Mapping key="0" text="Rdy" color="red"/>
+	<Mapping key="1" text="Rdy" color="green"/>
+</MappedDisplay>
+
+<MappedDisplay ref="ValidIoDisplay">
+	<Mapping key="0" text="Val" color="red"/>
+	<Mapping key="1" text="Val" color="green"/>
+</MappedDisplay>
+
+<AutoGrid ref='ReadyValidIo' step='col'>
+	<DataText path="_ready" display="ReadyIoDisplay"/>
+	<DataText path="_valid" display="ValidIoDisplay"/>
+	<DataText path="_bits" display="hexadecimal"/>
+</AutoGrid>
+
+<AutoGrid ref='ValidIo' step='col'>
+	<DataText path="_valid" display="ValidIoDisplay"/>
+	<DataText path="_bits" display="hexadecimal"/>
+</AutoGrid>
+
+<!-- Octave & components -->
+<AutoGrid ref='SiftCounter' step='col'>
+	<DataText path=".io_count" display="decimal"/>
+	<DataText path=".io_top" display="bool"/>
+</AutoGrid>
+
+<AutoGrid ref='DownSampler' step='col'>
+	<VisualizerRef target="ReadyValidIo" path=".io_in"/>
+	<Break/>
+	<VisualizerRef target="SiftCounter" path=".col_counter"/>
+	<DataText path=".row_active" display="bool"/>
+	<Break/>
+	<VisualizerRef target="ReadyValidIo" path=".io_out"/>
+</AutoGrid>
+
+<AutoGrid ref='UpSampler' step='col'>
+	<VisualizerRef target="ReadyValidIo" path=".io_in"/>
+	<Break/>
+	<AutoGrid label="buffer" step='row'>
+		<MemoryArray path=".buf" cols='8' rows='1' step='row'>
+			<DataText display="hexadecimal"/>
+		</MemoryArray>
+		<Break/>
+		<DataText path=".empty" display="bool"/>
+		<DataText path=".full" display="bool"/>
+	</AutoGrid>
+	<Break/>
+	<VisualizerRef target="ReadyValidIo" path=".io_out"/>
+</AutoGrid>
+
+<AutoGrid ref='Octave' step='row'>
+	<VisualizerRef target="DownSampler" path=".ds"/>
+	<VisualizerRef target="UpSampler" path=".us"/>
+</AutoGrid>
+
+<!-- Top-level & components -->
+
+<AutoGrid ref='PixelValidIo' step='col'>
+	<DataText path="_valid" display="ValidIoDisplay"/>
+	<DataText path="_bits_col" display="decimal"/>
+	<DataText path="_bits_row" display="decimal"/>
+</AutoGrid>
+
+<AutoGrid ref='ScaleSpaceExtrema' step='col'>
+	<VisualizerRef target="ReadyValidIo" path=".io_img_in"/>
+	<Break/>
+	<VisualizerRef target="Octave" path=".Octave"/>
+	<Break/>
+	<VisualizerRef target="PixelValidIo" path=".io_coord"/>
+	<VisualizerRef target="ReadyValidIo" path=".io_img_out"/>
+</AutoGrid>
+
+<VisualizerRef target="ScaleSpaceExtrema" path="ScaleSpaceExtrema"/>
+</root>

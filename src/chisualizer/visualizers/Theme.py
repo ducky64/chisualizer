@@ -43,7 +43,7 @@ class DarkTheme(Theme):
     return (0, 0, 0, 1)
   
   def default_color(self):
-    return (1, 1, 1, 1)
+    return (.9, .9, .9, 1)
   
   def color(self, desc):
     theme_dict = {'border': (0, 0.4, 0.6),
@@ -62,7 +62,7 @@ class LightTheme(Theme):
     return (1, 1, 1, 1)
   
   def default_color(self):
-    return (0, 0, 0, 1)
+    return (.1, .1, .1, 1)
   
   def color(self, desc):
     theme_dict = {'border': (.2, .5, .8),
