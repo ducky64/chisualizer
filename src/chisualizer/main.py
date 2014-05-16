@@ -228,6 +228,11 @@ class CairoPanel(wx.Panel):
     f = file(filename, 'w')
     surface = cairo.SVGSurface(f, layout.width()+2, layout.height()+2)
     cr = cairo.Context(surface)
+    
+    cr.set_source_rgba(*self.desc.get_theme().background_color())
+    cr.rectangle(0, 0, layout.width()+2, layout.height()+2)
+    cr.fill()
+    
     cr.translate(1, 1)
     cr.save()
     self.draw_visualizer(cr)
