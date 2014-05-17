@@ -1,5 +1,16 @@
 <root>
 
+<!-- Common -->
+<MappedDisplay ref="ReadyIoDisplay">
+	<Mapping key="0" text="Rdy" color="red"/>
+	<Mapping key="1" text="Rdy" color="green"/>
+</MappedDisplay>
+
+<MappedDisplay ref="ValidIoDisplay">
+	<Mapping key="0" text="Val" color="red"/>
+	<Mapping key="1" text="Val" color="green"/>
+</MappedDisplay>
+
 <!-- Pipeline -->
 <AutoGrid ref='FixPif' step='row' label="PreIF">
 	<DataText path=".PC_PIF" display="decimal"/>
@@ -97,8 +108,8 @@
 </MappedDisplay>
 
 <AutoGrid ref='FixHostIo' step='col'>
-	<DataText path="_ready" display="bool"/>
-	<DataText path="_valid" display="bool"/>
+	<DataText path="_ready" display="ReadyIoDisplay"/>
+	<DataText path="_valid" display="ValidIoDisplay"/>
 	<DataText path="_bits_dst_x" display="decimal"/>
 	<DataText path="_bits_dst_y" display="decimal"/>
 	<Break/>
@@ -158,23 +169,13 @@
 </AutoGrid>
 
 <!-- Router-->
-<MappedDisplay ref="ReadyIoDisplay">
-	<Mapping key="0" text="Rdy" color="red"/>
-	<Mapping key="1" text="Rdy" color="green"/>
-</MappedDisplay>
-
-<MappedDisplay ref="ValidIoDisplay">
-	<Mapping key="0" text="Val" color="red"/>
-	<Mapping key="1" text="Val" color="green"/>
-</MappedDisplay>
-
 <AutoGrid ref='FixPort' step='col'>
 	<DataText path="_in_ready" display="ReadyIoDisplay"/>
-	<DataText path="_in_valid" display="ReadyIoDisplay"/>
+	<DataText path="_in_valid" display="ValidIoDisplay"/>
 	<DataText path="_in_bits" display="hexadecimal"/>
 	<Break/>
 	<DataText path="_out_ready" display="ReadyIoDisplay"/>
-	<DataText path="_out_valid" display="ReadyIoDisplay"/>
+	<DataText path="_out_valid" display="ValidIoDisplay"/>
 	<DataText path="_out_bits" display="hexadecimal"/>
 </AutoGrid>
 
