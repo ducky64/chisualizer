@@ -33,6 +33,7 @@ class CairoPanel(wx.Panel):
     self.Bind(wx.EVT_MOUSEWHEEL, self.OnMouseWheel)
     self.Bind(wx.EVT_MOTION, self.OnMouseMotion)
     self.Bind(wx.EVT_RIGHT_UP, self.OnMouseRight)
+    self.Bind(wx.EVT_LEFT_DCLICK, self.OnMouseLeftDClick)
     
     self.api = api
     self.desc = desc
@@ -127,6 +128,17 @@ class CairoPanel(wx.Panel):
       self.PopupMenu(menu, evt.GetPosition())
     menu.Destroy()
     
+    self.need_visualizer_refresh = True
+    self.Refresh()
+    
+  def OnMouseLeftDClick(self, evt):
+    x, y = self.device_to_visualizer_coordinates(evt.GetPosition())
+    elements = self.get_mouseover_elements(x, y)
+    elements = sorted(elements, key = lambda element: element[0], reverse=True)
+
+    assert isinstance(elements[0][1], VisualizerBase.VisualizerBase)
+    elements[0][1].wx_defaultaction()
+        
     self.need_visualizer_refresh = True
     self.Refresh()
     

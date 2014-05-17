@@ -73,6 +73,9 @@ class DataText(Data):
     _, _, _, self.text_max_height, _, _ = cr.text_extents('X')
     return (self.text_max_width, self.text_max_height)
   
+  def wx_defaultaction(self):
+    self.wx_popupmenu_set(None)
+  
   def wx_popupmenu_populate(self, menu):
     item = wx.MenuItem(menu, wx.NewId(), "%s: Set" % self.wx_prefix())
     menu.AppendItem(item)

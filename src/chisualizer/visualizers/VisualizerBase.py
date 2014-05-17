@@ -142,6 +142,13 @@ class VisualizerBase(Base):
       prefix = "%s (%s)" % (prefix, self.label)
     return prefix
       
+  def wx_defaultaction(self):
+    #TODO: integrate this with menu so both choose options from common source
+    if self.collapsed:
+      self.wx_popupmenu_expand(None)
+    else:
+      self.wx_popupmenu_collapse(None)
+          
   def wx_popupmenu_populate(self, menu):
     """Adds items relevant to this visualizer to the argument menu.
     Return True if items were added, False otherwise."""
