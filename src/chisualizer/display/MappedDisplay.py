@@ -55,11 +55,21 @@ class MappedDisplay(DisplayBase):
   def set_from_text(self, node_ref, in_text):
     if super(MappedDisplay, self).set_from_text(node_ref, in_text):
       return True
+   
+    # allow case sensitive compare to take priority 
+    case_insensitive_val = None
+    # TODO: detect ambiguous parse
     
     for mapping_key, mapping_val in self.mappings.iteritems():
-      if 'text' in mapping_val and mapping_val['text'] == in_text:
-        node_ref.set_value(mapping_key)
-        return True
-      
+      if 'text' in mapping_val:
+        if mapping_val['text'] == in_text:
+          node_ref.set_value(mapping_key)
+          return True
+        elif mapping_val['text'].lower() == in_text.lower():
+          case_insensitive_val = mapping_key
+    if case_insensitive_val is not None:
+      node_ref.set_value(case_insensitive_val)
+      return True
+    
     return False
       
