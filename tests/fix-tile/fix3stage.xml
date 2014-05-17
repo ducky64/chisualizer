@@ -159,7 +159,7 @@
 
 <!-- Top-Level -->
 
-<AutoGrid ref='Fix3Stage' step='col'>
+<AutoGrid ref='Fix3Stage' step='col' label="Fix3Stage">
 	<VisualizerRef target="LargeMemory" path=".code_mem"/>
 	<VisualizerRef target="LargeMemory" path=".data_mem"/>
 	<Break/>
