@@ -1,5 +1,40 @@
 <root>
 
+<!-- Pipeline -->
+<AutoGrid ref='FixPif' step='row' label="PreIF">
+	<DataText path=".PC_PIF" display="decimal"/>
+	<DataText path=".idle_PIF" display="bool"/>
+</AutoGrid>
+
+<AutoGrid ref='FixIf' step='row' label="IF">
+	<DataText path=".PC_IF" display="decimal"/>
+	<DataText path=".idle_IF" display="bool"/>
+	<DataText path=".inst_bits_IF" display="hexadecimal"/>
+</AutoGrid>
+
+<AutoGrid ref='FixX' step='row' label="X">
+	<!--<DataText path=".PC_X" display="decimal"/>-->
+	<DataText path=".idle_X" display="bool"/>
+	<DataText path=".inst_bits_X" display="hexadecimal"/>
+	<Break/>
+	<VisualizerRef target="FixAlu" path=".alu"/>
+</AutoGrid>
+
+<AutoGrid ref='FixWb' step='row' label="WB">
+	<!--<DataText path=".PC_WB" display="decimal"/>-->
+	<!--<DataText path=".idle_WB" display="bool"/>-->
+	<DataText path=".alu_result_WB" display="hexadecimal"/>
+	<DataText path=".data_from_net_WB" display="hexadecimal"/>
+</AutoGrid>
+
+<AutoGrid ref='FixPipeline' step='col' label="Pipeline">
+	<DataText path=".control.io_stall_X" display="bool"/>
+	<VisualizerRef target="FixPif" path=""/>
+	<VisualizerRef target="FixIf" path=""/>
+	<VisualizerRef target="FixX" path=""/>
+	<VisualizerRef target="FixWb" path=""/>
+</AutoGrid>
+
 <!-- ALU -->
 <MappedDisplay ref="FixOp">
 	<Mapping key="0" text="NOP" color="grey"/>
@@ -62,23 +97,16 @@
 </MappedDisplay>
 
 <AutoGrid ref='FixHostIo' step='col'>
-	<DataText path=".io_hostIn_ready" display="bool"/>
-	<DataText path=".io_hostIn_valid" display="bool"/>
-	<DataText path=".io_hostIn_bits_dst_x" display="decimal"/>
-	<DataText path=".io_hostIn_bits_dst_y" display="decimal"/>
-	<DataText path=".io_hostIn_bits_op" display="FixHostOp"/>
-	<DataText path=".io_hostIn_bits_target" display="FixHostTarget"/>
-	<DataText path=".io_hostIn_bits_addr" display="decimal"/>
-	<DataText path=".io_hostIn_bits_data" display="hexadecimal"/>
+	<DataText path="_ready" display="bool"/>
+	<DataText path="_valid" display="bool"/>
+	<DataText path="_bits_dst_x" display="decimal"/>
+	<DataText path="_bits_dst_y" display="decimal"/>
 	<Break/>
-	<DataText path=".io_hostOut_ready" display="bool"/>
-	<DataText path=".io_hostOut_valid" display="bool"/>
-	<DataText path=".io_hostOut_bits_dst_x" display="decimal"/>
-	<DataText path=".io_hostOut_bits_dst_y" display="decimal"/>
-	<DataText path=".io_hostOut_bits_op" display="FixHostOp"/>
-	<DataText path=".io_hostOut_bits_target" display="FixHostTarget"/>
-	<DataText path=".io_hostOut_bits_addr" display="decimal"/>
-	<DataText path=".io_hostOut_bits_data" display="hexadecimal"/>
+	<DataText path="_bits_op" display="FixHostOp"/>
+	<DataText path="_bits_target" display="FixHostTarget"/>
+	<DataText path="_bits_addr" display="decimal"/>
+	<DataText path="_bits_data" display="hexadecimal"/>
+
 </AutoGrid>
 
 <!-- Memories -->
@@ -125,10 +153,42 @@
 	<VisualizerRef target="LargeMemory" path=".data_mem"/>
 	<Break/>
 	<VisualizerRef target="Regfile" path=".regfile"/>
-	<VisualizerRef target="FixHostIo" label="Host Interface"/>
 	<Break/>
-	<VisualizerRef target="FixAlu" path=".alu"/>
+	<VisualizerRef target="FixPipeline" path=""/>
 </AutoGrid>
 
-<VisualizerRef target="Fix3Stage" path="Fix3Stage"/>
+<!-- Router-->
+<MappedDisplay ref="ReadyIoDisplay">
+	<Mapping key="0" text="Rdy" color="red"/>
+	<Mapping key="1" text="Rdy" color="green"/>
+</MappedDisplay>
+
+<MappedDisplay ref="ValidIoDisplay">
+	<Mapping key="0" text="Val" color="red"/>
+	<Mapping key="1" text="Val" color="green"/>
+</MappedDisplay>
+
+<AutoGrid ref='FixPort' step='col'>
+	<DataText path="_in_ready" display="ReadyIoDisplay"/>
+	<DataText path="_in_valid" display="ReadyIoDisplay"/>
+	<DataText path="_in_bits" display="hexadecimal"/>
+	<Break/>
+	<DataText path="_out_ready" display="ReadyIoDisplay"/>
+	<DataText path="_out_valid" display="ReadyIoDisplay"/>
+	<DataText path="_out_bits" display="hexadecimal"/>
+</AutoGrid>
+
+<AutoGrid ref='FixTile' step='row'>
+	<VisualizerRef target="FixHostIo" path=".io_hostIn"/>
+	<VisualizerRef target="FixPort" path=".io_ports_1"/>
+	<VisualizerRef target="FixHostIo" path=".io_hostOut"/>
+	<Break/>
+	<VisualizerRef target="FixPort" path=".io_ports_0"/>
+	<VisualizerRef target="Fix3Stage" path=""/>
+	<VisualizerRef target="FixPort" path=".io_ports_2"/>
+	<Break/>
+	<VisualizerRef target="FixPort" path=".io_ports_3"/>
+</AutoGrid>
+
+<VisualizerRef target="FixTile" path="Fix3Stage"/>
 </root>
