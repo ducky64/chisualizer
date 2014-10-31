@@ -18,19 +18,9 @@ class AutoGrid(VisualizerBase):
         if new.cells[-1]: # append new list only if current not empty
           new.cells.append([])
       else:
-        new.cells[-1].append(Base.Base.from_xml(child_cell, parent=new))
+        new.cells[-1].append(Base.Base.from_xml(child_cell, new))
       
     return new
-  
-  def instantiate(self, new_parent):
-    cloned = super(AutoGrid, self).instantiate(new_parent)
-    cloned.step = self.step
-    cloned.cells = []
-    for cell_ary in self.cells:
-      cloned.cells.append([])
-      for cell in cell_ary:
-        cloned.cells[-1].append(cell.instantiate(cloned))
-    return cloned
 
   def layout_element_cairo(self, cr):
     self.cell_size = []     # size in the step direction, per <Break> group, per cell

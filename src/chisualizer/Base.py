@@ -32,7 +32,7 @@ class VisualizerDescriptor(object):
     xml_root = etree.parse(filename).getroot()
     vis_root = VisualizerRoot(self.api)
     vis_root.parse_children(xml_root)
-    vis_root.instantiate_visualizer()
+    vis_root.instantiate_visualizers()
     self.vis_root = vis_root
     self.visualizer = vis_root.visualizer
 
@@ -89,13 +89,9 @@ class Base(object):
     """Returns a Theme object, mapping descriptions to numerical colors."""
     return self.root.get_theme()
   
-  def get_ref(self, ref):
-    """Returns the container VisualizerDescriptor object."""
-    return self.root.get_ref(ref)
-    
   @staticmethod
   def from_xml(element, parent):
-    assert isinstance(element, etree.Element)
+    assert isinstance(element, etree.Element), "expected: Element, got: %s" % element.__class__.__name__ 
     if element.tag in xml_registry:
       rtn = xml_registry[element.tag].from_xml_cls(element, parent)
       logging.debug("Loaded %s: '%s'", rtn.__class__.__name__, rtn.ref)

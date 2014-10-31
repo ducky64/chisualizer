@@ -1,7 +1,7 @@
 import logging
 
 from chisualizer.Base import Base
-from chisualizer.visualizers.Theme import *
+from chisualizer.visualizers.Theme import DarkTheme
 
 class VisualizerRoot(Base):
   """Visualizer Root, maintains data structures to interface between the
@@ -11,7 +11,9 @@ class VisualizerRoot(Base):
   def __init__(self, chisel_api):
     super(VisualizerRoot, self).__init__()
     self.chisel_api = chisel_api
-    self.visualizer = None
+    self.visualizer_elements = []
+    self.visualizers = []
+    self.visualizer = None  # TODO: allow multiple visualizers in own window
     self.parent = self
     self.root = self
     self.registry = {}
@@ -23,28 +25,31 @@ class VisualizerRoot(Base):
   @classmethod
   def from_xml_cls(cls, element, parent=None):
     raise RuntimeError("Cannot instantiate VisualizerRoot")
-  
-  def instantiate_visualizer(self):
-    self.visualizer = self.visualizer.instantiate(self)
 
   def get_ref(self, ref):
-    from chisualizer.display.DisplayBase import display_registry
-    if ref in display_registry:
-      return display_registry[ref]
     if ref in self.registry:
       return self.registry[ref]
     raise NameError("Unknown ref '%s'" % ref)
   
   def parse_children(self, xml_root):
-    elt = None
-    for child in xml_root:
-      elt = Base.from_xml(child, self)
+    logging.debug("Parsing XML input")
+    for child in xml_root: 
       ref = child.get('ref', None)
       if ref:
         if ref in self.registry: raise NameError("Duplicate ref '%s'" % ref)
-        self.registry[ref] = elt
+        self.registry[ref] = child
         logging.debug("Registered '%s'", ref)
-    self.visualizer = elt
+      else:
+        self.visualizer_elements.append(child)
+  
+  def instantiate_visualizers(self):
+    logging.debug("Instantiating visualizers")
+    for visualizer in self.visualizer_elements:
+      self.visualizers.append(Base.from_xml(visualizer, self))
+    self.visualizer = self.visualizers[-1]
+    
+    if len(self.visualizers) > 1:
+      raise RuntimeError("Multiple visualizers not currently supported")
   
   def get_chisel_api(self):
     return self.chisel_api

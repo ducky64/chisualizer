@@ -26,18 +26,7 @@ class MemoryArray(Data):
     new.cells = []  # list of cols of cells (each element is a list of cells)
 
     return new
-  
-  def instantiate(self, new_parent):
-    cloned = super(MemoryArray, self).instantiate(new_parent)
-    cloned.offset = self.offset
-    cloned.rows = self.rows
-    cloned.cols = self.cols
-    cloned.step = self.step
-    cloned.cell = self.cell
-    cloned.cells = []
-    cloned.instantiate_cells(self.offset, self.rows, self.cols, self.cell)
-    return cloned
-  
+
   def instantiate_cells(self, offset, rows, cols, cell):
     self.cells = []
     element_num = offset
