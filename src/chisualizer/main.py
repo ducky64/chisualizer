@@ -15,6 +15,7 @@ except ImportError:
 import chisualizer.Base as Base
 from chisualizer.visualizers import *
 from chisualizer.display import *
+from chisualizer.ChiselDummyApi import *
 from chisualizer.ChiselEmulatorSubprocess import *
 from chisualizer.visualizers.Theme import *
 
@@ -261,7 +262,7 @@ def run():
     
   parser = argparse.ArgumentParser(description="Chisualizer, a block-diagram-style RTL visualizer")
   parser.add_argument('--emulator', '-e', required=True,
-                      help="Command to invoke the Chisel API compliant emulator with.")
+                      help="Command to invoke the Chisel API compliant emulator with (or 'dummy').")
   parser.add_argument('--emulator_args', '-a', nargs='*',
                       help="Arguments to pass into the emulator.")
   parser.add_argument('--visualizer_desc', '-d', required=True,
@@ -281,12 +282,15 @@ def run():
     logging.getLogger().setLevel(logging.INFO)
   elif args.log_level == 'debug':
     logging.getLogger().setLevel(logging.DEBUG)
-    
-  emulator_cmd_list = [args.emulator]
-  if args.emulator_args:
-    emulator_cmd_list.extend(args.emulator_args)
   
-  api = ChiselEmulatorSubprocess(emulator_cmd_list, reset=args.emulator_reset)
+  if args.emulator == "dummy":  
+    api = ChiselDummyApi()
+  else:
+    emulator_cmd_list = [args.emulator]
+    if args.emulator_args:
+      emulator_cmd_list.extend(args.emulator_args)
+    api = ChiselEmulatorSubprocess(emulator_cmd_list, reset=args.emulator_reset)
+  
   desc = Base.VisualizerDescriptor(args.visualizer_desc, api)
     
   app = wx.App(False)
@@ -295,3 +299,4 @@ def run():
 
 if __name__ == "__main__":
   run()
+  
