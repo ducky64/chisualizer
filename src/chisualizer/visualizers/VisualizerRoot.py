@@ -1,4 +1,6 @@
 import logging
+import os
+import xml.etree.ElementTree as etree
 
 from chisualizer.Base import Base
 from chisualizer.visualizers.Theme import DarkTheme
@@ -31,8 +33,10 @@ class VisualizerRoot(Base):
       return self.registry[ref]
     raise NameError("Unknown ref '%s'" % ref)
   
-  def parse_children(self, xml_root):
-    logging.debug("Parsing XML input")
+  def parse_children(self, xml_file, lib=False):
+    xml_file = os.path.abspath(xml_file)
+    logging.debug("Parsing XML file: '%s'%s" % (xml_file, " (as library)" if lib else ""))
+    xml_root = etree.parse(xml_file).getroot()
     for child in xml_root: 
       ref = child.get('ref', None)
       if ref:
@@ -40,6 +44,8 @@ class VisualizerRoot(Base):
         self.registry[ref] = child
         logging.debug("Registered '%s'", ref)
       else:
+        if lib:
+          raise ValueError("Can only create reference objects when reading library: got %s" % child)
         self.visualizer_elements.append(child)
   
   def instantiate_visualizers(self):

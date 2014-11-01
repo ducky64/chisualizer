@@ -30,8 +30,8 @@ class VisualizerDescriptor(object):
     """Parse this descriptor from an XML file."""
     from chisualizer.visualizers.VisualizerRoot import VisualizerRoot
     vis_root = VisualizerRoot(self.api)
-    vis_root.parse_children(etree.parse("vislib.xml").getroot())
-    vis_root.parse_children(etree.parse(filename).getroot())
+    vis_root.parse_children("vislib.xml", lib=True)
+    vis_root.parse_children(filename)
     vis_root.instantiate_visualizers()
     self.vis_root = vis_root
     self.visualizer = vis_root.visualizer
