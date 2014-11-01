@@ -1,4 +1,7 @@
-<!--Standard library for the Chisualizer, the contents of this are implicitly included in every visualization descriptor loaded.-->
+<!--
+Standard library for the Chisualizer, the contents of this are implicitly included in every visualization descriptor loaded.
+MODIFYING THIS FILE IS HIGHLY DISCOURAGED, unless you're a Chisualizer core developer or *really* know what you're doing. This file exists to provide *GLOBAL* defaults for visual elements as well as to give a comprehensive listing of available options. Modifying this will change how *EVERYTHING* looks, making your visualizations appear different from everyone else's. Obviously, this is bad for compatibility.
+-->
 <root>
 <!--Default display types-->
 <NumericalDisplay ref="binary" prefix="0b" radix="2"/>
