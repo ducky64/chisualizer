@@ -3,7 +3,7 @@
 	<Mapping key="0x0" text="idle" color="pink"/>
 	<Mapping key="0x1" text="calc" color="yellow"/>
 	<Mapping key="0x2" text="done" color="green"/>
-</MappedDisplay>-
+</MappedDisplay>
 
 <AutoGrid ref='GCD' step='row'>
 	<VisualizerRef target="GCD_io_in" path=".io"/>

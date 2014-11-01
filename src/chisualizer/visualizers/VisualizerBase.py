@@ -23,25 +23,6 @@ class VisualizerBase(Base):
     new.label_size = new.parse_element_int(element, 'label_size', 10)
     new.label_font = element.get('label_font', 'Mono')
     return new
-  
-  def instantiate(self, new_parent):
-    """Instantiates this visualizer template by cloning the template and
-    resolving all references. Acts as clone (to a new parent) if called by an
-    already-instantiated object.
-    """
-    cloned = self.__class__()
-    cloned.parent = new_parent
-    cloned.path_component = self.path_component
-    cloned.root = new_parent.root
-    cloned.path = new_parent.path + cloned.path_component
-
-    cloned.border_size = self.border_size
-    cloned.border_margin = self.border_margin
-    cloned.label = self.label
-    cloned.label_font = self.label_font
-    cloned.label_size = self.label_size
-    
-    return cloned
     
   def layout_cairo(self, cr):
     """Computes (and stores) the layout for this object when drawing with Cairo.

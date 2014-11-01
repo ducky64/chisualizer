@@ -15,56 +15,38 @@ class MemoryArray(Data):
     new.step = element.get('step', 'row')
     if new.step not in ['row', 'col']: new.parse_error("step must be 'row' or 'col', got '%s'" % new.step) 
     
-    new.cell = None # cell visualizer, as a template to populate cells with
-    for child_vis in element:
-      if new.cell:
-        new.parse_warning("duplicate cell, overwriting")
-      new.cell = Base.Base.from_xml(child_vis, new)
-    if not new.cell:
-      new.parse_error("MemoryArray missing cell")
+    if len(element) != 1:
+      new.parse_error("MemoryArray must have exactly 1 child")
+    new.cell_elt = element[0]
+
+    # TODO: allow dynamic cell instantiation by changing offsets
+    def instantiate_cell(num):
+      inst = Base.Base.from_xml(new.cell_elt, new)
+      inst.set_node(new.node.get_subscript_reference(num))
+      inst.path_component += "[%i]" % num
+      inst.path += "[%i]" % num
+      if inst.label is None: inst.label = str(num)
+      return inst
 
     new.cells = []  # list of cols of cells (each element is a list of cells)
+    element_num = new.offset
+    for col in xrange(new.cols):
+      new.cells.append([])
+    if new.step == 'row':
+      for _ in xrange(new.rows):
+        for col in xrange(new.cols):
+          new.cells[col].append(instantiate_cell(element_num))
+          element_num += 1
+          if element_num >= new.node.get_depth(): break
+    elif new.step == 'col':
+      for col in xrange(new.cols):
+        for _ in xrange(new.rows):
+          new.cells[col].append(instantiate_cell(element_num))
+          element_num += 1
+          if element_num >= new.node.get_depth(): break
 
     return new
-  
-  def instantiate(self, new_parent):
-    cloned = super(MemoryArray, self).instantiate(new_parent)
-    cloned.offset = self.offset
-    cloned.rows = self.rows
-    cloned.cols = self.cols
-    cloned.step = self.step
-    cloned.cell = self.cell
-    cloned.cells = []
-    cloned.instantiate_cells(self.offset, self.rows, self.cols, self.cell)
-    return cloned
-  
-  def instantiate_cells(self, offset, rows, cols, cell):
-    self.cells = []
-    element_num = offset
-    for col in xrange(cols):
-      self.cells.append([])
-      
-    def inst_cell(num):
-        inst = cell.instantiate(self)
-        inst.set_node(self.node.get_subscript_reference(num))
-        inst.path_component = inst.path_component + "[%i]" % num
-        inst.path = inst.path + "[%i]" % num
-        if inst.label is None: inst.label = str(num)
-        return inst      
-      
-    if self.step == 'row':
-      for row in xrange(rows):
-        for col in xrange(cols):
-          self.cells[col].append(inst_cell(element_num))
-          element_num += 1
-          if element_num >= self.node.get_depth(): break  
-    elif self.step == 'col':
-      for col in xrange(cols):
-        for row in xrange(rows):
-          self.cells[col].append(inst_cell(element_num))
-          element_num += 1
-          if element_num >= self.node.get_depth(): break
-  
+
   def layout_element_cairo(self, cr):
     # for now, assume the cell size is constant
     # TODO: FIXME

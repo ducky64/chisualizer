@@ -2,16 +2,10 @@ import copy
 import logging
 
 import chisualizer.Base as Base
-from DisplayBase import DisplayBase, display_instantiate
+from DisplayBase import DisplayBase
 
-@display_instantiate('bool', mappings={0: {'text':'false', 'color':'bool_0'},
-                                       1: {'text':'true',  'color':'bool_1'},
-                                       })
 @Base.xml_register('MappedDisplay')
 class MappedDisplay(DisplayBase):
-  def __init__(self, mappings=None):
-    self.mappings = mappings
-
   @classmethod
   def from_xml_cls(cls, element, parent):
     new = super(MappedDisplay, cls).from_xml_cls(element, parent)

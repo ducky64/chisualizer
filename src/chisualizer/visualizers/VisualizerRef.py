@@ -6,31 +6,20 @@ class VisualizerRef(VisualizerBase):
   """Lazy initialized reference to another visualizer"""
   @classmethod
   def from_xml_cls(cls, element, parent):
-    new = super(VisualizerRef, cls).from_xml_cls(element, parent)
-    new.target = element.get('target', None)
-    if not new.target:
-      raise ValueError("VisualizerRef must have 'target' attribute") 
-    return new
+    target = element.get('target', None)
+    if not target:
+      raise ValueError("VisualizerRef must have 'target' attribute")
+    container = super(VisualizerRef, cls).from_xml_cls(element, parent)
+    container.target = Base.Base.from_xml(parent.root.get_ref(target), container)
   
-  def instantiate(self, new_parent):
-    """Instantiates this visualizer template by cloning the template and
-    resolving all references. Acts as clone (to a new parent) if called by an
-    already-instantiated object.
-    """
-    target_obj = self.get_ref(self.target)
-    if not isinstance(target_obj, VisualizerBase):
-      raise ValueError("VisualizerRef does not point to VisualizerBase-derived object: ref '%s'" % self.ref)
+    return container
     
-    # TODO: FIXME make this less hacky
-    old_path_component = target_obj.path_component 
-    target_obj.path_component = self.path_component + target_obj.path_component
-    instantiated = target_obj.instantiate(new_parent)
+  def layout_cairo(self, cr):
+    return self.target.layout_cairo(cr)
     
-    if self.label and instantiated.label:
-      instantiated.label = self.label + instantiated.label
-    elif self.label:
-      instantiated.label = self.label
-    
-    target_obj.path_component = old_path_component
-    
-    return instantiated
+  def draw_cairo(self, cr, rect, depth):
+    return self.target.draw_cairo(cr, rect, depth)
+        
+  def wx_popupmenu_populate(self, menu):
+    return False
+  

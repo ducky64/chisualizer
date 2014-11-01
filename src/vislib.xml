@@ -1,0 +1,16 @@
+<!--
+Standard library for the Chisualizer, the contents of this are implicitly included in every visualization descriptor loaded.
+MODIFYING THIS FILE IS HIGHLY DISCOURAGED, unless you're a Chisualizer core developer or *really* know what you're doing. This file exists to provide *GLOBAL* defaults for visual elements as well as to give a comprehensive listing of available options. Modifying this will change how *EVERYTHING* looks, making your visualizations appear different from everyone else's. Obviously, this is bad for compatibility.
+-->
+<root>
+<!--Default display types-->
+<NumericalDisplay ref="binary" prefix="0b" radix="2"/>
+<NumericalDisplay ref="decimal" radix="10"/>
+<NumericalDisplay ref="hexadecimal" prefix="0x" radix="16"/>
+
+<MappedDisplay ref="bool">
+	<Mapping key="0" text="false" color="bool_0"/>
+	<Mapping key="1" text="true" color="bool_1"/>
+</MappedDisplay>
+
+</root>
