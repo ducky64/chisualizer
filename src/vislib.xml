@@ -1,0 +1,12 @@
+<!--Standard library for the Chisualizer, the contents of this are implicitly included in every visualization descriptor loaded.-->
+<root>
+<!--Default display types-->
+<NumericalDisplay ref="binary" prefix="0b" radix="2"/>
+<NumericalDisplay ref="decimal" radix="10"/>
+<NumericalDisplay ref="hexadecimal" prefix="0x" radix="16"/>
+
+<MappedDisplay ref="bool">
+	<Mapping key="0" text="false" color="bool_0"/>
+	<Mapping key="1" text="true" color="bool_1"/>
+</MappedDisplay>
+</root>

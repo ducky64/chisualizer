@@ -46,7 +46,7 @@ class MemoryArray(Data):
         for col in xrange(cols):
           self.cells[col].append(inst_cell(element_num))
           element_num += 1
-          if element_num >= self.node.get_depth(): break  
+          if element_num >= self.node.get_depth(): break
     elif self.step == 'col':
       for col in xrange(cols):
         for row in xrange(rows):
