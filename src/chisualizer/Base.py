@@ -86,6 +86,9 @@ class ParsedElement(object):
       self.parsed_element = parsed_element
       self.accessed = set()
 
+    def parse_error(self, message):
+      self.parsed_element.parse_error(message)
+
     def get(self, attribute):
       """Retrieves an attribute and marks it as "read"."""
       rtn = self.parsed_element.get(attribute)
@@ -142,8 +145,10 @@ class ParsedElement(object):
     self.parent = None
     if self.tag + "Default" in prev_parsed_dict:
       self.class_parent = prev_parsed_dict[self.tag + "Default"]  # TODO: make this dynamic based on actual instantiated class
-    else:
+    elif self.tag == "Template":
       self.class_parent = None
+    else:
+      self.parse_error("Can't find default template")
     
     self.attributes = {}
     for attr_name, attr_value in xml_element.items():
