@@ -53,7 +53,7 @@ class VisualizerRoot(object):
   def instantiate_visualizers(self):
     logging.debug("Instantiating visualizers")
     for visualizer in self.visualizer_elements:
-      self.visualizers.append(Base.from_xml(visualizer, self))
+      self.visualizers.append(visualizer.instantiate(self))
     self.visualizer = self.visualizers[-1]
     
     if len(self.visualizers) > 1:

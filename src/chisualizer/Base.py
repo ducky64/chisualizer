@@ -165,8 +165,10 @@ class ParsedElement(object):
   def instantiate(self, parent):
     if self.tag not in xml_registry:
       self.parse_error("Unknown tag '%s'" % self.tag)
-    rtn = xml_registry[self.tag](self, parent)
-    logging.debug("Instantiating %s: '%s'", rtn.__class__.__name__, rtn.ref)
+    rtn_cls = xml_registry[self.tag] 
+    logging.debug("Instantiating %s (%s:%s)" % 
+                  (rtn_cls.__name__, self.tag, self.ref))
+    rtn = rtn_cls(self, parent)
     return rtn
     
   def create_accessor(self):
