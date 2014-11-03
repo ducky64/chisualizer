@@ -3,24 +3,19 @@ from VisualizerBase import VisualizerBase, Rectangle
 
 @Base.xml_register('AutoGrid')
 class AutoGrid(VisualizerBase):
-  """A grid of elements, each pointing to a memory element."""
-  @classmethod
-  def from_xml_cls(cls, element, parent):
-    new = super(AutoGrid, cls).from_xml_cls(element, parent)
+  """A grid of elements, automatically sized by rows or columns."""
+  def __init__(self, element, parent):
+    super(AutoGrid, self).__init__(element, parent)
     
-    new.offset = new.parse_element_int(element, 'offset', 0)
-    new.step = element.get('step', 'row')
-    if new.step not in ['row', 'col']: new.parse_error("step must be 'row' or 'col', got '%s'" % new.step) 
+    self.step = element.get_attr_string('step', valid_set=['row', 'col'])
     
-    new.cells = [[]]
-    for child_cell in element:
+    self.cells = [[]]
+    for child_cell in element.get_children():
       if child_cell.tag == "Break":
-        if new.cells[-1]: # append new list only if current not empty
-          new.cells.append([])
+        if self.cells[-1]: # append new list only if current not empty
+          self.cells.append([])
       else:
-        new.cells[-1].append(Base.Base.from_xml(child_cell, new))
-      
-    return new
+        self.cells[-1].append(child_cell.instantiate(self))
 
   def layout_element_cairo(self, cr):
     self.cell_size = []     # size in the step direction, per <Break> group, per cell

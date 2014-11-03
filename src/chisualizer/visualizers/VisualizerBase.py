@@ -8,22 +8,22 @@ import wx
 
 class VisualizerBase(Base):
   """Abstract base class for Chisel visualizer objects."""
-  def __init__(self):
-    self.collapsed = False
-  
-  @classmethod
-  def from_xml_cls(cls, element, parent):
-    new = super(VisualizerBase, cls).from_xml_cls(element, parent)
-    new.path_component = element.get('path', '')
-    new.path = parent.path + new.path_component
-
-    new.border_size = new.parse_element_int(element, 'border_size', 1)
-    new.border_margin = new.parse_element_int(element, 'border_margin', 6)
-    new.label = element.get('label', None)
-    new.label_size = new.parse_element_int(element, 'label_size', 10)
-    new.label_font = element.get('label_font', 'Mono')
-    return new
+  def __init__(self, element, parent):
+    super(VisualizerBase, self).__init__(element, parent)
     
+    self.path_component = element.get_attr_string('path')
+    self.path = parent.path + self.path_component
+    
+    self.border_size = element.get_attr_int('border_size', valid_min=1)
+    self.border_margin = element.get_attr_int('border_margin', valid_min=1)
+    self.label = element.get_attr_string('label')
+    if not self.label:
+      self.label = None
+    self.label_size = element.get_attr_int('label_size', valid_min=1)
+    self.label_font = element.get_attr_string('label_font')
+    
+    self.collapsed = False
+
   def layout_cairo(self, cr):
     """Computes (and stores) the layout for this object when drawing with Cairo.
     Returns a tuple (width, height) of the minimum size of this object.

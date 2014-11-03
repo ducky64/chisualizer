@@ -13,4 +13,10 @@ MODIFYING THIS FILE IS HIGHLY DISCOURAGED, unless you're a Chisualizer core deve
 	<Mapping key="1" text="true" color="bool_1"/>
 </MappedDisplay>
 
+<!--Default visual properties-->
+<Template ref="VisualizerBaseDefault" path="" border_size="1" border_margin="6" label="" label_size="10" label_font="Mono"/>
+<Template ref="VisualizerRefDefault" template="VisualizerBaseDefault"/>
+<Template ref="AutoGridDefault" template="VisualizerBaseDefault" step="row"/>
+<Template ref="DataTextDefault" template="VisualizerBaseDefault" display="hexadecimal" display_size="14" display_font="Mono"/>
+<Template ref="MemoryArrayDefault" template="VisualizerBaseDefault"/>
 </root>

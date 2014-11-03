@@ -4,16 +4,11 @@ from VisualizerBase import VisualizerBase
 @Base.xml_register('VisualizerRef')
 class VisualizerRef(VisualizerBase):
   """Lazy initialized reference to another visualizer"""
-  @classmethod
-  def from_xml_cls(cls, element, parent):
-    target = element.get('target', None)
-    if not target:
-      raise ValueError("VisualizerRef must have 'target' attribute")
-    container = super(VisualizerRef, cls).from_xml_cls(element, parent)
-    container.target = Base.Base.from_xml(parent.root.get_ref(target), container)
+  def __init__(self, element, parent):
+    super(VisualizerRef, self).__init__(element, parent)
+    target = element.get('target')
+    self.target = self.root.get_ref(target).instantiate(self)
   
-    return container
-    
   def layout_cairo(self, cr):
     return self.target.layout_cairo(cr)
     

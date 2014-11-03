@@ -92,16 +92,19 @@ class ParsedElement(object):
       self.accessed.add(attribute)
       return rtn
   
-    def check_attributes_used(self):
-      """Return True if all attributes in the ParsedElement have been accessed
+    def get_unused_attributes(self):
+      """Return set of attributes in all of parent's attributes but not accessed
       from this ParsedElementAccessor using the get_attr_* functions."""
-      return self.accessed == self.parent.all_attributes
+      return self.accessed.difference(self.parsed_element.all_attributes)
     
     def get_ref(self):
-      return self.parent.ref
+      return self.parsed_element.ref
     
-    def get_attr_string(self, attr):
-      return self.get(attr)
+    def get_attr_string(self, attr, valid_set=None):
+      got = self.get(attr)
+      if valid_set is not None and got not in valid_set:
+        self.parse_error("%s='%s' not in valid set: %s" % (attr, got, valid_set))
+      return got
     
     def get_attr_int(self, attr, valid_min=None, valid_max=None):
       got = self.get(attr)
@@ -114,6 +117,9 @@ class ParsedElement(object):
       if valid_max is not None and conv > valid_max:
         self.parse_error("%s=%i < max (%i)" % (attr, conv, valid_max))
       return conv        
+    
+    def get_children(self):
+      return self.parsed_element.children
     
   def parse_error(self, message):
     """Helper function to throw a fatal error, indicating the broken element
@@ -129,17 +135,21 @@ class ParsedElement(object):
     self.xml_element = xml_element
     self.xml_filename = xml_filename
     
-    # TODO: create default parents
-    self.parent = None
-    
     self.tag = xml_element.tag 
     self.ref = '(anon)'
     
+    # TODO: create default parents
+    self.parent = None
+    if self.tag + "Default" in prev_parsed_dict:
+      self.class_parent = prev_parsed_dict[self.tag + "Default"]  # TODO: make this dynamic based on actual instantiated class
+    else:
+      self.class_parent = None
+    
     self.attributes = {}
     for attr_name, attr_value in xml_element.items():
-      if attr_name == "class":
+      if attr_name == "template":
         if attr_value not in prev_parsed_dict:
-          self.parse_error("No class: '%s'" % attr_value)
+          self.parse_error("No template: '%s'" % attr_value)
         self.parent = prev_parsed_dict[attr_value]
       elif attr_name == "ref":
         self.ref = attr_value 
@@ -161,14 +171,22 @@ class ParsedElement(object):
       for attr_name in current.attributes.iterkeys():
         self.all_attributes.add(attr_name)
       current = current.parent
-    
+    current = self.class_parent
+    while current:
+      for attr_name in current.attributes.iterkeys():
+        self.all_attributes.add(attr_name)
+      current = current.parent
+      
   def instantiate(self, parent):
     if self.tag not in xml_registry:
       self.parse_error("Unknown tag '%s'" % self.tag)
     rtn_cls = xml_registry[self.tag] 
     logging.debug("Instantiating %s (%s:%s)" % 
                   (rtn_cls.__name__, self.tag, self.ref))
-    rtn = rtn_cls(self, parent)
+    accessor = self.create_accessor()
+    rtn = rtn_cls(accessor, parent)
+    if accessor.get_unused_attributes():
+      self.parse_error("Unused attributes: %s" % accessor.get_unused_attributes())
     return rtn
     
   def create_accessor(self):
@@ -176,6 +194,11 @@ class ParsedElement(object):
     
   def get(self, attribute):
     current = self
+    while current:
+      if attribute in current.attributes:
+        return current.attributes[attribute]
+      current = current.parent
+    current = self.class_parent
     while current:
       if attribute in current.attributes:
         return current.attributes[attribute]
