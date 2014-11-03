@@ -5,7 +5,7 @@ from lxml import etree
 from chisualizer.Base import Base, ParsedElement
 from chisualizer.visualizers.Theme import DarkTheme
 
-class VisualizerRoot(Base):
+class VisualizerRoot(object):
   """Visualizer Root, maintains data structures to interface between the
   parsed visualizers and the rest of the system (like the API and the
   VisualizerDescriptor container class."""

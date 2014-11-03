@@ -56,29 +56,11 @@ class VisualizerParseError(BaseException):
 
 class Base(object):
   """Abstract base class for visualizer descriptor objects."""
-  def parse_warning(self, msg):
-    """Emits a warning message for XML parsing, automatically prepending
-    the class name and reference."""
-    logging.warning("Parsing warning for %s: '%s': %s" % 
-                    (self.__class__.__name__, self.ref, msg))
-  def parse_error(self, msg):
-    """Emits an error message for XML parsing, automatically prepending
-    the class name and reference and throwing an exception"""
-    logging.warning("Parsing ERROR for %s: '%s': %s" % 
-                    (self.__class__.__name__, self.ref, msg))
-    raise VisualizerParseError(msg) 
-    
-  def parse_element_int(self, element, param, default):
-    got = element.get(param, None)
-    if got is None:
-      return default
-    try:
-      return int(got, 0)
-    except ValueError:
-      self.parse_warning("unable to convert %s='%s' to int, default to %s" %
-                         (param, got, default))
-      return default
-    
+  def __init__(self, element, parent):
+    self.parent = parent
+    self.root = parent.root
+    self.ref = element.get_ref()
+  
   def get_chisel_api(self):
     """Returns the ChiselApi object used to access node values.
     Returns None if not available or if this visualizer wasn't properly
@@ -88,26 +70,6 @@ class Base(object):
   def get_theme(self):
     """Returns a Theme object, mapping descriptions to numerical colors."""
     return self.root.get_theme()
-  
-  @staticmethod
-  def from_xml(element, parent):
-    assert isinstance(element, etree.Element), "expected: Element, got: %s" % element.__class__.__name__ 
-    if element.tag in xml_registry:
-      rtn = xml_registry[element.tag].from_xml_cls(element, parent)
-      logging.debug("Loaded %s: '%s'", rtn.__class__.__name__, rtn.ref)
-      return rtn
-    else:
-      raise NameError("Unknown class '%s'" % element.tag)
-      
-  @classmethod
-  def from_xml_cls(cls, element, parent):
-    """Initializes this descriptor from a XML etree Element."""
-    assert isinstance(element, etree.Element)
-    new = cls()
-    new.parent = parent
-    new.root = parent.root
-    new.ref = element.get('ref', '(anon)')
-    return new
 
 class ParsedElement(object):
   """
@@ -125,6 +87,7 @@ class ParsedElement(object):
       self.accessed = set()
 
     def get(self, attribute):
+      """Retrieves an attribute and marks it as "read"."""
       rtn = self.parsed_element.get(attribute)
       self.accessed.add(attribute)
       return rtn
@@ -134,12 +97,24 @@ class ParsedElement(object):
       from this ParsedElementAccessor using the get_attr_* functions."""
       return self.accessed == self.parent.all_attributes
     
-    def get_attr_string(self, attr):
-      pass
+    def get_ref(self):
+      return self.parent.ref
     
-    def get_attr_int(self, attr):
-      pass
-  
+    def get_attr_string(self, attr):
+      return self.get(attr)
+    
+    def get_attr_int(self, attr, valid_min=None, valid_max=None):
+      got = self.get(attr)
+      try:
+        conv = int(got, 0)
+      except ValueError:
+        self.parse_error("Unable to convert %s='%s' to int" % (attr, got))
+      if valid_min is not None and conv < valid_min:
+        self.parse_error("%s=%i < min (%i)" % (attr, conv, valid_min))
+      if valid_max is not None and conv > valid_max:
+        self.parse_error("%s=%i < max (%i)" % (attr, conv, valid_max))
+      return conv        
+    
   def parse_error(self, message):
     """Helper function to throw a fatal error, indicating the broken element
     along with filename and line number.
@@ -154,9 +129,11 @@ class ParsedElement(object):
     self.xml_element = xml_element
     self.xml_filename = xml_filename
     
+    # TODO: create default parents
     self.parent = None
     
     self.tag = xml_element.tag 
+    self.ref = '(anon)'
     
     self.attributes = {}
     for attr_name, attr_value in xml_element.items():
@@ -164,10 +141,12 @@ class ParsedElement(object):
         if attr_value not in prev_parsed_dict:
           self.parse_error("No class: '%s'" % attr_value)
         self.parent = prev_parsed_dict[attr_value]
-        
-      if attr_value in self.attributes:
-        self.parse_error("Duplicate attribute: '%s'" % attr_name)
-      self.attributes[attr_name] = attr_value
+      elif attr_name == "ref":
+        self.ref = attr_value 
+      else:
+        if attr_value in self.attributes:
+          self.parse_error("Duplicate attribute: '%s'" % attr_name)
+        self.attributes[attr_name] = attr_value
     
     self.children = []
     for child in xml_element.iterchildren(tag=etree.Element):
@@ -176,12 +155,19 @@ class ParsedElement(object):
     
     # Build a list of all attributes so we can determine if there are unused
     # attributes during parsing.
-    self.all_atributes = set()
+    self.all_attributes = set()
     current = self
     while current:
-      for attr_name in current.iterkeys():
+      for attr_name in current.attributes.iterkeys():
         self.all_attributes.add(attr_name)
       current = current.parent
+    
+  def instantiate(self, parent):
+    if self.tag not in xml_registry:
+      self.parse_error("Unknown tag '%s'" % self.tag)
+    rtn = xml_registry[self.tag](self, parent)
+    logging.debug("Instantiating %s: '%s'", rtn.__class__.__name__, rtn.ref)
+    return rtn
     
   def create_accessor(self):
     return self.ParsedElementAccessor(self)
