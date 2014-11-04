@@ -22,5 +22,5 @@ class VisualizerRef(AbstractVisualizer):
     self.target.wx_defaultaction()
         
   def wx_popupmenu_populate(self, menu):
-    return False
+    return self.target.wxpopupmenu_populate(menu)
   

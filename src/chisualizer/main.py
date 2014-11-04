@@ -122,7 +122,7 @@ class CairoPanel(wx.Panel):
     menu = wx.Menu()
     populated = False
     for element in elements:
-      assert isinstance(element[1], VisualizerBase.VisualizerBase)
+      assert isinstance(element[1], VisualizerBase.AbstractVisualizer)
       this_populated = element[1].wx_popupmenu_populate(menu)
       populated = populated or this_populated
     if populated:
@@ -137,7 +137,7 @@ class CairoPanel(wx.Panel):
     elements = self.get_mouseover_elements(x, y)
     elements = sorted(elements, key = lambda element: element[0], reverse=True)
 
-    assert isinstance(elements[0][1], VisualizerBase.VisualizerBase)
+    assert isinstance(elements[0][1], VisualizerBase.AbstractVisualizer)
     elements[0][1].wx_defaultaction()
         
     self.need_visualizer_refresh = True

@@ -43,7 +43,7 @@ class AbstractVisualizer(Base):
   def wx_popupmenu_populate(self, menu):
     """Adds items relevant to this visualizer to the argument menu.
     Return True if items were added, False otherwise."""
-    raise NotImplementedError()
+    return False
 
 class FramedVisualizer(AbstractVisualizer):
   """Base class for visualizers providing visual framing (borders)."""
@@ -167,7 +167,6 @@ class FramedVisualizer(AbstractVisualizer):
       item = wx.MenuItem(menu, wx.NewId(), "%s: Collapse" % self.wx_prefix())
       menu.AppendItem(item)
       menu.Bind(wx.EVT_MENU, self.wx_popupmenu_collapse, item)
-
     return True
 
   def wx_popupmenu_expand(self, evt):
