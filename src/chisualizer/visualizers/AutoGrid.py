@@ -1,8 +1,8 @@
 import chisualizer.Base as Base
-from VisualizerBase import VisualizerBase, Rectangle
+from VisualizerBase import AbstractVisualizer, FramedVisualizer, Rectangle
 
 @Base.xml_register('AutoGrid')
-class AutoGrid(VisualizerBase):
+class AutoGrid(FramedVisualizer):
   """A grid of elements, automatically sized by rows or columns."""
   def __init__(self, element, parent):
     super(AutoGrid, self).__init__(element, parent)
@@ -14,7 +14,7 @@ class AutoGrid(VisualizerBase):
         if self.cells[-1]: # append new list only if current not empty
           self.cells.append([])
       else:
-        self.cells[-1].append(child_cell.instantiate(self))
+        self.cells[-1].append(child_cell.instantiate(self, valid_subclass=AbstractVisualizer))
 
   def layout_element_cairo(self, cr):
     self.cell_size = []     # size in the step direction, per <Break> group, per cell

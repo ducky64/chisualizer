@@ -1,6 +1,6 @@
-from VisualizerBase import VisualizerBase
+from VisualizerBase import FramedVisualizer
 
-class Data(VisualizerBase):
+class Data(FramedVisualizer):
   """Abstract base class for visualizer objects depending on node values.
   Provides the node field."""
   def __init__(self, element, parent):

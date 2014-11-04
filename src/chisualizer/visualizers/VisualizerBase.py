@@ -6,13 +6,49 @@ from chisualizer.util import Rectangle
 import cairo
 import wx
 
-class VisualizerBase(Base):
-  """Abstract base class for Chisel visualizer objects."""
+class AbstractVisualizer(Base):
+  """Abstract base class for Chisel visualizer objects. Defines interface 
+  methods and provides common functionality, like paths."""
   def __init__(self, element, parent):
-    super(VisualizerBase, self).__init__(element, parent)
+    super(AbstractVisualizer, self).__init__(element, parent)
     
     self.path_component = element.get_attr_string('path')
     self.path = parent.path + self.path_component
+    
+  def layout_cairo(self, cr):
+    """Computes (and stores) the layout for this object when drawing with Cairo.
+    Returns a tuple (width, height) of the minimum size of this object.
+    This may differ per frame, and should be called before draw_cairo."""
+    raise NotImplementedError()
+    
+  def draw_cairo(self, cr, rect, depth):
+    """Draw this object (with borders and labels) to the Cairo context.
+    rect indicates the area allocated for this object.
+    Returns a list elements drawn: tuple (depth, rect, visualizer)
+    Depth indicates the drawing depth, with a higher number meaning deeper
+    (further nested). This is used to calculate UI events, like mouseover 
+    and clicks.
+    """
+    raise NotImplementedError()
+     
+  def wx_prefix(self):
+    """Returns the string prefix for this visualizer when referred to in UI 
+    elements."""
+    raise NotImplementedError()
+      
+  def wx_defaultaction(self):
+    """Default action when the visualizer is double-clicked."""
+    raise NotImplementedError()
+          
+  def wx_popupmenu_populate(self, menu):
+    """Adds items relevant to this visualizer to the argument menu.
+    Return True if items were added, False otherwise."""
+    raise NotImplementedError()
+
+class FramedVisualizer(AbstractVisualizer):
+  """Base class for visualizers providing visual framing (borders)."""
+  def __init__(self, element, parent):
+    super(FramedVisualizer, self).__init__(element, parent)
     
     self.border_size = element.get_attr_int('border_size', valid_min=1)
     self.border_margin = element.get_attr_int('border_margin', valid_min=1)
@@ -25,9 +61,6 @@ class VisualizerBase(Base):
     self.collapsed = False
 
   def layout_cairo(self, cr):
-    """Computes (and stores) the layout for this object when drawing with Cairo.
-    Returns a tuple (width, height) of the minimum size of this object.
-    This may differ per frame, and should be called before draw_cairo."""
     assert isinstance(cr, cairo.Context)
     if self.collapsed:
       self.element_width, self.element_height = (0, 0)
@@ -49,13 +82,6 @@ class VisualizerBase(Base):
             self.top_height + self.border_margin + self.element_height)
   
   def draw_cairo(self, cr, rect, depth):
-    """Draw this object (with borders and labels) to the Cairo context.
-    rect indicates the area allocated for this object.
-    Returns a list elements drawn: tuple (depth, rect, visualizer)
-    Depth indicates the drawing depth, with a higher number meaning deeper
-    (further nested). This is used to calculate UI events, like mouseover 
-    and clicks.
-    """
     assert isinstance(cr, cairo.Context)
     assert isinstance(rect, Rectangle)
     
@@ -118,11 +144,12 @@ class VisualizerBase(Base):
     raise NotImplementedError()
 
   def wx_prefix(self):
+    return self.path
     prefix = self.path
     if self.label:
       prefix = "%s (%s)" % (prefix, self.label)
     return prefix
-      
+
   def wx_defaultaction(self):
     #TODO: integrate this with menu so both choose options from common source
     if self.collapsed:
@@ -131,8 +158,7 @@ class VisualizerBase(Base):
       self.wx_popupmenu_collapse(None)
           
   def wx_popupmenu_populate(self, menu):
-    """Adds items relevant to this visualizer to the argument menu.
-    Return True if items were added, False otherwise."""
+    super(FramedVisualizer, self).wx_popupmenu_populate(menu)
     if self.collapsed:
       item = wx.MenuItem(menu, wx.NewId(), "%s: Expand" % self.wx_prefix())
       menu.AppendItem(item)
@@ -149,4 +175,3 @@ class VisualizerBase(Base):
     
   def wx_popupmenu_collapse(self, evt):
     self.collapsed = True
-    

@@ -2,7 +2,7 @@ import sys
 import logging
 
 import chisualizer.Base as Base
-from VisualizerBase import Rectangle
+from VisualizerBase import AbstractVisualizer, Rectangle
 from Data import Data
 
 @Base.xml_register('MemoryArray')
@@ -30,7 +30,7 @@ class MemoryArray(Data):
 
   def update_cells(self):
     def instantiate_cell(addr):
-      inst = self.cell_elt.instantiate(self)
+      inst = self.cell_elt.instantiate(self, valid_subclass=AbstractVisualizer)
       inst.set_node(self.node.get_subscript_reference(addr))
       # TODO: dehackify
       inst.path_component += "[%i]" % addr

@@ -4,6 +4,7 @@ import cairo
 import wx
 
 import chisualizer.Base as Base
+from chisualizer.display.DisplayBase import DisplayBase
 
 from Data import Data
 
@@ -13,7 +14,7 @@ class DataText(Data):
   def __init__(self, element, parent):
     super(DataText, self).__init__(element, parent)
     
-    self.display = self.root.get_ref(element.get_attr_string('display')).instantiate(self)
+    self.display = self.root.get_ref(element.get_attr_string('display')).instantiate(self, valid_subclass=DisplayBase)
     self.display_size = element.get_attr_int('display_size', valid_min=1)
     self.display_font = element.get_attr_string('display_font')
 

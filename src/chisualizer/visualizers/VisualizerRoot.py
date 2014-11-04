@@ -3,6 +3,7 @@ import os
 from lxml import etree
 
 from chisualizer.Base import Base, ParsedElement
+from chisualizer.visualizers.VisualizerBase import AbstractVisualizer
 from chisualizer.visualizers.Theme import DarkTheme
 
 class VisualizerRoot(object):
@@ -53,7 +54,7 @@ class VisualizerRoot(object):
   def instantiate_visualizers(self):
     logging.debug("Instantiating visualizers")
     for visualizer in self.visualizer_elements:
-      self.visualizers.append(visualizer.instantiate(self))
+      self.visualizers.append(visualizer.instantiate(self, valid_subclass=AbstractVisualizer))
     self.visualizer = self.visualizers[-1]
     
     if len(self.visualizers) > 1:

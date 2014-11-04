@@ -174,10 +174,15 @@ class ParsedElement(object):
         self.all_attributes.add(attr_name)
       current = current.parent
       
-  def instantiate(self, parent):
+  def instantiate(self, parent, valid_subclass=None):
+    assert valid_subclass is not None
     if self.tag not in xml_registry:
       self.parse_error("Unknown tag '%s'" % self.tag)
-    rtn_cls = xml_registry[self.tag] 
+      
+    rtn_cls = xml_registry[self.tag]
+    if not issubclass(rtn_cls, valid_subclass):
+      self.parse_error("Expected to be a subclass of %s" % valid_subclass.__name__)
+        
     logging.debug("Instantiating %s (%s:%s)" % 
                   (rtn_cls.__name__, self.tag, self.ref))
     accessor = self.create_accessor()
