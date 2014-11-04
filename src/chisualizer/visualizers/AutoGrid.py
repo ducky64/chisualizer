@@ -6,7 +6,6 @@ class AutoGrid(VisualizerBase):
   """A grid of elements, automatically sized by rows or columns."""
   def __init__(self, element, parent):
     super(AutoGrid, self).__init__(element, parent)
-    
     self.step = element.get_attr_string('step', valid_set=['row', 'col'])
     
     self.cells = [[]]

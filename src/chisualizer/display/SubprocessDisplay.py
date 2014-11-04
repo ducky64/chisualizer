@@ -6,28 +6,23 @@ from DisplayBase import DisplayBase
 
 @xml_register('SubprocessDisplay')
 class SubprocessDisplay(DisplayBase):
-  @classmethod
-  def from_xml_cls(cls, element, parent):
-    new = super(SubprocessDisplay, cls).from_xml_cls(element, parent)
-    new.subprocess = element.get('subprocess', None)
-    if not new.subprocess:
-      new.parse_error("No subprocess specified")
+  def __init__(self, element, parent):
+    super(SubprocessDisplay, self).__init__(element, parent)
+    self.subprocess = element.get_attr_string('subprocess')
     try:
       #TODO: avoid creating duplicate subprocesses of the same name
-      new.p = subprocess.Popen(new.subprocess,
-                               stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                               stderr=subprocess.STDOUT)
+      self.p = subprocess.Popen(self.subprocess,
+                                stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                stderr=subprocess.STDOUT)
       #TODO: gracefully close subprocesses somewhere?
     except OSError as e:
-      new.parse_error("Failed to open subprocess %s: %s" % (new.subprocess, e))
+      element.parse_error("Can't open subprocess %s: %s" % (self.subprocess, e))
     
-    new.length = new.parse_element_int(element, 'length', 0)
-    
-    new.cmd_to_text = element.get('cmd_to_text', None)
-    new.cmd_from_text = element.get('cmd_from_text', None)
-    
-    return new
-  
+    self.length = element.get_attr_int('length', 1)
+
+    self.cmd_to_text = element.get_attr_string('cmd_to_text')
+    self.cmd_from_text = element.get_attr_string('cmd_from_text')
+
   def command(self, cmd):
     """Sends a command to the subprocess, and returns the output string.
     The expected protocol is that each command ends with a newline, and

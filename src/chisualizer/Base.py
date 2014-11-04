@@ -89,37 +89,29 @@ class ParsedElement(object):
     def parse_error(self, message):
       self.parsed_element.parse_error(message)
 
-    def get(self, attribute):
-      """Retrieves an attribute and marks it as "read"."""
-      rtn = self.parsed_element.get(attribute)
+    def get_attr_accessed(self, attribute):
+      """Marks an attribute as "read"."""
       self.accessed.add(attribute)
-      return rtn
   
     def get_unused_attributes(self):
       """Return set of attributes in all of parent's attributes but not accessed
       from this ParsedElementAccessor using the get_attr_* functions."""
-      return self.accessed.difference(self.parsed_element.all_attributes)
+      return self.parsed_element.all_attributes.difference(self.accessed)
     
     def get_ref(self):
       return self.parsed_element.ref
     
-    def get_attr_string(self, attr, valid_set=None):
-      got = self.get(attr)
-      if valid_set is not None and got not in valid_set:
-        self.parse_error("%s='%s' not in valid set: %s" % (attr, got, valid_set))
-      return got
+    def get_attr_string(self, attr, **kwargs):
+      self.get_attr_accessed(attr)
+      return self.parsed_element.get_attr_string(attr, **kwargs)
     
-    def get_attr_int(self, attr, valid_min=None, valid_max=None):
-      got = self.get(attr)
-      try:
-        conv = int(got, 0)
-      except ValueError:
-        self.parse_error("Unable to convert %s='%s' to int" % (attr, got))
-      if valid_min is not None and conv < valid_min:
-        self.parse_error("%s=%i < min (%i)" % (attr, conv, valid_min))
-      if valid_max is not None and conv > valid_max:
-        self.parse_error("%s=%i < max (%i)" % (attr, conv, valid_max))
-      return conv        
+    def get_attr_int(self, attr, **kwargs):
+      self.get_attr_accessed(attr)
+      return self.parsed_element.get_attr_int(attr, **kwargs)      
+    
+    def get_attr_float(self, attr, **kwargs):
+      self.get_attr_accessed(attr)
+      return self.parsed_element.get_attr_float(attr, **kwargs)      
     
     def get_children(self):
       return self.parsed_element.children
@@ -128,8 +120,8 @@ class ParsedElement(object):
     """Helper function to throw a fatal error, indicating the broken element
     along with filename and line number.
     """
-    raise ValueError("Error parsing %s (%s:%i): %s" % 
-                     (self.tag, self.xml_filename,
+    raise ValueError("Error parsing %s '%s' (%s:%i): %s" % 
+                     (self.tag, self.ref, self.xml_filename,
                       self.xml_element.sourceline, message))
   
   def __init__(self, xml_element, xml_filename, prev_parsed_dict):
@@ -141,14 +133,11 @@ class ParsedElement(object):
     self.tag = xml_element.tag 
     self.ref = '(anon)'
     
-    # TODO: create default parents
     self.parent = None
     if self.tag + "Default" in prev_parsed_dict:
       self.class_parent = prev_parsed_dict[self.tag + "Default"]  # TODO: make this dynamic based on actual instantiated class
-    elif self.tag == "Template":
-      self.class_parent = None
     else:
-      self.parse_error("Can't find default template")
+      self.class_parent = None
     
     self.attributes = {}
     for attr_name, attr_value in xml_element.items():
@@ -172,12 +161,12 @@ class ParsedElement(object):
     # attributes during parsing.
     self.all_attributes = set()
     current = self
-    while current:
+    while current is not None:
       for attr_name in current.attributes.iterkeys():
         self.all_attributes.add(attr_name)
       current = current.parent
     current = self.class_parent
-    while current:
+    while current is not None:
       for attr_name in current.attributes.iterkeys():
         self.all_attributes.add(attr_name)
       current = current.parent
@@ -196,16 +185,50 @@ class ParsedElement(object):
     
   def create_accessor(self):
     return self.ParsedElementAccessor(self)
+
+  def get_all_attrs(self):
+    return self.all_attributes
     
-  def get(self, attribute):
+  def get_attr(self, attribute):
     current = self
-    while current:
+    while current is not None:
       if attribute in current.attributes:
         return current.attributes[attribute]
       current = current.parent
     current = self.class_parent
-    while current:
+    while current is not None:
       if attribute in current.attributes:
         return current.attributes[attribute]
       current = current.parent
     self.parse_error("Cannot find attribute: '%s'" % attribute)
+
+  def get_attr_string(self, attr, valid_set=None):
+    got = self.get_attr(attr)
+    if valid_set is not None and got not in valid_set:
+      self.parse_error("%s='%s' not in valid set: %s" % (attr, got, valid_set))
+    return got
+  
+  def get_attr_int(self, attr, valid_min=None, valid_max=None):
+    got = self.get_attr(attr)
+    try:
+      conv = int(got, 0)
+    except ValueError:
+      self.parse_error("Unable to convert %s='%s' to int" % (attr, got))
+    if valid_min is not None and conv < valid_min:
+      self.parse_error("%s=%i < min (%i)" % (attr, conv, valid_min))
+    if valid_max is not None and conv > valid_max:
+      self.parse_error("%s=%i < max (%i)" % (attr, conv, valid_max))
+    return conv        
+  
+  def get_attr_float(self, attr, valid_min=None, valid_max=None):
+    got = self.get_attr(attr)
+    try:
+      conv = float(got)
+    except ValueError:
+      self.parse_error("Unable to convert %s='%s' to float" % (attr, got))
+    if valid_min is not None and conv < valid_min:
+      self.parse_error("%s=%i < min (%i)" % (attr, conv, valid_min))
+    if valid_max is not None and conv > valid_max:
+      self.parse_error("%s=%i < max (%i)" % (attr, conv, valid_max))
+    return conv        
+  

@@ -6,7 +6,7 @@ class VisualizerRef(VisualizerBase):
   """Lazy initialized reference to another visualizer"""
   def __init__(self, element, parent):
     super(VisualizerRef, self).__init__(element, parent)
-    target = element.get('target')
+    target = element.get_attr_string('target')
     self.target = self.root.get_ref(target).instantiate(self)
   
   def layout_cairo(self, cr):
