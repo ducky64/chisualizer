@@ -1,5 +1,6 @@
 import logging
 from lxml import etree
+import os
 
 from chisualizer.util import Rectangle
 
@@ -30,7 +31,9 @@ class VisualizerDescriptor(object):
     """Parse this descriptor from an XML file."""
     from chisualizer.visualizers.VisualizerRoot import VisualizerRoot
     vis_root = VisualizerRoot(self.api)
-    vis_root.parse_children("vislib.xml", lib=True)
+    vis_root.parse_children(os.path.join(os.path.dirname(__file__),
+                                         "vislib.xml"),
+                            lib=True)
     vis_root.parse_children(filename)
     vis_root.instantiate_visualizers()
     self.vis_root = vis_root
