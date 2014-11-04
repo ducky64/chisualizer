@@ -1,8 +1,21 @@
 <!--
 Standard library for the Chisualizer, the contents of this are implicitly included in every visualization descriptor loaded.
-MODIFYING THIS FILE IS HIGHLY DISCOURAGED, unless you're a Chisualizer core developer or *really* know what you're doing. This file exists to provide *GLOBAL* defaults for visual elements as well as to give a comprehensive listing of available options. Modifying this will change how *EVERYTHING* looks, making your visualizations appear different from everyone else's. Obviously, this is bad for compatibility.
+MODIFYING THIS FILE IS HIGHLY DISCOURAGED unless you're a Chisualizer core developer or *really* know what you're doing. This file exists to provide *GLOBAL* defaults for visual elements as well as to give a comprehensive listing of available options. Modifying this will change how *EVERYTHING* looks, making your visualizations appear different from everyone else's. Obviously, this is bad for compatibility.
 -->
 <root>
+<!--Default visualizer object properties-->
+<Template ref="VisualizerBaseDefault" path="" border_size="1" border_margin="6" label="" label_size="8" label_font="Mono"/>
+<Template ref="VisualizerRefDefault" template="VisualizerBaseDefault"/>
+<Template ref="AutoGridDefault" template="VisualizerBaseDefault" step="row"/>
+<Template ref="DataTextDefault" template="VisualizerBaseDefault" display="hexadecimal" display_size="14" display_font="Mono"/>
+<Template ref="MemoryArrayDefault" template="VisualizerBaseDefault" step="row" offset="0" offset_anchor="0" rows="1" cols="1"/>
+
+<!--Default display properties-->
+<Template ref="DisplayBaseDefault"/>
+<Template ref="NumericalDisplayDefault" template="DisplayBaseDefault" prefix="" charmap="0123456789abcdefghijklmnopqrstuvwxyz"/>
+<Template ref="MappedDisplayDefault" template="DisplayBaseDefault"/>
+<Template ref="SubprocessDisplay" template="DisplayBaseDefault" cmd_to_text="" cmd_from_text=""/>
+
 <!--Default display types-->
 <NumericalDisplay ref="binary" prefix="0b" radix="2"/>
 <NumericalDisplay ref="decimal" radix="10"/>
@@ -12,5 +25,5 @@ MODIFYING THIS FILE IS HIGHLY DISCOURAGED, unless you're a Chisualizer core deve
 	<Mapping key="0" text="false" color="bool_0"/>
 	<Mapping key="1" text="true" color="bool_1"/>
 </MappedDisplay>
-
 </root>
+

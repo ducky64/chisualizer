@@ -10,16 +10,12 @@ from Data import Data
 @Base.xml_register('DataText')
 class DataText(Data):
   """Visualizer for data represented as text."""
-  @classmethod
-  def from_xml_cls(cls, element, parent):
-    new = super(DataText, cls).from_xml_cls(element, parent)
-    display_ref = element.get('display', 'hexadecimal')
-    new.display = Base.Base.from_xml(new.root.get_ref(display_ref), parent)
+  def __init__(self, element, parent):
+    super(DataText, self).__init__(element, parent)
     
-    new.display_size = new.parse_element_int(element, 'display_size', 14)
-    new.display_font = element.get('display_font', 'Mono')
-
-    return new
+    self.display = self.root.get_ref(element.get_attr_string('display')).instantiate(self)
+    self.display_size = element.get_attr_int('display_size', valid_min=1)
+    self.display_font = element.get_attr_string('display_font')
 
   def draw_element_cairo(self, cr, rect, depth):
     cr.set_source_rgba(*self.get_theme().default_color())

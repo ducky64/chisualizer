@@ -282,7 +282,9 @@ def run():
     logging.getLogger().setLevel(logging.INFO)
   elif args.log_level == 'debug':
     logging.getLogger().setLevel(logging.DEBUG)
-  
+  else:
+    assert False
+    
   if args.emulator == "dummy":  
     api = ChiselDummyApi()
   else:

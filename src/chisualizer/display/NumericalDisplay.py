@@ -5,17 +5,14 @@ from DisplayBase import DisplayBase
 
 @xml_register('NumericalDisplay')
 class NumericalDisplay(DisplayBase):
-  @classmethod
-  def from_xml_cls(cls, element, parent):
-    new = super(NumericalDisplay, cls).from_xml_cls(element, parent)
-    new.prefix = element.get('prefix', '')
-    new.radix = new.parse_element_int(element, 'radix', 10)
-    if new.radix <= 0:
-      raise ValueError("NumericalDisplay.radix must be > 0, got %i" % new.radix)
-    new.charmap = element.get('charmap', '0123456789abcdefghijklmnopqrstuvwxyz')
-    if len(new.charmap) < new.radix:
-      raise ValueError("NumericalDisplay.charmap must be longer than radix (%i), got %i" % (new.radix, len(new.charmap)))
-    return new
+  def __init__(self, element, parent):
+    super(NumericalDisplay, self).__init__(element, parent)
+    self.prefix = element.get_attr_string('prefix')
+    self.radix = element.get_attr_int('radix', valid_min=1)
+    self.charmap = element.get_attr_string('charmap')
+    if len(self.charmap) < self.radix:
+      element.parse_error("charmap must be longer than radix (%i), got %i" %
+                          (self.radix, len(self.charmap)))    
   
   def apply(self, node):
     value = node.get_value()
