@@ -3,7 +3,7 @@ from VisualizerBase import AbstractVisualizer
 
 @Base.xml_register('VisualizerRef')
 class VisualizerRef(AbstractVisualizer):
-  """Lazy initialized reference to another visualizer"""
+  """Lazily initialized reference to another visualizer."""
   def __init__(self, element, parent):
     super(VisualizerRef, self).__init__(element, parent)
     target = element.get_attr_string('target')
