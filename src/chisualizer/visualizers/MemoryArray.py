@@ -42,7 +42,6 @@ class MemoryArray(Data):
       ary = []
       assert inst_min <= inst_max
       for i in xrange(inst_min, inst_max+1):
-        logging.debug("create %i", i)
         ary.append(instantiate_cell(i))
       assert len(ary) == inst_max - inst_min + 1
       return ary
@@ -58,8 +57,6 @@ class MemoryArray(Data):
       render_max = self.node.get_depth() - 1
     if render_min < 0:
       render_min = 0
-      
-    logging.debug("%i - %i", render_min, render_max)
       
     if render_max == self.cells_max and render_min == self.cells_min:
       # If rendering range exactly the same, nothing needs to be done.
