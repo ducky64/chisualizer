@@ -4,7 +4,7 @@ import os
 
 from chisualizer.util import Rectangle
 
-# a registry of all visualization descriptors which can be instantiated
+# A registry of all visualization descriptors which can be instantiated
 # indexed by name which it can be instantiated under.
 xml_registry = {}
 def xml_register(name=None):
@@ -12,9 +12,7 @@ def xml_register(name=None):
     local_name = name
     if local_name == None:
       local_name = cls.__name__
-    if local_name in xml_registry:
-      raise NameError("Attempting to re-register a XML descriptor '%s'" %
-                      local_name)
+    assert local_name not in xml_registry
     xml_registry[local_name] = cls
     logging.debug("Registered XML descriptor class '%s'" % local_name)
     return cls
@@ -54,6 +52,18 @@ class VisualizerDescriptor(object):
     # TODO: is persisrent theme state really the best idea?
     self.vis_root.set_theme(theme)
 
+# A dict of XML tags to desugaring functions which take in the ParsedElement
+# and return the desugared ParsedElement (or None if nothing was changed).
+# Desugaring is complete when there are no more desugaring functions to call
+# or all return false.
+xml_desugar_registry = {}
+def xml_desugar(tag):
+  def wrap(fun):
+    assert tag not in xml_desugar_registry
+    xml_desugar_registry[tag] = fun
+    return fun
+  return wrap
+
 class VisualizerParseError(BaseException):
   pass
 
@@ -78,7 +88,8 @@ class ParsedElement(object):
   """
   An intermediate representation for parsed XML visualizer descriptor objects -
   essentially a dict of the element attributes and list of children. Contains
-  logic for resolving inheritance and checking usage. 
+  functionality to to type conversion, validation, and check that all attributes
+  specified are actually read.
   """
   class ParsedElementAccessor():
     """Accessor to the ParsedElement. Tracks attribute accesses to ensure
@@ -128,52 +139,24 @@ class ParsedElement(object):
                       self.xml_element.sourceline, message))
   
   def __init__(self, xml_element, xml_filename, prev_parsed_dict):
-    """Constructor. Initializes this from a XML element, handling inheritance
-    and some common parsing."""
+    """Constructor. Parses an ElementTree element to populate my attributes and
+    children. Subclasses can assign specific meanings to attributes by """
     self.xml_element = xml_element
     self.xml_filename = xml_filename
     
     self.tag = xml_element.tag 
     self.ref = '(anon)'
     
-    self.parent = None
-    if self.tag + "Default" in prev_parsed_dict:
-      self.class_parent = prev_parsed_dict[self.tag + "Default"]  # TODO: make this dynamic based on actual instantiated class
-    else:
-      self.class_parent = None
-    
     self.attributes = {}
     for attr_name, attr_value in xml_element.items():
-      if attr_name == "template":
-        if attr_value not in prev_parsed_dict:
-          self.parse_error("No template: '%s'" % attr_value)
-        self.parent = prev_parsed_dict[attr_value]
-      elif attr_name == "ref":
-        self.ref = attr_value 
-      else:
-        if attr_value in self.attributes:
-          self.parse_error("Duplicate attribute: '%s'" % attr_name)
-        self.attributes[attr_name] = attr_value
+      if attr_value in self.attributes:
+        self.parse_error("Duplicate attribute: '%s'" % attr_name)
+      self.attributes[attr_name] = attr_value
     
     self.children = []
     for child in xml_element.iterchildren(tag=etree.Element):
-      # TODO: handle special tags (modifiers?) here
       self.children.append(ParsedElement(child, xml_filename, prev_parsed_dict))
-    
-    # Build a list of all attributes so we can determine if there are unused
-    # attributes during parsing.
-    self.all_attributes = set()
-    current = self
-    while current is not None:
-      for attr_name in current.attributes.iterkeys():
-        self.all_attributes.add(attr_name)
-      current = current.parent
-    current = self.class_parent
-    while current is not None:
-      for attr_name in current.attributes.iterkeys():
-        self.all_attributes.add(attr_name)
-      current = current.parent
-      
+          
   def instantiate(self, parent, valid_subclass=None):
     assert valid_subclass is not None
     if self.tag not in xml_registry:
@@ -195,7 +178,7 @@ class ParsedElement(object):
     return self.ParsedElementAccessor(self)
 
   def get_all_attrs(self):
-    return self.all_attributes
+    return self.attributes.iterkeys()
     
   def get_attr(self, attribute):
     current = self
@@ -239,4 +222,26 @@ class ParsedElement(object):
     if valid_max is not None and conv > valid_max:
       self.parse_error("%s=%i < max (%i)" % (attr, conv, valid_max))
     return conv        
-  
+
+class InheritanceParsedElement(ParsedElement):
+  def __init__(self, xml_element, xml_filename, prev_parsed_dict):
+    super(InheritanceParsedElement, self).__init__(xml_element, xml_filename, prev_parsed_dict)
+    
+    self.parent = None
+    if self.tag + "Default" in prev_parsed_dict:
+      self.class_parent = prev_parsed_dict[self.tag + "Default"]  # TODO: make this dynamic based on actual instantiated class
+    else:
+      self.class_parent = None
+    
+    
+    current = self
+    while current is not None:
+      for attr_name in current.attributes.iterkeys():
+        self.all_attributes.add(attr_name)
+      current = current.parent
+    current = self.class_parent
+    while current is not None:
+      for attr_name in current.attributes.iterkeys():
+        self.all_attributes.add(attr_name)
+      current = current.parent
+      
