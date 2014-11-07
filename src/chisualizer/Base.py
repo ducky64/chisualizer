@@ -84,9 +84,6 @@ class VisualizerDescriptor(object):
     # TODO: is persisrent theme state really the best idea?
     self.vis_root.set_theme(theme)
 
-class VisualizerParseError(BaseException):
-  pass
-
 class Base(object):
   """Abstract base class for visualizer descriptor objects."""
   def __init__(self, element, parent):
@@ -103,6 +100,34 @@ class Base(object):
   def get_theme(self):
     """Returns a Theme object, mapping descriptions to numerical colors."""
     return self.root.get_theme()
+
+class VisualizerParseError(BaseException):
+  """Base exception class for errors during visualizer descriptor parsing."""
+  pass
+
+class VisualizerParseTypeError(VisualizerParseError):
+  """Type conversion (string->?) failed during parsing."""
+  pass
+
+class VisualizerParseValidationError(VisualizerParseError):
+  """Attribute validation failed during parsing."""
+  pass
+
+class VisualizerParseTagError(VisualizerParseError):
+  """Something was wrong with the element tag."""
+  pass
+
+class VisualizerParseAttributeError(VisualizerParseError):
+  """Something was wrong with the attributes."""
+  pass
+
+class VisualizerParseAttributeNotFound(VisualizerParseError):
+  """A required attribute was not found."""
+  pass
+
+class VisualizerParseAttributeNotUsed(VisualizerParseError):
+  """A specified attribute was not used."""
+  pass
 
 class ParsedElement(object):
   """
@@ -154,15 +179,15 @@ class ParsedElement(object):
     def get_children(self):
       return self.parsed_element.children
     
-  def parse_error(self, message):
+  def parse_error(self, message, exc_cls=VisualizerParseError):
     """Helper function to throw a fatal error, indicating the broken element
     along with filename and line number.
     """
-    raise ValueError("Error parsing %s '%s' (%s:%i): %s" % 
-                     (self.tag, self.ref, self.xml_filename,
-                      self.xml_element.sourceline, message))
+    raise exc_cls("Error parsing %s '%s' (%s:%i): %s" % 
+                  (self.tag, self.ref, self.xml_filename,
+                   self.xml_element.sourceline, message))
   
-  def __init__(self, xml_element, xml_filename, registry):
+  def __init__(self, xml_element, xml_filename):
     """Constructor. Parses an ElementTree element to populate my attributes and
     children."""
     self.xml_element = xml_element
@@ -174,28 +199,34 @@ class ParsedElement(object):
     self.attributes = {}
     for attr_name, attr_value in xml_element.items():
       if attr_value in self.attributes:
-        self.parse_error("Duplicate attribute: '%s'" % attr_name)
+        self.parse_error("Duplicate attribute: '%s'" % attr_name,
+                         exc_cls=VisualizerParseAttributeError)
       self.attributes[attr_name] = attr_value
     
     self.children = []
     for child in xml_element.iterchildren(tag=etree.Element):
-      self.children.append(ParsedElement(child, xml_filename, registry))
+      self.children.append(ParsedElement(child, xml_filename))
           
   def instantiate(self, parent, valid_subclass=None):
     assert valid_subclass is not None
     if self.tag not in xml_registry:
-      self.parse_error("Unknown tag '%s'" % self.tag)
+      self.parse_error("Unknown tag '%s'" % self.tag,
+                       exc_cls=VisualizerParseTagError)
       
     rtn_cls = xml_registry[self.tag]
     if not issubclass(rtn_cls, valid_subclass):
-      self.parse_error("Expected to be a subclass of %s" % valid_subclass.__name__)
+      self.parse_error("Expected to be a subclass of %s" %
+                       valid_subclass.__name__,
+                       exc_cls=VisualizerParseTagError)
         
     logging.debug("Instantiating %s (%s:%s)" % 
                   (rtn_cls.__name__, self.tag, self.ref))
     accessor = self.create_accessor()
     rtn = rtn_cls(accessor, parent)
     if accessor.get_unused_attributes():
-      self.parse_error("Unused attributes: %s" % accessor.get_unused_attributes())
+      self.parse_error("Unused attributes: %s" % 
+                       accessor.get_unused_attributes(),
+                       exc_cls=VisualizerParseAttributeNotUsed)
     return rtn
     
   def create_accessor(self):
@@ -215,13 +246,15 @@ class ParsedElement(object):
       if attribute in current.attributes:
         return current.attributes[attribute]
       current = current.parent
-    self.parse_error("Cannot find attribute: '%s'" % attribute)
+    self.parse_error("Cannot find attribute: '%s'" % attribute,
+                     exc_cls=VisualizerParseAttributeNotFoundError)
 
   def get_attr_string(self, attr, valid_set=None):
     got = self.get_attr(attr)
     assert isinstance(got, basestring)
     if valid_set is not None and got not in valid_set:
-      self.parse_error("%s='%s' not in valid set: %s" % (attr, got, valid_set))
+      self.parse_error("%s='%s' not in valid set: %s" % (attr, got, valid_set),
+                       exc_cls=VisualizerParseValidationError)
     return got
   
   def get_attr_int(self, attr, valid_min=None, valid_max=None):
@@ -230,11 +263,14 @@ class ParsedElement(object):
     try:
       conv = int(got, 0)
     except ValueError:
-      self.parse_error("Unable to convert %s='%s' to int" % (attr, got))
+      self.parse_error("Unable to convert %s='%s' to int" % (attr, got),
+                       exc_cls=VisualizerParseTypeError)
     if valid_min is not None and conv < valid_min:
-      self.parse_error("%s=%i < min (%i)" % (attr, conv, valid_min))
+      self.parse_error("%s=%i < min (%i)" % (attr, conv, valid_min),
+                       exc_cls=VisualizerParseValidationError)
     if valid_max is not None and conv > valid_max:
-      self.parse_error("%s=%i < max (%i)" % (attr, conv, valid_max))
+      self.parse_error("%s=%i < max (%i)" % (attr, conv, valid_max),
+                       exc_cls=VisualizerParseValidationError)
     return conv        
   
   def get_attr_float(self, attr, valid_min=None, valid_max=None):
@@ -243,10 +279,13 @@ class ParsedElement(object):
     try:
       conv = float(got)
     except ValueError:
-      self.parse_error("Unable to convert %s='%s' to float" % (attr, got))
+      self.parse_error("Unable to convert %s='%s' to float" % (attr, got),
+                       exc_cls=VisualizerParseTypeError)
     if valid_min is not None and conv < valid_min:
-      self.parse_error("%s=%i < min (%i)" % (attr, conv, valid_min))
+      self.parse_error("%s=%i < min (%i)" % (attr, conv, valid_min),
+                       exc_cls=VisualizerParseValidationError)
     if valid_max is not None and conv > valid_max:
-      self.parse_error("%s=%i < max (%i)" % (attr, conv, valid_max))
+      self.parse_error("%s=%i < max (%i)" % (attr, conv, valid_max),
+                       exc_cls=VisualizerParseValidationError)
     return conv        
    

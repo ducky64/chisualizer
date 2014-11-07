@@ -34,14 +34,15 @@ class VisualizerRoot(object):
       return self.registry[ref]
     raise NameError("Unknown ref '%s'" % ref)
   
-  def parse_children(self, xml_file, lib=False):
-    xml_file = os.path.abspath(xml_file)
-    logging.debug("Parsing XML file: '%s'%s" % (xml_file, " (as library)" if lib else ""))
-    xml_root = etree.parse(xml_file).getroot()
+  def parse_children(self, xml_filename, lib=False):
+    xml_filename = os.path.abspath(xml_filename)
+    logging.debug("Parsing XML file: '%s'%s" % 
+                  (xml_filename, " (as library)" if lib else ""))
+    xml_root = etree.parse(xml_filename).getroot()
     for child in xml_root.iterchildren(tag=etree.Element):
       # TODO: handle special elements (import directives?) here
       ref = child.get('ref', None)
-      parsed = ParsedElement(child, xml_file, self.registry)
+      parsed = ParsedElement(child, xml_filename)
       if ref:
         if ref in self.registry: raise NameError("Duplicate ref '%s'" % ref)
         self.registry[ref] = parsed
