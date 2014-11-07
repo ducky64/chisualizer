@@ -4,18 +4,50 @@ import os
 
 from chisualizer.util import Rectangle
 
-# A registry of all visualization descriptors which can be instantiated
-# indexed by name which it can be instantiated under.
+# A registry of all visualization descriptors (map from XML tag name to class)
+# which can be instantiated.
 xml_registry = {}
-def xml_register(name=None):
+def xml_register(xml_tag_name=None):
   def wrap(cls):
-    local_name = name
+    local_name = xml_tag_name
     if local_name == None:
       local_name = cls.__name__
     assert local_name not in xml_registry
     xml_registry[local_name] = cls
     logging.debug("Registered XML descriptor class '%s'" % local_name)
     return cls
+  return wrap
+
+# A registry of desugaring structural transforms, a map from the XML tag name
+# to a function which takes in the ParsedElement and returns the desugared
+# version (which may or may not be the same. This is part of the first 
+# desugaring pass. Desugaring runs in the same order as elements were read in.
+# Returned elements may alias with other elements.
+# TODO: is aliasing a good idea? should ParsedElements be able to clone()?
+# TODO: is the ordering guarantee good enough? better ways to do that?  
+desugar_structural_registry = {}
+def desugar_structural_register(xml_tag_name):
+  def wrap(fun):
+    assert xml_tag_name not in desugar_structural_registry
+    desugar_structural_registry[xml_tag_name] = fun
+    logging.debug("Registered structural desugaring transform '%s'" % xml_tag_name)
+    return fun
+  return wrap
+
+# A registry of element desugaring transforms, which takes in a ParsedElement
+# and desugars it by mutating it in-place. A map of classes to desugaring
+# functions - the transforms run on ParsedElements corresponding to the class
+# and subclasses. Desugaring runs in the same order as elements were read in.
+# Main use is to do pre-processing to transform all children into attributes. 
+# The attribute values can be complete free-form.
+# TODO: is the ordering guarantee good enough? better ways to do that?
+desugar_element_registry = {}
+def desugar_element_register(cls):
+  def wrap(fun):
+    assert cls not in desugar_element_registry
+    desugar_element_registry[cls] = fun
+    logging.debug("Registered structural desugaring transform '%s'" % cls.__name__)
+    return fun
   return wrap
 
 class VisualizerDescriptor(object):
@@ -51,18 +83,6 @@ class VisualizerDescriptor(object):
   def set_theme(self, theme):
     # TODO: is persisrent theme state really the best idea?
     self.vis_root.set_theme(theme)
-
-# A dict of XML tags to desugaring functions which take in the ParsedElement
-# and return the desugared ParsedElement (or None if nothing was changed).
-# Desugaring is complete when there are no more desugaring functions to call
-# or all return false.
-xml_desugar_registry = {}
-def xml_desugar(tag):
-  def wrap(fun):
-    assert tag not in xml_desugar_registry
-    xml_desugar_registry[tag] = fun
-    return fun
-  return wrap
 
 class VisualizerParseError(BaseException):
   pass
@@ -115,6 +135,10 @@ class ParsedElement(object):
     def get_ref(self):
       return self.parsed_element.ref
     
+    def get_attr(self, attr):
+      self.get_attr_accessed(attr)
+      return self.parsed_element.get_attr_string(attr)
+    
     def get_attr_string(self, attr, **kwargs):
       self.get_attr_accessed(attr)
       return self.parsed_element.get_attr_string(attr, **kwargs)
@@ -138,9 +162,9 @@ class ParsedElement(object):
                      (self.tag, self.ref, self.xml_filename,
                       self.xml_element.sourceline, message))
   
-  def __init__(self, xml_element, xml_filename, prev_parsed_dict):
+  def __init__(self, xml_element, xml_filename, registry):
     """Constructor. Parses an ElementTree element to populate my attributes and
-    children. Subclasses can assign specific meanings to attributes by """
+    children."""
     self.xml_element = xml_element
     self.xml_filename = xml_filename
     
@@ -155,7 +179,7 @@ class ParsedElement(object):
     
     self.children = []
     for child in xml_element.iterchildren(tag=etree.Element):
-      self.children.append(ParsedElement(child, xml_filename, prev_parsed_dict))
+      self.children.append(ParsedElement(child, xml_filename, registry))
           
   def instantiate(self, parent, valid_subclass=None):
     assert valid_subclass is not None
@@ -195,12 +219,14 @@ class ParsedElement(object):
 
   def get_attr_string(self, attr, valid_set=None):
     got = self.get_attr(attr)
+    assert isinstance(got, basestring)
     if valid_set is not None and got not in valid_set:
       self.parse_error("%s='%s' not in valid set: %s" % (attr, got, valid_set))
     return got
   
   def get_attr_int(self, attr, valid_min=None, valid_max=None):
     got = self.get_attr(attr)
+    assert isinstance(got, basestring)
     try:
       conv = int(got, 0)
     except ValueError:
@@ -213,6 +239,7 @@ class ParsedElement(object):
   
   def get_attr_float(self, attr, valid_min=None, valid_max=None):
     got = self.get_attr(attr)
+    assert isinstance(got, basestring)
     try:
       conv = float(got)
     except ValueError:
@@ -222,26 +249,4 @@ class ParsedElement(object):
     if valid_max is not None and conv > valid_max:
       self.parse_error("%s=%i < max (%i)" % (attr, conv, valid_max))
     return conv        
-
-class InheritanceParsedElement(ParsedElement):
-  def __init__(self, xml_element, xml_filename, prev_parsed_dict):
-    super(InheritanceParsedElement, self).__init__(xml_element, xml_filename, prev_parsed_dict)
-    
-    self.parent = None
-    if self.tag + "Default" in prev_parsed_dict:
-      self.class_parent = prev_parsed_dict[self.tag + "Default"]  # TODO: make this dynamic based on actual instantiated class
-    else:
-      self.class_parent = None
-    
-    
-    current = self
-    while current is not None:
-      for attr_name in current.attributes.iterkeys():
-        self.all_attributes.add(attr_name)
-      current = current.parent
-    current = self.class_parent
-    while current is not None:
-      for attr_name in current.attributes.iterkeys():
-        self.all_attributes.add(attr_name)
-      current = current.parent
-      
+   

@@ -68,4 +68,18 @@ class VisualizerRoot(object):
   
   def get_theme(self):
     return self.theme
-    
+
+class VisualizerRegistry():
+  def __init__(self):
+    self.templates = {}
+    self.default_templates = {}
+    self.ref_elements = []
+  
+  def get_template(self, template_ref):
+    pass
+  
+  def get_default_template(self, cls):
+    pass
+  
+  def get_visualizer_ref(self, ref):
+    pass
