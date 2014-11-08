@@ -1,0 +1,33 @@
+lib:
+  gcd:
+    AutoGrid:
+    step: row
+    cells:
+    - ref: GCD_io_in
+    - ref: GCD_state
+    - ref: GCD_io_out
+  gcd_state:
+    AutoGrid:
+    step: col
+    cells:
+    - {DataText:, path: .state, display: gcd_state_map}
+    - {DataText:, path: .latch_A, display: decimal}
+    - {DataText:, path: .latch_B, display: decimal}
+  gcd_io_in:
+    AutoGrid:
+    step: col
+    cells:
+    - {DataText:, path: _operands_bits_A, display: decimal}
+    - {DataText:, path: _operands_bits_B, display: decimal}
+    - {DataText:, path: _operands_val, display: bool}
+    - {DataText:, path: _operands_rdy, display: bool}
+  gcd_io_out:
+    AutoGrid:
+    step: col
+    cells:
+    - {DataText:, path: _results_bits_data, display: decimal}
+    - {DataText:, path: _results_val, display: bool}
+    - {DataText:, path: _results_rdy, display: bool}
+
+display:
+- ref: gcd
