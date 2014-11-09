@@ -8,7 +8,7 @@ from chisualizer.display.DisplayBase import DisplayBase
 
 from Data import Data
 
-@Base.xml_register('DataText')
+@Base.tag_register('DataText')
 class DataText(Data):
   """Visualizer for data represented as text."""
   def __init__(self, element, parent):

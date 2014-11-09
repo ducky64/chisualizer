@@ -2,7 +2,6 @@ import argparse
 import logging
 import sys
 import time
-import xml.etree.ElementTree as etree
 
 try:
   import wx
@@ -293,7 +292,7 @@ def run():
       emulator_cmd_list.extend(args.emulator_args)
     api = ChiselEmulatorSubprocess(emulator_cmd_list, reset=args.emulator_reset)
   
-  desc = Base.VisualizerDescriptor(args.visualizer_desc, api)
+  desc = Base.VisualizerRoot(args.visualizer_desc, api)
     
   app = wx.App(False)
   ChisualizerFrame(None, 'Chisualizer', api, desc)

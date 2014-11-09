@@ -1,7 +1,7 @@
 import chisualizer.Base as Base
 from VisualizerBase import AbstractVisualizer
 
-@Base.xml_register('VisualizerRef')
+@Base.tag_register('VisualizerRef')
 class VisualizerRef(AbstractVisualizer):
   """Lazily initialized reference to another visualizer."""
   def __init__(self, element, parent):

@@ -1,7 +1,7 @@
 import chisualizer.Base as Base
 from VisualizerBase import AbstractVisualizer, FramedVisualizer, Rectangle
 
-@Base.xml_register('AutoGrid')
+@Base.tag_register('AutoGrid')
 class AutoGrid(FramedVisualizer):
   """A grid of elements, automatically sized by rows or columns."""
   def __init__(self, element, parent):

@@ -1,73 +1,74 @@
 import logging
-from lxml import etree
+import yaml
 import os
 
 from chisualizer.util import Rectangle
 
-# A registry of all visualization descriptors (map from XML tag name to class)
+# A registry of all visualization descriptors (map from tag name to class)
 # which can be instantiated.
-xml_registry = {}
-def xml_register(xml_tag_name=None):
+tag_registry = {}
+def tag_register(tag_name=None):
   def wrap(cls):
-    local_name = xml_tag_name
+    local_name = tag_name
     if local_name == None:
       local_name = cls.__name__
-    assert local_name not in xml_registry
-    xml_registry[local_name] = cls
-    logging.debug("Registered XML descriptor class '%s'" % local_name)
+    assert local_name not in tag_registry
+    tag_registry[local_name] = cls
+    logging.debug("Registered tag '%s'" % local_name)
     return cls
   return wrap
 
-# A registry of desugaring structural transforms, a map from the XML tag name
-# to a function which takes in the ParsedElement and returns the desugared
-# version (which may or may not be the same. This is part of the first 
-# desugaring pass. Desugaring runs in the same order as elements were read in.
-# Returned elements may alias with other elements.
+# A registry of desugaring structural transforms, a map from the tag name to a
+# function which takes in the ParsedElement and returns the desugared version
+# (which may or may not be the same. Desugaring runs in the same order as 
+# elements were read in. Returned elements may alias with other elements.
 # TODO: is aliasing a good idea? should ParsedElements be able to clone()?
 # TODO: is the ordering guarantee good enough? better ways to do that?  
-desugar_structural_registry = {}
-def desugar_structural_register(xml_tag_name):
+desugar_registry = {}
+def desugar_register(tag_name):
   def wrap(fun):
-    assert xml_tag_name not in desugar_structural_registry
-    desugar_structural_registry[xml_tag_name] = fun
-    logging.debug("Registered structural desugaring transform '%s'" % xml_tag_name)
+    assert tag_name not in desugar_registry
+    desugar_registry[tag_name] = fun
+    logging.debug("Registered desugaring transform for '%s'" % tag_name)
     return fun
   return wrap
 
-# A registry of element desugaring transforms, which takes in a ParsedElement
-# and desugars it by mutating it in-place. A map of classes to desugaring
-# functions - the transforms run on ParsedElements corresponding to the class
-# and subclasses. Desugaring runs in the same order as elements were read in.
-# Main use is to do pre-processing to transform all children into attributes. 
-# The attribute values can be complete free-form.
-# TODO: is the ordering guarantee good enough? better ways to do that?
-desugar_element_registry = {}
-def desugar_element_register(cls):
-  def wrap(fun):
-    assert cls not in desugar_element_registry
-    desugar_element_registry[cls] = fun
-    logging.debug("Registered structural desugaring transform '%s'" % cls.__name__)
-    return fun
-  return wrap
+class YAMLVisualizerRegistry():
+  def __init__(self):
+    self.templates = {}
+    self.default_templates = {}
+    self.ref_elements = {}
 
-class VisualizerDescriptor(object):
+  def read_descriptor(self, filename):
+    loader = yaml.SafeLoader(file(filename, 'r'))
+    
+    def obj_constructor(loader, node):
+        value = loader.construct_mapping(node)
+        print value.__class__.__name__
+        return value
+    
+    for tag_name in tag_registry:
+      loader.add_constructor("!" + tag_name, obj_constructor)
+      
+    for tag_name in desugar_registry:
+      loader.add_constructor("!" + tag_name, obj_constructor)
+    
+    print loader.get_data()
+
+class VisualizerRoot(object):
   """An visualizer descriptor file."""
   def __init__(self, filename, api):
     """Initialize this descriptor from a file and given a ChiselApi object."""
+    from chisualizer.visualizers.Theme import DarkTheme
+    
     self.api = api
-    self.parse_from_xml(filename)
+    self.theme = DarkTheme()
+    self.registry = YAMLVisualizerRegistry()
+    self.visualizer = None  # TODO: support multiple visualizers in different windows
 
-  def parse_from_xml(self, filename):
-    """Parse this descriptor from an XML file."""
-    from chisualizer.visualizers.VisualizerRoot import VisualizerRoot
-    vis_root = VisualizerRoot(self.api)
-    vis_root.parse_children(os.path.join(os.path.dirname(__file__),
-                                         "vislib.xml"),
-                            lib=True)
-    vis_root.parse_children(filename)
-    vis_root.instantiate_visualizers()
-    self.vis_root = vis_root
-    self.visualizer = vis_root.visualizer
+    self.registry.read_descriptor(filename)
+
+    assert False
 
   def layout_cairo(self, cr):
     size_x, size_y = self.visualizer.layout_cairo(cr)
@@ -78,11 +79,11 @@ class VisualizerDescriptor(object):
 
   def get_theme(self):
     # TODO refactor this, probably makes more sense to set themes here
-    return self.vis_root.get_theme()
+    return self.theme
 
   def set_theme(self, theme):
-    # TODO: is persisrent theme state really the best idea?
-    self.vis_root.set_theme(theme)
+    # TODO: is persistent theme state really the best idea?
+    self.theme = theme
 
 class Base(object):
   """Abstract base class for visualizer descriptor objects."""
@@ -204,8 +205,8 @@ class ParsedElement(object):
       self.attributes[attr_name] = attr_value
     
     self.children = []
-    for child in xml_element.iterchildren(tag=etree.Element):
-      self.children.append(ParsedElement(child, xml_filename))
+    """for child in xml_element.iterchildren(tag=etree.Element):
+      self.children.append(ParsedElement(child, xml_filename))"""
           
   def instantiate(self, parent, valid_subclass=None):
     assert valid_subclass is not None

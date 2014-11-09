@@ -1,19 +1,24 @@
 defaults:
   NumericalText:
+    !Template
     charmap: 01234567890abcdefghijklmnopqrstuvwxyz
   FramedBase:
+    !Template
     border_size: 1
     border_margin: 6
     label: 
     label_size: 8
     label_font: Mono
   AutoGrid:
+    !Template
     step: row
   Text:
+    !Template
     text: {NumericalText:, radix: 10}
     text_size: 14
     text_font: Mono
   MemoryArray:
+    !Template
     step: row
     offset: 0
     offset_anchor: 0
@@ -22,28 +27,28 @@ defaults:
     
 lib:
   text_binary:
-    Template:
+    !Template
     text: {NumericalText:, prefix: 0b, radix: 2}
   text_decimal:
-    Template:
+    !Template
     text: {NumericalText:, radix: 10}
   text_hexadecimal:
-    Template:
+    !Template
     text: {NumericalText:, prefix: 0x, radix: 16}
   text_bool:
-    DictTemplate:
+    !DictTemplate
     0:
-      text: false
+      text: "false"
       text_color: red
     1:
-      text: true
+      text: "true"
       text_color: green
     default:
-      text: true*
+      text: "true*"
       text_color: green
     
   gcd_state_map:
-    DictTemplate:
+    !DictTemplate
     0:
       text: idle
       text_color: pink
@@ -55,37 +60,37 @@ lib:
       text_color: green
       
   gcd:
-    AutoGrid:
+    !AutoGrid
     step: row
     cells:
     - ref: GCD_io_in
     - ref: GCD_state
     - ref: GCD_io_out
   gcd_state:
-    AutoGrid:
+    !AutoGrid
     label: state
     step: col
     cells:
     - {Text:, path: .state, template: gcd_state_map}
-    - {Text:, path: .latch_A, display: decimal}
-    - {Text:, path: .latch_B, display: decimal}
+    - {Text:, path: .latch_A, template: text_decimal}
+    - {Text:, path: .latch_B, template: text_decimal}
   gcd_io_in:
-    AutoGrid:
+    !AutoGrid
     label: io (in)
     step: col
     cells:
-    - {Text:, path: _operands_bits_A, display: decimal}
-    - {Text:, path: _operands_bits_B, display: decimal}
-    - {Text:, path: _operands_val, display: bool}
-    - {Text:, path: _operands_rdy, display: bool}
+    - {Text:, path: _operands_bits_A, template: text_decimal}
+    - {Text:, path: _operands_bits_B, template: text_decimal}
+    - {Text:, path: _operands_val, template: text_bool}
+    - {Text:, path: _operands_rdy, template: text_bool}
   gcd_io_out:
-    AutoGrid:
+    !AutoGrid
     label: io (out)
     step: col
     cells:
-    - {Text:, path: _results_bits_data, display: decimal}
-    - {Text:, path: _results_val, display: bool}
-    - {Text:, path: _results_rdy, display: bool}
+    - {Text:, path: _results_bits_data, template: text_decimal}
+    - {Text:, path: _results_val, template: text_bool}
+    - {Text:, path: _results_rdy, template: text_bool}
 
 display:
 - {ref: gcd, path: gcd}

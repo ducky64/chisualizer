@@ -1,9 +1,9 @@
 import math
 
-from chisualizer.Base import xml_register
+import chisualizer.Base as Base
 from DisplayBase import DisplayBase
 
-@xml_register('NumericalDisplay')
+@Base.tag_register('NumericalDisplay')
 class NumericalDisplay(DisplayBase):
   def __init__(self, element, parent):
     super(NumericalDisplay, self).__init__(element, parent)

@@ -5,7 +5,7 @@ import chisualizer.Base as Base
 from VisualizerBase import AbstractVisualizer, Rectangle
 from Data import Data
 
-@Base.xml_register('MemoryArray')
+@Base.tag_register('MemoryArray')
 class MemoryArray(Data):
   """A grid of cells, each pointing to a memory element."""
   def __init__(self, element, parent):

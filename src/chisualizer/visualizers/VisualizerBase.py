@@ -1,12 +1,15 @@
 import string
 
-from chisualizer.Base import Base
+import chisualizer.Base as Base
 from chisualizer.util import Rectangle
 
 import cairo
 import wx
 
-class AbstractVisualizer(Base):
+@Base.tag_register("Text")
+@Base.tag_register("Template")
+@Base.tag_register("DictTemplate")
+class AbstractVisualizer(Base.Base):
   """Abstract base class for Chisel visualizer objects. Defines interface 
   methods and provides common functionality, like paths."""
   def __init__(self, element, parent):
