@@ -63,6 +63,7 @@ lib:
     - ref: GCD_io_out
   gcd_state:
     AutoGrid:
+    label: state
     step: col
     cells:
     - {Text:, path: .state, template: gcd_state_map}
@@ -70,6 +71,7 @@ lib:
     - {Text:, path: .latch_B, display: decimal}
   gcd_io_in:
     AutoGrid:
+    label: io (in)
     step: col
     cells:
     - {Text:, path: _operands_bits_A, display: decimal}
@@ -78,6 +80,7 @@ lib:
     - {Text:, path: _operands_rdy, display: bool}
   gcd_io_out:
     AutoGrid:
+    label: io (out)
     step: col
     cells:
     - {Text:, path: _results_bits_data, display: decimal}
@@ -85,4 +88,4 @@ lib:
     - {Text:, path: _results_rdy, display: bool}
 
 display:
-- ref: gcd
+- {ref: gcd, path: gcd}
