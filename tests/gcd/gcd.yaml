@@ -1,4 +1,59 @@
+defaults:
+  NumericalText:
+    charmap: 01234567890abcdefghijklmnopqrstuvwxyz
+  FramedBase:
+    border_size: 1
+    border_margin: 6
+    label: 
+    label_size: 8
+    label_font: Mono
+  AutoGrid:
+    step: row
+  Text:
+    text: {NumericalText:, radix: 10}
+    text_size: 14
+    text_font: Mono
+  MemoryArray:
+    step: row
+    offset: 0
+    offset_anchor: 0
+    rows: 1
+    cols: 1
+    
 lib:
+  text_binary:
+    Template:
+    text: {NumericalText:, prefix: 0b, radix: 2}
+  text_decimal:
+    Template:
+    text: {NumericalText:, radix: 10}
+  text_hexadecimal:
+    Template:
+    text: {NumericalText:, prefix: 0x, radix: 16}
+  text_bool:
+    DictTemplate:
+    0:
+      text: false
+      text_color: red
+    1:
+      text: true
+      text_color: green
+    default:
+      text: true*
+      text_color: green
+    
+  gcd_state_map:
+    DictTemplate:
+    0:
+      text: idle
+      text_color: pink
+    1:
+      text: calc
+      text_color: yellow
+    2:
+      text: done
+      text_color: green
+      
   gcd:
     AutoGrid:
     step: row
@@ -10,24 +65,24 @@ lib:
     AutoGrid:
     step: col
     cells:
-    - {DataText:, path: .state, display: gcd_state_map}
-    - {DataText:, path: .latch_A, display: decimal}
-    - {DataText:, path: .latch_B, display: decimal}
+    - {Text:, path: .state, template: gcd_state_map}
+    - {Text:, path: .latch_A, display: decimal}
+    - {Text:, path: .latch_B, display: decimal}
   gcd_io_in:
     AutoGrid:
     step: col
     cells:
-    - {DataText:, path: _operands_bits_A, display: decimal}
-    - {DataText:, path: _operands_bits_B, display: decimal}
-    - {DataText:, path: _operands_val, display: bool}
-    - {DataText:, path: _operands_rdy, display: bool}
+    - {Text:, path: _operands_bits_A, display: decimal}
+    - {Text:, path: _operands_bits_B, display: decimal}
+    - {Text:, path: _operands_val, display: bool}
+    - {Text:, path: _operands_rdy, display: bool}
   gcd_io_out:
     AutoGrid:
     step: col
     cells:
-    - {DataText:, path: _results_bits_data, display: decimal}
-    - {DataText:, path: _results_val, display: bool}
-    - {DataText:, path: _results_rdy, display: bool}
+    - {Text:, path: _results_bits_data, display: decimal}
+    - {Text:, path: _results_val, display: bool}
+    - {Text:, path: _results_rdy, display: bool}
 
 display:
 - ref: gcd
