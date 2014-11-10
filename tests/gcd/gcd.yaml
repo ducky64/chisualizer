@@ -37,27 +37,15 @@ lib:
     text: {NumericalText:, prefix: 0x, radix: 16}
   text_bool:
     !DictTemplate
-    0:
-      text: "false"
-      text_color: red
-    1:
-      text: "true"
-      text_color: green
-    default:
-      text: "true*"
-      text_color: green
+    0: {text: "false", text_color: red}
+    1: {text: "true", text_color: green}
+    default: {text: "true*", text_color: green}
     
   gcd_state_map:
     !DictTemplate
-    0:
-      text: idle
-      text_color: pink
-    1:
-      text: calc
-      text_color: yellow
-    2:
-      text: done
-      text_color: green
+    0: {text: idle, text_color: pink}
+    1: {text: calc, text_color: yellow}
+    2: {text: done, text_color: green}
       
   gcd:
     !AutoGrid
