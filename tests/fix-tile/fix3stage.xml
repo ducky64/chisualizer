@@ -107,19 +107,6 @@
 	<Mapping key="7" text="CLKHI_OFFS"/>
 </MappedDisplay>
 
-<AutoGrid ref='FixHostIo' step='col'>
-	<DataText path="_ready" display="ReadyIoDisplay"/>
-	<DataText path="_valid" display="ValidIoDisplay"/>
-	<DataText path="_bits_dst_x" display="decimal"/>
-	<DataText path="_bits_dst_y" display="decimal"/>
-	<Break/>
-	<DataText path="_bits_op" display="FixHostOp"/>
-	<DataText path="_bits_target" display="FixHostTarget"/>
-	<DataText path="_bits_addr" display="decimal"/>
-	<DataText path="_bits_data" display="hexadecimal"/>
-
-</AutoGrid>
-
 <!-- Memories -->
 
 <AutoGrid ref='MuxedMemoryPort' step='col'>
@@ -168,15 +155,31 @@
 	<VisualizerRef target="FixPipeline" path=""/>
 </AutoGrid>
 
+<MappedDisplay ref="Rdy">
+	<Mapping key="0x0" text="R" color="red"/>
+	<Mapping key="0x1" text="R" color="green"/>
+</MappedDisplay>
+
+<MappedDisplay ref="Val">
+	<Mapping key="0x0" text="V" color="red"/>
+	<Mapping key="0x1" text="V" color="green"/>
+</MappedDisplay>
+
 <!-- Router-->
 <AutoGrid ref='FixPort' step='col'>
-	<DataText path="_in_ready" display="ReadyIoDisplay"/>
-	<DataText path="_in_valid" display="ValidIoDisplay"/>
-	<DataText path="_in_bits" display="hexadecimal"/>
+	<DataText path="_in_ready" label="in" display="Rdy"/>
+	<DataText path="_in_valid" label="in" display="Val"/>
 	<Break/>
-	<DataText path="_out_ready" display="ReadyIoDisplay"/>
-	<DataText path="_out_valid" display="ValidIoDisplay"/>
-	<DataText path="_out_bits" display="hexadecimal"/>
+	<DataText path="_out_ready" label="out" display="Rdy"/>
+	<DataText path="_out_valid" label="out" display="Val"/>
+</AutoGrid>
+
+<AutoGrid ref='FixHostIo' step='col'>
+	<DataText path="_ready" label="" display="Rdy"/>
+	<DataText path="_valid" label="" display="Val"/>
+	<Break/>
+	<DataText path="_bits_op" label="op" display="FixHostOp"/>
+	<DataText path="_bits_target" label="tar" display="FixHostTarget"/>
 </AutoGrid>
 
 <AutoGrid ref='FixTile' step='row'>
@@ -185,7 +188,10 @@
 	<VisualizerRef target="FixHostIo" path=".io_hostOut"/>
 	<Break/>
 	<VisualizerRef target="FixPort" path=".io_ports_0"/>
-	<VisualizerRef target="Fix3Stage" path=""/>
+	<AutoGrid step="col">
+    <DataText path=".PC_IF" display="decimal"/>
+    <DataText path=".inst_bits_IF" display="hexadecimal"/>
+  </AutoGrid>
 	<VisualizerRef target="FixPort" path=".io_ports_2"/>
 	<Break/>
 	<VisualizerRef target="FixPort" path=".io_ports_3"/>

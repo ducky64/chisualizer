@@ -9,12 +9,9 @@ from chisualizer.util import Rectangle
 tag_registry = {}
 def tag_register(tag_name=None):
   def wrap(cls):
-    local_name = tag_name
-    if local_name == None:
-      local_name = cls.__name__
-    assert local_name not in tag_registry
-    tag_registry[local_name] = cls
-    logging.debug("Registered tag '%s'" % local_name)
+    assert tag_name not in tag_registry
+    tag_registry[tag_name] = cls
+    logging.debug("Registered tag '%s'" % tag_name)
     return cls
   return wrap
 
@@ -42,16 +39,17 @@ class YAMLVisualizerRegistry():
   def read_descriptor(self, filename):
     loader = yaml.SafeLoader(file(filename, 'r'))
     
-    def obj_constructor(loader, node):
-        value = loader.construct_mapping(node)
-        print value.__class__.__name__
-        return value
+    def create_obj_constructor(tag_name):
+      def obj_constructor(loader, node):
+        return ParsedElement(tag_name, loader.construct_mapping(node),
+                             filename)
+      return obj_constructor
     
     for tag_name in tag_registry:
-      loader.add_constructor("!" + tag_name, obj_constructor)
+      loader.add_constructor("!" + tag_name, create_obj_constructor(tag_name))
       
     for tag_name in desugar_registry:
-      loader.add_constructor("!" + tag_name, obj_constructor)
+      loader.add_constructor("!" + tag_name, create_obj_constructor(tag_name))
     
     print loader.get_data()
 
@@ -132,54 +130,9 @@ class VisualizerParseAttributeNotUsed(VisualizerParseError):
 
 class ParsedElement(object):
   """
-  An intermediate representation for parsed XML visualizer descriptor objects -
-  essentially a dict of the element attributes and list of children. Contains
-  functionality to to type conversion, validation, and check that all attributes
-  specified are actually read.
+  An intermediate representation for parsed visualizer descriptor objects -
+  essentially a dict of the element attributes and list of children.
   """
-  class ParsedElementAccessor():
-    """Accessor to the ParsedElement. Tracks attribute accesses to ensure
-    everything is used. There should be a unique accessor per 'object' for the
-    tracking to work. Provides type conversion (string parsing) and validcation 
-    functions.""" 
-    def __init__(self, parsed_element):
-      self.parsed_element = parsed_element
-      self.accessed = set()
-
-    def parse_error(self, message):
-      self.parsed_element.parse_error(message)
-
-    def get_attr_accessed(self, attribute):
-      """Marks an attribute as "read"."""
-      self.accessed.add(attribute)
-  
-    def get_unused_attributes(self):
-      """Return set of attributes in all of parent's attributes but not accessed
-      from this ParsedElementAccessor using the get_attr_* functions."""
-      return self.parsed_element.all_attributes.difference(self.accessed)
-    
-    def get_ref(self):
-      return self.parsed_element.ref
-    
-    def get_attr(self, attr):
-      self.get_attr_accessed(attr)
-      return self.parsed_element.get_attr_string(attr)
-    
-    def get_attr_string(self, attr, **kwargs):
-      self.get_attr_accessed(attr)
-      return self.parsed_element.get_attr_string(attr, **kwargs)
-    
-    def get_attr_int(self, attr, **kwargs):
-      self.get_attr_accessed(attr)
-      return self.parsed_element.get_attr_int(attr, **kwargs)      
-    
-    def get_attr_float(self, attr, **kwargs):
-      self.get_attr_accessed(attr)
-      return self.parsed_element.get_attr_float(attr, **kwargs)      
-    
-    def get_children(self):
-      return self.parsed_element.children
-    
   def parse_error(self, message, exc_cls=VisualizerParseError):
     """Helper function to throw a fatal error, indicating the broken element
     along with filename and line number.
@@ -188,33 +141,19 @@ class ParsedElement(object):
                   (self.tag, self.ref, self.xml_filename,
                    self.xml_element.sourceline, message))
   
-  def __init__(self, xml_element, xml_filename):
-    """Constructor. Parses an ElementTree element to populate my attributes and
-    children."""
-    self.xml_element = xml_element
-    self.xml_filename = xml_filename
+  def __init__(self, tag_name, attr_map, filename):
+    self.tag = tag_name
+    self.attrs = attr_map
     
-    self.tag = xml_element.tag 
-    self.ref = '(anon)'
-    
-    self.attributes = {}
-    for attr_name, attr_value in xml_element.items():
-      if attr_value in self.attributes:
-        self.parse_error("Duplicate attribute: '%s'" % attr_name,
-                         exc_cls=VisualizerParseAttributeError)
-      self.attributes[attr_name] = attr_value
-    
-    self.children = []
-    """for child in xml_element.iterchildren(tag=etree.Element):
-      self.children.append(ParsedElement(child, xml_filename))"""
+    self.filename = filename
           
   def instantiate(self, parent, valid_subclass=None):
     assert valid_subclass is not None
-    if self.tag not in xml_registry:
+    if self.tag not in tag_registry:
       self.parse_error("Unknown tag '%s'" % self.tag,
                        exc_cls=VisualizerParseTagError)
       
-    rtn_cls = xml_registry[self.tag]
+    rtn_cls = tag_registry[self.tag]
     if not issubclass(rtn_cls, valid_subclass):
       self.parse_error("Expected to be a subclass of %s" %
                        valid_subclass.__name__,
@@ -222,17 +161,9 @@ class ParsedElement(object):
         
     logging.debug("Instantiating %s (%s:%s)" % 
                   (rtn_cls.__name__, self.tag, self.ref))
-    accessor = self.create_accessor()
-    rtn = rtn_cls(accessor, parent)
-    if accessor.get_unused_attributes():
-      self.parse_error("Unused attributes: %s" % 
-                       accessor.get_unused_attributes(),
-                       exc_cls=VisualizerParseAttributeNotUsed)
-    return rtn
     
-  def create_accessor(self):
-    return self.ParsedElementAccessor(self)
-
+    assert False #TODO IMPLEMENT ME
+    
   def get_all_attrs(self):
     return self.attributes.iterkeys()
     
@@ -248,7 +179,7 @@ class ParsedElement(object):
         return current.attributes[attribute]
       current = current.parent
     self.parse_error("Cannot find attribute: '%s'" % attribute,
-                     exc_cls=VisualizerParseAttributeNotFoundError)
+                     exc_cls=VisualizerParseAttributeNotFound)
 
   def get_attr_string(self, attr, valid_set=None):
     got = self.get_attr(attr)
@@ -289,4 +220,3 @@ class ParsedElement(object):
       self.parse_error("%s=%i < max (%i)" % (attr, conv, valid_max),
                        exc_cls=VisualizerParseValidationError)
     return conv        
-   

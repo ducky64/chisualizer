@@ -18,6 +18,37 @@ class AbstractVisualizer(Base.Base):
     self.path_component = element.get_attr_string('path')
     self.path = parent.path + self.path_component
     
+    # TODO: set node based on path, if existent
+    self.node = None
+    
+    # List of overloaded elements. May be modified by myself and my parents,
+    # used for modifiers to overload attributes based on circuit state.
+    # Should be cleared after use, as this is refreshed every cycle. 
+    self.overloaded_elements = []
+    
+    # Attributes dict, updated once per cycle by update()
+    self.attrs = {}
+    
+    self.register_attrs()
+    
+  def register_attrs(self):
+    """Registers my attributes, so update() will look for and appropriately
+    type-convert attribute values."""
+    pass
+    
+  def update(self):
+    """Called once per visualizer update, refreshes my attrs dict based on
+    new circuit values / modifiers / whatever.
+    """
+    # Handle modifiers
+    
+    # Update attrs - common infrastructure
+    
+    
+  def get_node_ref(self):
+    """Returns my associated Chisel API node, or None."""
+    return self.node
+    
   def layout_cairo(self, cr):
     """Computes (and stores) the layout for this object when drawing with Cairo.
     Returns a tuple (width, height) of the minimum size of this object.
