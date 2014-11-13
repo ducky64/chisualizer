@@ -1,8 +1,8 @@
 import math
 
-from chisualizer.Base import Base
+import chisualizer.Base as Base
 
-class NodeToString(Base):
+class VisualizerToString(Base.Base):
   """Abstract base class for "functions" converting Chisel node values to
   strings. Provides supporting functionality, like getting the longest possible
   strings (for auto-sizing) and setting the node from text."""
@@ -46,7 +46,7 @@ class NodeToString(Base):
       return False
     
 @Base.tag_register('NumericalString')
-class NumericalString(NodeToString):
+class NumericalString(VisualizerToString):
   def __init__(self, element, parent):
     super(NumericalString, self).__init__(element, parent)
     self.prefix = element.get_attr_string('prefix')
