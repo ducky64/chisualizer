@@ -59,26 +59,26 @@ lib:
     label: state
     step: col
     cells:
-    - {Text:, path: .state, template: gcd_state_map}
-    - {Text:, path: .latch_A, template: text_decimal}
-    - {Text:, path: .latch_B, template: text_decimal}
+    - {TextBox:, path: .state, template: gcd_state_map}
+    - {TextBox:, path: .latch_A, template: text_decimal}
+    - {TextBox:, path: .latch_B, template: text_decimal}
   gcd_io_in:
     !AutoGrid
     label: io (in)
     step: col
     cells:
-    - {Text:, path: _operands_bits_A, template: text_decimal}
-    - {Text:, path: _operands_bits_B, template: text_decimal}
-    - {Text:, path: _operands_val, template: text_bool}
-    - {Text:, path: _operands_rdy, template: text_bool}
+    - {TextBox:, path: _operands_bits_A, template: text_decimal}
+    - {TextBox:, path: _operands_bits_B, template: text_decimal}
+    - {TextBox:, path: _operands_val, template: text_bool}
+    - {TextBox:, path: _operands_rdy, template: text_bool}
   gcd_io_out:
     !AutoGrid
     label: io (out)
     step: col
     cells:
-    - {Text:, path: _results_bits_data, template: text_decimal}
-    - {Text:, path: _results_val, template: text_bool}
-    - {Text:, path: _results_rdy, template: text_bool}
+    - {TextBox:, path: _results_bits_data, template: text_decimal}
+    - {TextBox:, path: _results_val, template: text_bool}
+    - {TextBox:, path: _results_rdy, template: text_bool}
 
 display:
 - {ref: gcd, path: gcd}
