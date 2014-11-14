@@ -66,8 +66,6 @@ class VisualizerRoot(object):
 
     self.registry.read_descriptor(filename)
 
-    assert False
-
   def layout_cairo(self, cr):
     size_x, size_y = self.visualizer.layout_cairo(cr)
     return Rectangle((0, 0), (size_x, size_y))
@@ -128,6 +126,113 @@ class VisualizerParseAttributeNotUsed(VisualizerParseError):
   """A specified attribute was not used."""
   pass
 
+class ElementAccessor(object):
+  """Accessor object for ParsedElement. Provides type-conversion functions,
+  static attribute access & checking, dynamic attribute registration and
+  resolution, and checks to ensure all attributes were used.
+  The elt_to_* functions are the parse_fn s referred below, provide type
+  conversion and validation.
+  """
+  def __init__(self, parent_element):
+    self.parent = parent_element
+    self.dynamic_overloads = [] # TODO implement support for this later
+    self.accessed_attrs = set()
+    self.dynamic_attrs = {} # mapping of attr name to (parsing function, kwds)
+  
+  def get_dynamic_attrs(self):
+    """Returns a dict of dynamic attrs -> parsed value."""
+    rtn = {}
+    for attr_name, parse_fn_tuple in self.dynamic_attrs:
+      parse_fn, parse_fn_kwds = parse_fn_tuple
+      attr_list = self.get_attr_list(attr_name)
+      if len(attr_list) < 1:
+        self.parent.parse_error("Attribute %s not found.")
+      for elt in attr_list:
+        parsed = parse_fn(self, attr_name, elt, False, **parse_fn_kwds)
+        if parsed:
+          rtn[attr_name] = parsed
+          break
+    return rtn
+  
+  def all_attrs_accessed(self):
+    return self.accessed_attrs == self.parent.get_all_attrs()
+  
+  def attr_used(self, attr):
+    self.accessed.add(attr)
+  
+  def get_attr_list(self, attr):
+    # TODO support dynamic overload attrs
+    return self.parent.get_attr_list(attr)
+  
+  def get_static_attr(self, parse_fn, attr, **kwds):
+    self.attr_used(attr)
+    attr_list = self.get_attr_list(attr)
+    if len(attr_list) < 1:
+      self.parent.parse_error("Attribute %s not found.")
+    return parse_fn(self, attr, attr_list[-1], True, **kwds)
+    
+  def register_dynamic_attr(self, parse_fn, attr, **kwds):
+    self.attr_used(attr)
+    assert attr not in self.dynamic_attrs
+    self.dynamic_attrs[attr] = (parse_fn, kwds)
+  
+  def error_if_static(self, attr, value, static):
+    if static:
+      self.parent.parse_error("%s='%s' is non-static" 
+                              % (attr, value),
+                              exc_cls=VisualizerParseValidationError)      
+  
+  def elt_to_string(self, attr, value, static, valid_set=[]):
+    assert isinstance(value, basestring)
+    if valid_set is not None and value not in valid_set:
+      self.parent.parse_error("%s='%s' not in valid set: %s" 
+                              % (attr, value, valid_set),
+                              exc_cls=VisualizerParseValidationError)
+    
+  def elt_to_int(self, attr, value, static, valid_min=None, valid_max=None):
+    if isinstance(value, basestring):
+      conv = self.string_to_int(attr, value)
+    else:
+      assert False  # TODO more descriptive error here
+      
+    if valid_min is not None and conv < valid_min:
+      self.parent.parse_error("%s=%i < min (%i)" % (attr, conv, valid_min),
+                              exc_cls=VisualizerParseValidationError)
+    if valid_max is not None and conv > valid_max:
+      self.parent.parse_error("%s=%i < max (%i)" % (attr, conv, valid_max),
+                              exc_cls=VisualizerParseValidationError)
+    return conv        
+  
+  def string_to_int(self, attr, value):
+    assert isinstance(value, basestring)
+    try:
+      return int(value, 0)
+    except ValueError:
+      self.parent.parse_error("Unable to convert %s='%s' to int" % (attr, value),
+                              exc_cls=VisualizerParseTypeError)
+  
+  def elt_to_float(self, attr, value, static, valid_min=None, valid_max=None):
+    if isinstance(value, basestring):
+      conv = self.string_to_float(attr, value)
+    else:
+      assert False  # TODO more descriptive error here
+      
+    if valid_min is not None and conv < valid_min:
+      self.parent.parse_error("%s=%i < min (%i)" % (attr, conv, valid_min),
+                              exc_cls=VisualizerParseValidationError)
+    if valid_max is not None and conv > valid_max:
+      self.parent.parse_error("%s=%i < max (%i)" % (attr, conv, valid_max),
+                              exc_cls=VisualizerParseValidationError)
+    return conv
+
+  def string_to_float(self, attr, value):
+    assert isinstance(value, basestring)
+    try:
+      return float(value)
+    except ValueError:
+      self.parent.parse_error("Unable to convert %s='%s' to float" % (attr, value),
+                              exc_cls=VisualizerParseTypeError)
+      
 class ParsedElement(object):
   """
   An intermediate representation for parsed visualizer descriptor objects -
@@ -143,10 +248,19 @@ class ParsedElement(object):
   
   def __init__(self, tag_name, attr_map, filename):
     self.tag = tag_name
-    self.attrs = attr_map
+    self.attr_map = self.canonicalize_attr_map(attr_map)
     
     self.filename = filename
-          
+  
+  @staticmethod
+  def canonicalize_attr_map(attr_map):
+    """Canonicalizes the attr map, making everything that isn't a list into a
+    list. Modification is done in-place."""
+    for attr, val in attr_map.iteritems():
+      if val is not list:
+        attr_map[attr] = [val] 
+    return attr_map
+  
   def instantiate(self, parent, valid_subclass=None):
     assert valid_subclass is not None
     if self.tag not in tag_registry:
@@ -162,61 +276,14 @@ class ParsedElement(object):
     logging.debug("Instantiating %s (%s:%s)" % 
                   (rtn_cls.__name__, self.tag, self.ref))
     
-    assert False #TODO IMPLEMENT ME
+    return rtn_cls(ElementAccessor(self), parent)
     
   def get_all_attrs(self):
     return self.attributes.iterkeys()
     
-  def get_attr(self, attribute):
-    current = self
-    while current is not None:
-      if attribute in current.attributes:
-        return current.attributes[attribute]
-      current = current.parent
-    current = self.class_parent
-    while current is not None:
-      if attribute in current.attributes:
-        return current.attributes[attribute]
-      current = current.parent
-    self.parse_error("Cannot find attribute: '%s'" % attribute,
-                     exc_cls=VisualizerParseAttributeNotFound)
-
-  def get_attr_string(self, attr, valid_set=None):
-    got = self.get_attr(attr)
-    assert isinstance(got, basestring)
-    if valid_set is not None and got not in valid_set:
-      self.parse_error("%s='%s' not in valid set: %s" % (attr, got, valid_set),
-                       exc_cls=VisualizerParseValidationError)
-    return got
+  def get_attr_list(self, attr):
+    if attr not in self.attr_map:
+      self.parse_error("Cannot find attribute: '%s'" % attr,
+                       exc_cls=VisualizerParseAttributeNotFound)
+    return self.attr_map[attr]
   
-  def get_attr_int(self, attr, valid_min=None, valid_max=None):
-    got = self.get_attr(attr)
-    assert isinstance(got, basestring)
-    try:
-      conv = int(got, 0)
-    except ValueError:
-      self.parse_error("Unable to convert %s='%s' to int" % (attr, got),
-                       exc_cls=VisualizerParseTypeError)
-    if valid_min is not None and conv < valid_min:
-      self.parse_error("%s=%i < min (%i)" % (attr, conv, valid_min),
-                       exc_cls=VisualizerParseValidationError)
-    if valid_max is not None and conv > valid_max:
-      self.parse_error("%s=%i < max (%i)" % (attr, conv, valid_max),
-                       exc_cls=VisualizerParseValidationError)
-    return conv        
-  
-  def get_attr_float(self, attr, valid_min=None, valid_max=None):
-    got = self.get_attr(attr)
-    assert isinstance(got, basestring)
-    try:
-      conv = float(got)
-    except ValueError:
-      self.parse_error("Unable to convert %s='%s' to float" % (attr, got),
-                       exc_cls=VisualizerParseTypeError)
-    if valid_min is not None and conv < valid_min:
-      self.parse_error("%s=%i < min (%i)" % (attr, conv, valid_min),
-                       exc_cls=VisualizerParseValidationError)
-    if valid_max is not None and conv > valid_max:
-      self.parse_error("%s=%i < max (%i)" % (attr, conv, valid_max),
-                       exc_cls=VisualizerParseValidationError)
-    return conv        

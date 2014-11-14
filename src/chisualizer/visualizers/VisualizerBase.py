@@ -6,7 +6,7 @@ from chisualizer.util import Rectangle
 import cairo
 import wx
 
-@Base.tag_register("Text")
+@Base.tag_register("TextBox")
 @Base.tag_register("Template")
 @Base.tag_register("DictTemplate")
 class AbstractVisualizer(Base.Base):
@@ -18,16 +18,12 @@ class AbstractVisualizer(Base.Base):
     self.path_component = element.get_attr_string('path')
     self.path = parent.path + self.path_component
     
-    # TODO: set node based on path, if existent
     self.node = None
-    
-    # List of overloaded elements. May be modified by myself and my parents,
-    # used for modifiers to overload attributes based on circuit state.
-    # Should be cleared after use, as this is refreshed every cycle. 
-    self.overloaded_elements = []
+    if self.root.get_api().has_node(self.path):
+      self.node = self.root.get_api().get_node_reference(self.path)
     
     # Attributes dict, updated once per cycle by update()
-    self.attrs = {}
+    self.dynamic_attrs = {}
     
     self.register_attrs()
     
