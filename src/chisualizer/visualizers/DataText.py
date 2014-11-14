@@ -4,10 +4,10 @@ import cairo
 import wx
 
 import chisualizer.Base as Base
-from chisualizer.visualizers.VisualizerBase import AbstractVisualizer
+from chisualizer.visualizers.VisualizerBase import FramedVisualizer
 
 @Base.tag_register('TextBox')
-class TextBox(AbstractVisualizer):
+class TextBox(FramedVisualizer):
   """Visualizer for data represented as text."""
   def __init__(self, elt, parent):
     super(TextBox, self).__init__(elt, parent)

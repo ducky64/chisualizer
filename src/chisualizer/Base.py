@@ -1,4 +1,5 @@
 import logging
+from numbers import Number
 import yaml
 import os
 
@@ -228,6 +229,8 @@ class ElementAccessor(object):
   def elt_to_int(self, attr, value, static, valid_min=None, valid_max=None):
     if isinstance(value, basestring):
       conv = self.string_to_int(attr, value)
+    elif isinstance(value, Number):
+      conv = int(value)
     else:
       assert False  # TODO more descriptive error here
       
@@ -250,6 +253,8 @@ class ElementAccessor(object):
   def elt_to_float(self, attr, value, static, valid_min=None, valid_max=None):
     if isinstance(value, basestring):
       conv = self.string_to_float(attr, value)
+    elif isinstance(value, Number):
+      conv = float(value)
     else:
       assert False  # TODO more descriptive error here
       
@@ -324,7 +329,7 @@ class ParsedElement(object):
     
     
   def get_all_attrs(self):
-    return self.attributes.iterkeys()
+    return set(self.attr_map.iterkeys())
     
   def get_attr_list(self, attr):
     if attr not in self.attr_map:

@@ -67,7 +67,7 @@ class NumericalString(VisualizerToString):
     value_string = self.prefix + value_string
     return value_string
   
-  def get_longest_text(self, visualizer):
+  def get_longest_strings(self, visualizer):
     width = visualizer.get_node().get_width()
     digits = int(math.ceil(math.log(2 ** width - 1, self.radix)))
     return [self.prefix + self.charmap[0]*digits]
