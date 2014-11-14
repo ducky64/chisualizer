@@ -6,7 +6,6 @@ from chisualizer.util import Rectangle
 import cairo
 import wx
 
-@Base.tag_register("TextBox")
 @Base.tag_register("Template")
 @Base.tag_register("DictTemplate")
 class AbstractVisualizer(Base.Base):

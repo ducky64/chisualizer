@@ -81,4 +81,4 @@ lib:
     - !TextBox {path: _results_rdy, template: text_bool}
 
 display:
-- {ref: gcd, path: gcd}
+- !Ref {target: gcd, path: gcd}

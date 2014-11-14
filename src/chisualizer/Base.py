@@ -9,7 +9,7 @@ from chisualizer.util import Rectangle
 tag_registry = {}
 def tag_register(tag_name=None):
   def wrap(cls):
-    assert tag_name not in tag_registry
+    assert tag_name not in tag_registry, "Duplicate tag '%s'" % tag_name
     tag_registry[tag_name] = cls
     logging.debug("Registered tag '%s'" % tag_name)
     return cls
@@ -24,17 +24,20 @@ def tag_register(tag_name=None):
 desugar_registry = {}
 def desugar_register(tag_name):
   def wrap(fun):
-    assert tag_name not in desugar_registry
+    assert tag_name not in desugar_registry, "Duplicate desugar tag '%s'" % tag_name
     desugar_registry[tag_name] = fun
     logging.debug("Registered desugaring transform for '%s'" % tag_name)
     return fun
   return wrap
 
+@desugar_register("Ref")
+def desugar_ref(parsed_element):
+  return None
+
 class YAMLVisualizerRegistry():
   def __init__(self):
-    self.templates = {}
-    self.default_templates = {}
-    self.ref_elements = {}
+    self.lib_elements = {}
+    self.display_elements = []
 
   def read_descriptor(self, filename):
     loader = yaml.SafeLoader(file(filename, 'r'))
@@ -42,7 +45,8 @@ class YAMLVisualizerRegistry():
     def create_obj_constructor(tag_name):
       def obj_constructor(loader, node):
         return ParsedElement(tag_name, loader.construct_mapping(node),
-                             filename)
+                             filename, -1)
+        # TODO: add line numbers
       return obj_constructor
     
     for tag_name in tag_registry:
@@ -51,7 +55,18 @@ class YAMLVisualizerRegistry():
     for tag_name in desugar_registry:
       loader.add_constructor("!" + tag_name, create_obj_constructor(tag_name))
     
-    print loader.get_data()
+    yaml_dict = loader.get_data()
+    if 'lib' in yaml_dict:
+      assert isinstance(yaml_dict['lib'], dict)
+      for ref_name, elt in yaml_dict['lib'].iteritems():
+        logging.debug("Loaded library element ref='%s'", ref_name)
+        self.lib_elements[ref_name] = elt
+
+    if 'display' in yaml_dict:
+      assert isinstance(yaml_dict['display'], list)
+      self.display_elements.extend(yaml_dict['display'])
+      
+    # TODO: desugaring pass
 
 class VisualizerRoot(object):
   """An visualizer descriptor file."""
@@ -65,6 +80,15 @@ class VisualizerRoot(object):
     self.visualizer = None  # TODO: support multiple visualizers in different windows
 
     self.registry.read_descriptor(filename)
+    
+    if not self.registry.display_elements:
+      raise VisualizerParseError("No display elements specified.")
+    
+    if len(self.registry.display_elements) != 1:
+      raise VisualizerParseError("Multiple visualizers currently not supported.")
+    
+    from chisualizer.visualizers.VisualizerBase import AbstractVisualizer
+    self.visualizer = self.registry.display_elements[0].instantiate(self, valid_subclass=AbstractVisualizer)
 
   def layout_cairo(self, cr):
     size_x, size_y = self.visualizer.layout_cairo(cr)
@@ -154,8 +178,8 @@ class ElementAccessor(object):
           break
     return rtn
   
-  def all_attrs_accessed(self):
-    return self.accessed_attrs == self.parent.get_all_attrs()
+  def attrs_not_accessed(self):
+    return self.parent.get_all_attrs() - self.accessed_attrs
   
   def get_attr_list(self, attr):
     # TODO support dynamic overload attrs
@@ -239,15 +263,14 @@ class ParsedElement(object):
     """Helper function to throw a fatal error, indicating the broken element
     along with filename and line number.
     """
-    raise exc_cls("Error parsing %s '%s' (%s:%i): %s" % 
-                  (self.tag, self.ref, self.xml_filename,
-                   self.xml_element.sourceline, message))
+    raise exc_cls("Error parsing %s (%s:%i): %s" % 
+                  (self.tag, self.filename, self.lineno, message))
   
-  def __init__(self, tag_name, attr_map, filename):
+  def __init__(self, tag_name, attr_map, filename, lineno):
     self.tag = tag_name
     self.attr_map = self.canonicalize_attr_map(attr_map)
-    
     self.filename = filename
+    self.lineno = lineno
   
   @staticmethod
   def canonicalize_attr_map(attr_map):
@@ -273,7 +296,13 @@ class ParsedElement(object):
     logging.debug("Instantiating %s (%s:%s)" % 
                   (rtn_cls.__name__, self.tag, self.ref))
     
-    return rtn_cls(ElementAccessor(self), parent)
+    accessor = ElementAccessor(self)
+    rtn = rtn_cls(accessor, parent)
+    if accessor.attrs_not_accessed():
+      self.parse_error("Unused attributes: %s" % accessor.attrs_not_accessed())
+    
+    return rtn
+    
     
   def get_all_attrs(self):
     return self.attributes.iterkeys()
