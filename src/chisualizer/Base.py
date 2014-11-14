@@ -157,22 +157,19 @@ class ElementAccessor(object):
   def all_attrs_accessed(self):
     return self.accessed_attrs == self.parent.get_all_attrs()
   
-  def attr_used(self, attr):
-    self.accessed.add(attr)
-  
   def get_attr_list(self, attr):
     # TODO support dynamic overload attrs
     return self.parent.get_attr_list(attr)
   
   def get_static_attr(self, parse_fn, attr, **kwds):
-    self.attr_used(attr)
+    self.accessed.add(attr)
     attr_list = self.get_attr_list(attr)
     if len(attr_list) < 1:
       self.parent.parse_error("Attribute %s not found.")
     return parse_fn(self, attr, attr_list[-1], True, **kwds)
     
   def register_dynamic_attr(self, parse_fn, attr, **kwds):
-    self.attr_used(attr)
+    self.accessed.add(attr)
     assert attr not in self.dynamic_attrs
     self.dynamic_attrs[attr] = (parse_fn, kwds)
   
