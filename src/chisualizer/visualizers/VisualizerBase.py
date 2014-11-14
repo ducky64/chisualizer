@@ -6,17 +6,43 @@ from chisualizer.util import Rectangle
 import cairo
 import wx
 
-@Base.tag_register("Text")
 @Base.tag_register("Template")
 @Base.tag_register("DictTemplate")
 class AbstractVisualizer(Base.Base):
   """Abstract base class for Chisel visualizer objects. Defines interface 
   methods and provides common functionality, like paths."""
-  def __init__(self, element, parent):
-    super(AbstractVisualizer, self).__init__(element, parent)
+  def __init__(self, elt, parent):
+    super(AbstractVisualizer, self).__init__(elt, parent)
     
-    self.path_component = element.get_attr_string('path')
+    self.path_component = elt.get_static_attr(elt.elt_to_string, 'path')
     self.path = parent.path + self.path_component
+    
+    self.node = None
+    if self.root.get_api().has_node(self.path):
+      self.node = self.root.get_api().get_node_reference(self.path)
+    
+    # Attributes dict, updated once per cycle by update()
+    self.dynamic_attrs = {}
+    
+    self.register_attrs()
+    
+  def register_attrs(self):
+    """Registers my attributes, so update() will look for and appropriately
+    type-convert attribute values."""
+    pass
+    
+  def update(self):
+    """Called once per visualizer update, refreshes my attrs dict based on
+    new circuit values / modifiers / whatever.
+    """
+    # Handle modifiers
+    
+    # Update attrs - common infrastructure
+    
+    
+  def get_node_ref(self):
+    """Returns my associated Chisel API node, or None."""
+    return self.node
     
   def layout_cairo(self, cr):
     """Computes (and stores) the layout for this object when drawing with Cairo.
@@ -50,16 +76,20 @@ class AbstractVisualizer(Base.Base):
 
 class FramedVisualizer(AbstractVisualizer):
   """Base class for visualizers providing visual framing (borders)."""
-  def __init__(self, element, parent):
-    super(FramedVisualizer, self).__init__(element, parent)
+  def __init__(self, elt, parent):
+    super(FramedVisualizer, self).__init__(elt, parent)
     
-    self.border_size = element.get_attr_int('border_size', valid_min=1)
-    self.border_margin = element.get_attr_int('border_margin', valid_min=1)
-    self.label = element.get_attr_string('label')
+    self.border_size = elt.get_static_attr(elt.elt_to_int, 'border_size',
+                                           valid_min = 1) 
+    self.border_margin = elt.get_static_attr(elt.elt_to_int, 'border_margin', 
+                                             valid_min=1)
+    
+    self.label = elt.get_static_attr(elt.elt_to_string, 'label')
     if not self.label:
       self.label = None
-    self.label_size = element.get_attr_int('label_size', valid_min=1)
-    self.label_font = element.get_attr_string('label_font')
+    self.label_size = elt.get_static_attr(elt.elt_to_int,'label_size',
+                                          valid_min=1)
+    self.label_font = elt.get_static_attr(elt.elt_to_string,'label_font')
     
     self.collapsed = False
 

@@ -4,19 +4,17 @@ import cairo
 import wx
 
 import chisualizer.Base as Base
-from chisualizer.display.DisplayBase import DisplayBase
+from chisualizer.visualizers.VisualizerBase import FramedVisualizer
 
-from Data import Data
-
-@Base.tag_register('DataText')
-class DataText(Data):
+@Base.tag_register('TextBox')
+class TextBox(FramedVisualizer):
   """Visualizer for data represented as text."""
-  def __init__(self, element, parent):
-    super(DataText, self).__init__(element, parent)
+  def __init__(self, elt, parent):
+    super(TextBox, self).__init__(elt, parent)
     
-    self.display = self.root.get_ref(element.get_attr_string('display')).instantiate(self, valid_subclass=DisplayBase)
-    self.display_size = element.get_attr_int('display_size', valid_min=1)
-    self.display_font = element.get_attr_string('display_font')
+    self.display_size = elt.get_static_attr(elt.elt_to_int, 'display_size',
+                                            valid_min=1)
+    self.display_font = elt.get_static_attr(elt.elt_to_string, 'display_font')
 
   def draw_element_cairo(self, cr, rect, depth):
     cr.set_source_rgba(*self.get_theme().default_color())
@@ -71,7 +69,7 @@ class DataText(Data):
     menu.AppendItem(item)
     menu.Bind(wx.EVT_MENU, self.wx_popupmenu_set, item)
     
-    super(DataText, self).wx_popupmenu_populate(menu)
+    super(TextBox, self).wx_popupmenu_populate(menu)
     
     return True
     

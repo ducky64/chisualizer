@@ -3,13 +3,12 @@ import logging
 
 import chisualizer.Base as Base
 from VisualizerBase import AbstractVisualizer, Rectangle
-from Data import Data
 
 @Base.tag_register('MemoryArray')
-class MemoryArray(Data):
+class MemoryArray(AbstractVisualizer):
   """A grid of cells, each pointing to a memory element."""
   def __init__(self, element, parent):
-    super(MemoryArray, self).__init__(element, parent)
+    super(AbstractVisualizer, self).__init__(element, parent)
     self.step = element.get_attr_string('step', valid_set=['row', 'col'])
         
     self.offset = element.get_attr_int('offset', valid_min=0)

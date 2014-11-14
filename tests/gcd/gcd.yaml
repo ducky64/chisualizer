@@ -1,5 +1,5 @@
 defaults:
-  NumericalText:
+  NumericalString:
     !Template
     charmap: 01234567890abcdefghijklmnopqrstuvwxyz
   FramedBase:
@@ -14,7 +14,7 @@ defaults:
     step: row
   Text:
     !Template
-    text: {!NumericalText radix: 10}
+    text: !NumericalString {radix: 10}
     text_size: 14
     text_font: Mono
   MemoryArray:
@@ -28,13 +28,13 @@ defaults:
 lib:
   text_binary:
     !Template
-    text: {!NumericalText prefix: 0b, radix: 2}
+    text: !NumericalString {prefix: 0b, radix: 2}
   text_decimal:
     !Template
-    text: {!NumericalText radix: 10}
+    text: !NumericalString {radix: 10}
   text_hexadecimal:
     !Template
-    text: {!NumericalText prefix: 0x, radix: 16}
+    text: !NumericalString {prefix: 0x, radix: 16}
   text_bool:
     !DictTemplate
     0: {text: "false", text_color: red}
@@ -59,26 +59,25 @@ lib:
     label: state
     step: col
     cells:
-    - {!TextBox path: .state, template: gcd_state_map}
-    - {!TextBox path: .latch_A, template: text_decimal}
-    - {!TextBox path: .latch_B, template: text_decimal}
+    - !TextBox {path: .state, template: gcd_state_map}
+    - !TextBox {path: .latch_A, template: text_decimal}
+    - !TextBox {path: .latch_B, template: text_decimal}
   gcd_io_in:
     !AutoGrid
     label: io (in)
     step: col
     cells:
-    - {!TextBox path: _operands_bits_A, template: text_decimal}
-    - {!TextBox path: _operands_bits_B, template: text_decimal}
-    - {!TextBox path: _operands_val, template: text_bool}
-    - {!TextBox path: _operands_rdy, template: text_bool}
+    - !TextBox {path: _operands_bits_A, template: text_decimal}
+    - !TextBox {path: _operands_bits_B, template: text_decimal}
+    - !TextBox {path: _operands_val, template: text_bool}
+    - !TextBox {path: _operands_rdy, template: text_bool}
   gcd_io_out:
     !AutoGrid
     label: io (out)
     step: col
     cells:
-    - {!TextBox path: _results_bits_data, template: text_decimal}
-    - {!TextBox path: _results_val, template: text_bool}
-    - {!TextBox path: _results_rdy, template: text_bool}
-
+    - !TextBox {path: _results_bits_data, template: text_decimal}
+    - !TextBox {path: _results_val, template: text_bool}
+    - !TextBox {path: _results_rdy, template: text_bool}
 display:
-- {ref: gcd, path: gcd}
+- !Ref {target: gcd, path: gcd}

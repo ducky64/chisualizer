@@ -1,4 +1,5 @@
 import logging
+from numbers import Number
 import yaml
 import os
 
@@ -9,12 +10,9 @@ from chisualizer.util import Rectangle
 tag_registry = {}
 def tag_register(tag_name=None):
   def wrap(cls):
-    local_name = tag_name
-    if local_name == None:
-      local_name = cls.__name__
-    assert local_name not in tag_registry
-    tag_registry[local_name] = cls
-    logging.debug("Registered tag '%s'" % local_name)
+    assert tag_name not in tag_registry, "Duplicate tag '%s'" % tag_name
+    tag_registry[tag_name] = cls
+    logging.debug("Registered tag '%s'" % tag_name)
     return cls
   return wrap
 
@@ -27,33 +25,52 @@ def tag_register(tag_name=None):
 desugar_registry = {}
 def desugar_register(tag_name):
   def wrap(fun):
-    assert tag_name not in desugar_registry
+    assert tag_name not in desugar_registry, "Duplicate desugar tag '%s'" % tag_name
     desugar_registry[tag_name] = fun
     logging.debug("Registered desugaring transform for '%s'" % tag_name)
     return fun
   return wrap
 
+@desugar_register("Ref")
+def desugar_ref(parsed_element):
+  return None
+
 class YAMLVisualizerRegistry():
   def __init__(self):
-    self.templates = {}
-    self.default_templates = {}
-    self.ref_elements = {}
+    self.lib_elements = {}
+    self.display_elements = []
 
   def read_descriptor(self, filename):
     loader = yaml.SafeLoader(file(filename, 'r'))
     
-    def obj_constructor(loader, node):
-        value = loader.construct_mapping(node)
-        print value.__class__.__name__
-        return value
+    def create_obj_constructor(tag_name):
+      def obj_constructor(loader, node):
+        return ParsedElement(tag_name, loader.construct_mapping(node),
+                             filename, -1)
+        # TODO: add line numbers
+      return obj_constructor
     
     for tag_name in tag_registry:
-      loader.add_constructor("!" + tag_name, obj_constructor)
+      loader.add_constructor("!" + tag_name, create_obj_constructor(tag_name))
       
     for tag_name in desugar_registry:
-      loader.add_constructor("!" + tag_name, obj_constructor)
+      loader.add_constructor("!" + tag_name, create_obj_constructor(tag_name))
     
-    print loader.get_data()
+    yaml_dict = loader.get_data()
+    if 'lib' in yaml_dict:
+      assert isinstance(yaml_dict['lib'], dict)
+      for ref_name, elt in yaml_dict['lib'].iteritems():
+        logging.debug("Loaded library element ref='%s'", ref_name)
+        elt.set_ref(ref_name)
+        self.lib_elements[ref_name] = elt
+
+    if 'display' in yaml_dict:
+      assert isinstance(yaml_dict['display'], list)
+      for idx, elt in enumerate(yaml_dict['display']):
+        elt.set_ref("(display %i)" % idx)
+        self.display_elements.append(elt)
+      
+    # TODO: desugaring pass
 
 class VisualizerRoot(object):
   """An visualizer descriptor file."""
@@ -61,14 +78,26 @@ class VisualizerRoot(object):
     """Initialize this descriptor from a file and given a ChiselApi object."""
     from chisualizer.visualizers.Theme import DarkTheme
     
+    # Hacks to get this to behave as a AbstractVisualizer
+    # TODO: FIX, perhaps with guard node
+    self.root = self
+    self.path = ""
+    
     self.api = api
     self.theme = DarkTheme()
     self.registry = YAMLVisualizerRegistry()
     self.visualizer = None  # TODO: support multiple visualizers in different windows
 
     self.registry.read_descriptor(filename)
-
-    assert False
+    
+    if not self.registry.display_elements:
+      raise VisualizerParseError("No display elements specified.")
+    
+    if len(self.registry.display_elements) != 1:
+      raise VisualizerParseError("Multiple visualizers currently not supported.")
+    
+    from chisualizer.visualizers.VisualizerBase import AbstractVisualizer
+    self.visualizer = self.registry.display_elements[0].instantiate(self, valid_subclass=AbstractVisualizer)
 
   def layout_cairo(self, cr):
     size_x, size_y = self.visualizer.layout_cairo(cr)
@@ -84,6 +113,9 @@ class VisualizerRoot(object):
   def set_theme(self, theme):
     # TODO: is persistent theme state really the best idea?
     self.theme = theme
+
+  def get_api(self):
+    return self.api
 
 class Base(object):
   """Abstract base class for visualizer descriptor objects."""
@@ -130,91 +162,156 @@ class VisualizerParseAttributeNotUsed(VisualizerParseError):
   """A specified attribute was not used."""
   pass
 
+class ElementAccessor(object):
+  """Accessor object for ParsedElement. Provides type-conversion functions,
+  static attribute access & checking, dynamic attribute registration and
+  resolution, and checks to ensure all attributes were used.
+  The elt_to_* functions are the parse_fn s referred below, provide type
+  conversion and validation.
+  """
+  def __init__(self, parent_element):
+    self.parent = parent_element
+    self.dynamic_overloads = [] # TODO implement support for this later
+    self.accessed_attrs = set()
+    self.dynamic_attrs = {} # mapping of attr name to (parsing function, kwds)
+  
+  def get_ref(self):
+    return self.parent.ref
+  
+  def get_dynamic_attrs(self):
+    """Returns a dict of dynamic attrs -> parsed value."""
+    rtn = {}
+    for attr_name, parse_fn_tuple in self.dynamic_attrs:
+      parse_fn, parse_fn_kwds = parse_fn_tuple
+      attr_list = self.get_attr_list(attr_name)
+      if len(attr_list) < 1:
+        self.parent.parse_error("Attribute %s not found.")
+      for elt in attr_list:
+        parsed = parse_fn(attr_name, elt, static=False, **parse_fn_kwds)
+        if parsed:
+          rtn[attr_name] = parsed
+          break
+    return rtn
+  
+  def attrs_not_accessed(self):
+    return self.parent.get_all_attrs() - self.accessed_attrs
+  
+  def get_attr_list(self, attr):
+    # TODO support dynamic overload attrs
+    return self.parent.get_attr_list(attr)
+  
+  def get_static_attr(self, parse_fn, attr, **kwds):
+    self.accessed_attrs.add(attr)
+    attr_list = self.get_attr_list(attr)
+    if len(attr_list) < 1:
+      self.parent.parse_error("Attribute %s not found.")
+    return parse_fn(attr, attr_list[-1], static=True, **kwds)
+    
+  def register_dynamic_attr(self, parse_fn, attr, **kwds):
+    self.accessed_attrs.add(attr)
+    assert attr not in self.dynamic_attrs
+    self.dynamic_attrs[attr] = (parse_fn, kwds)
+  
+  def error_if_static(self, attr, value, static):
+    if static:
+      self.parent.parse_error("%s='%s' is non-static" 
+                              % (attr, value),
+                              exc_cls=VisualizerParseValidationError)      
+  
+  def elt_to_string(self, attr, value, static, valid_set=[]):
+    assert isinstance(value, basestring)
+    if valid_set and value not in valid_set:
+      self.parent.parse_error("%s='%s' not in valid set: %s" 
+                              % (attr, value, valid_set),
+                              exc_cls=VisualizerParseValidationError)
+    return value
+    
+  def elt_to_int(self, attr, value, static, valid_min=None, valid_max=None):
+    if isinstance(value, basestring):
+      conv = self.string_to_int(attr, value)
+    elif isinstance(value, Number):
+      conv = int(value)
+    else:
+      assert False  # TODO more descriptive error here
+      
+    if valid_min is not None and conv < valid_min:
+      self.parent.parse_error("%s=%i < min (%i)" % (attr, conv, valid_min),
+                              exc_cls=VisualizerParseValidationError)
+    if valid_max is not None and conv > valid_max:
+      self.parent.parse_error("%s=%i < max (%i)" % (attr, conv, valid_max),
+                              exc_cls=VisualizerParseValidationError)
+    return conv        
+  
+  def string_to_int(self, attr, value):
+    assert isinstance(value, basestring)
+    try:
+      return int(value, 0)
+    except ValueError:
+      self.parent.parse_error("Unable to convert %s='%s' to int" % (attr, value),
+                              exc_cls=VisualizerParseTypeError)
+  
+  def elt_to_float(self, attr, value, static, valid_min=None, valid_max=None):
+    if isinstance(value, basestring):
+      conv = self.string_to_float(attr, value)
+    elif isinstance(value, Number):
+      conv = float(value)
+    else:
+      assert False  # TODO more descriptive error here
+      
+    if valid_min is not None and conv < valid_min:
+      self.parent.parse_error("%s=%i < min (%i)" % (attr, conv, valid_min),
+                              exc_cls=VisualizerParseValidationError)
+    if valid_max is not None and conv > valid_max:
+      self.parent.parse_error("%s=%i < max (%i)" % (attr, conv, valid_max),
+                              exc_cls=VisualizerParseValidationError)
+    return conv
+
+  def string_to_float(self, attr, value):
+    assert isinstance(value, basestring)
+    try:
+      return float(value)
+    except ValueError:
+      self.parent.parse_error("Unable to convert %s='%s' to float" % (attr, value),
+                              exc_cls=VisualizerParseTypeError)
+      
 class ParsedElement(object):
   """
-  An intermediate representation for parsed XML visualizer descriptor objects -
-  essentially a dict of the element attributes and list of children. Contains
-  functionality to to type conversion, validation, and check that all attributes
-  specified are actually read.
+  An intermediate representation for parsed visualizer descriptor objects -
+  essentially a dict of the element attributes and list of children.
   """
-  class ParsedElementAccessor():
-    """Accessor to the ParsedElement. Tracks attribute accesses to ensure
-    everything is used. There should be a unique accessor per 'object' for the
-    tracking to work. Provides type conversion (string parsing) and validcation 
-    functions.""" 
-    def __init__(self, parsed_element):
-      self.parsed_element = parsed_element
-      self.accessed = set()
-
-    def parse_error(self, message):
-      self.parsed_element.parse_error(message)
-
-    def get_attr_accessed(self, attribute):
-      """Marks an attribute as "read"."""
-      self.accessed.add(attribute)
-  
-    def get_unused_attributes(self):
-      """Return set of attributes in all of parent's attributes but not accessed
-      from this ParsedElementAccessor using the get_attr_* functions."""
-      return self.parsed_element.all_attributes.difference(self.accessed)
-    
-    def get_ref(self):
-      return self.parsed_element.ref
-    
-    def get_attr(self, attr):
-      self.get_attr_accessed(attr)
-      return self.parsed_element.get_attr_string(attr)
-    
-    def get_attr_string(self, attr, **kwargs):
-      self.get_attr_accessed(attr)
-      return self.parsed_element.get_attr_string(attr, **kwargs)
-    
-    def get_attr_int(self, attr, **kwargs):
-      self.get_attr_accessed(attr)
-      return self.parsed_element.get_attr_int(attr, **kwargs)      
-    
-    def get_attr_float(self, attr, **kwargs):
-      self.get_attr_accessed(attr)
-      return self.parsed_element.get_attr_float(attr, **kwargs)      
-    
-    def get_children(self):
-      return self.parsed_element.children
-    
   def parse_error(self, message, exc_cls=VisualizerParseError):
     """Helper function to throw a fatal error, indicating the broken element
     along with filename and line number.
     """
     raise exc_cls("Error parsing %s '%s' (%s:%i): %s" % 
-                  (self.tag, self.ref, self.xml_filename,
-                   self.xml_element.sourceline, message))
+                  (self.tag, self.ref, self.filename, self.lineno, message))
   
-  def __init__(self, xml_element, xml_filename):
-    """Constructor. Parses an ElementTree element to populate my attributes and
-    children."""
-    self.xml_element = xml_element
-    self.xml_filename = xml_filename
-    
-    self.tag = xml_element.tag 
+  def __init__(self, tag_name, attr_map, filename, lineno):
+    self.tag = tag_name
+    self.attr_map = self.canonicalize_attr_map(attr_map)
+    self.filename = filename
+    self.lineno = lineno
     self.ref = '(anon)'
-    
-    self.attributes = {}
-    for attr_name, attr_value in xml_element.items():
-      if attr_value in self.attributes:
-        self.parse_error("Duplicate attribute: '%s'" % attr_name,
-                         exc_cls=VisualizerParseAttributeError)
-      self.attributes[attr_name] = attr_value
-    
-    self.children = []
-    """for child in xml_element.iterchildren(tag=etree.Element):
-      self.children.append(ParsedElement(child, xml_filename))"""
-          
+  
+  def set_ref(self, ref):
+    self.ref = ref
+  
+  @staticmethod
+  def canonicalize_attr_map(attr_map):
+    """Canonicalizes the attr map, making everything that isn't a list into a
+    list. Modification is done in-place."""
+    for attr, val in attr_map.iteritems():
+      if val is not list:
+        attr_map[attr] = [val] 
+    return attr_map
+  
   def instantiate(self, parent, valid_subclass=None):
     assert valid_subclass is not None
-    if self.tag not in xml_registry:
+    if self.tag not in tag_registry:
       self.parse_error("Unknown tag '%s'" % self.tag,
                        exc_cls=VisualizerParseTagError)
       
-    rtn_cls = xml_registry[self.tag]
+    rtn_cls = tag_registry[self.tag]
     if not issubclass(rtn_cls, valid_subclass):
       self.parse_error("Expected to be a subclass of %s" %
                        valid_subclass.__name__,
@@ -222,71 +319,21 @@ class ParsedElement(object):
         
     logging.debug("Instantiating %s (%s:%s)" % 
                   (rtn_cls.__name__, self.tag, self.ref))
-    accessor = self.create_accessor()
+    
+    accessor = ElementAccessor(self)
     rtn = rtn_cls(accessor, parent)
-    if accessor.get_unused_attributes():
-      self.parse_error("Unused attributes: %s" % 
-                       accessor.get_unused_attributes(),
-                       exc_cls=VisualizerParseAttributeNotUsed)
+    if accessor.attrs_not_accessed():
+      self.parse_error("Unused attributes: %s" % accessor.attrs_not_accessed())
+    
     return rtn
     
-  def create_accessor(self):
-    return self.ParsedElementAccessor(self)
-
-  def get_all_attrs(self):
-    return self.attributes.iterkeys()
     
-  def get_attr(self, attribute):
-    current = self
-    while current is not None:
-      if attribute in current.attributes:
-        return current.attributes[attribute]
-      current = current.parent
-    current = self.class_parent
-    while current is not None:
-      if attribute in current.attributes:
-        return current.attributes[attribute]
-      current = current.parent
-    self.parse_error("Cannot find attribute: '%s'" % attribute,
-                     exc_cls=VisualizerParseAttributeNotFoundError)
-
-  def get_attr_string(self, attr, valid_set=None):
-    got = self.get_attr(attr)
-    assert isinstance(got, basestring)
-    if valid_set is not None and got not in valid_set:
-      self.parse_error("%s='%s' not in valid set: %s" % (attr, got, valid_set),
-                       exc_cls=VisualizerParseValidationError)
-    return got
+  def get_all_attrs(self):
+    return set(self.attr_map.iterkeys())
+    
+  def get_attr_list(self, attr):
+    if attr not in self.attr_map:
+      self.parse_error("Cannot find attribute: '%s'" % attr,
+                       exc_cls=VisualizerParseAttributeNotFound)
+    return self.attr_map[attr]
   
-  def get_attr_int(self, attr, valid_min=None, valid_max=None):
-    got = self.get_attr(attr)
-    assert isinstance(got, basestring)
-    try:
-      conv = int(got, 0)
-    except ValueError:
-      self.parse_error("Unable to convert %s='%s' to int" % (attr, got),
-                       exc_cls=VisualizerParseTypeError)
-    if valid_min is not None and conv < valid_min:
-      self.parse_error("%s=%i < min (%i)" % (attr, conv, valid_min),
-                       exc_cls=VisualizerParseValidationError)
-    if valid_max is not None and conv > valid_max:
-      self.parse_error("%s=%i < max (%i)" % (attr, conv, valid_max),
-                       exc_cls=VisualizerParseValidationError)
-    return conv        
-  
-  def get_attr_float(self, attr, valid_min=None, valid_max=None):
-    got = self.get_attr(attr)
-    assert isinstance(got, basestring)
-    try:
-      conv = float(got)
-    except ValueError:
-      self.parse_error("Unable to convert %s='%s' to float" % (attr, got),
-                       exc_cls=VisualizerParseTypeError)
-    if valid_min is not None and conv < valid_min:
-      self.parse_error("%s=%i < min (%i)" % (attr, conv, valid_min),
-                       exc_cls=VisualizerParseValidationError)
-    if valid_max is not None and conv > valid_max:
-      self.parse_error("%s=%i < max (%i)" % (attr, conv, valid_max),
-                       exc_cls=VisualizerParseValidationError)
-    return conv        
-   
