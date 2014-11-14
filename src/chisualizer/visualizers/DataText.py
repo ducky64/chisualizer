@@ -9,12 +9,12 @@ from chisualizer.visualizers.VisualizerBase import AbstractVisualizer
 @Base.tag_register('TextBox')
 class TextBox(AbstractVisualizer):
   """Visualizer for data represented as text."""
-  def __init__(self, element, parent):
-    super(TextBox, self).__init__(element, parent)
+  def __init__(self, elt, parent):
+    super(TextBox, self).__init__(elt, parent)
     
-
-    self.display_size = element.get_attr_int('display_size', valid_min=1)
-    self.display_font = element.get_attr_string('display_font')
+    self.display_size = elt.get_static_attr(elt.elt_to_int, 'display_size',
+                                            valid_min=1)
+    self.display_font = elt.get_static_attr(elt.elt_to_string, 'display_font')
 
   def draw_element_cairo(self, cr, rect, depth):
     cr.set_source_rgba(*self.get_theme().default_color())

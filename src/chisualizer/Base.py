@@ -60,11 +60,14 @@ class YAMLVisualizerRegistry():
       assert isinstance(yaml_dict['lib'], dict)
       for ref_name, elt in yaml_dict['lib'].iteritems():
         logging.debug("Loaded library element ref='%s'", ref_name)
+        elt.set_ref(ref_name)
         self.lib_elements[ref_name] = elt
 
     if 'display' in yaml_dict:
       assert isinstance(yaml_dict['display'], list)
-      self.display_elements.extend(yaml_dict['display'])
+      for idx, elt in enumerate(yaml_dict['display']):
+        elt.set_ref("(display %i)" % idx)
+        self.display_elements.append(elt)
       
     # TODO: desugaring pass
 
@@ -73,6 +76,11 @@ class VisualizerRoot(object):
   def __init__(self, filename, api):
     """Initialize this descriptor from a file and given a ChiselApi object."""
     from chisualizer.visualizers.Theme import DarkTheme
+    
+    # Hacks to get this to behave as a AbstractVisualizer
+    # TODO: FIX, perhaps with guard node
+    self.root = self
+    self.path = ""
     
     self.api = api
     self.theme = DarkTheme()
@@ -104,6 +112,9 @@ class VisualizerRoot(object):
   def set_theme(self, theme):
     # TODO: is persistent theme state really the best idea?
     self.theme = theme
+
+  def get_api(self):
+    return self.api
 
 class Base(object):
   """Abstract base class for visualizer descriptor objects."""
@@ -163,6 +174,9 @@ class ElementAccessor(object):
     self.accessed_attrs = set()
     self.dynamic_attrs = {} # mapping of attr name to (parsing function, kwds)
   
+  def get_ref(self):
+    return self.parent.ref
+  
   def get_dynamic_attrs(self):
     """Returns a dict of dynamic attrs -> parsed value."""
     rtn = {}
@@ -172,7 +186,7 @@ class ElementAccessor(object):
       if len(attr_list) < 1:
         self.parent.parse_error("Attribute %s not found.")
       for elt in attr_list:
-        parsed = parse_fn(self, attr_name, elt, False, **parse_fn_kwds)
+        parsed = parse_fn(attr_name, elt, static=False, **parse_fn_kwds)
         if parsed:
           rtn[attr_name] = parsed
           break
@@ -186,14 +200,14 @@ class ElementAccessor(object):
     return self.parent.get_attr_list(attr)
   
   def get_static_attr(self, parse_fn, attr, **kwds):
-    self.accessed.add(attr)
+    self.accessed_attrs.add(attr)
     attr_list = self.get_attr_list(attr)
     if len(attr_list) < 1:
       self.parent.parse_error("Attribute %s not found.")
-    return parse_fn(self, attr, attr_list[-1], True, **kwds)
+    return parse_fn(attr, attr_list[-1], static=True, **kwds)
     
   def register_dynamic_attr(self, parse_fn, attr, **kwds):
-    self.accessed.add(attr)
+    self.accessed_attrs.add(attr)
     assert attr not in self.dynamic_attrs
     self.dynamic_attrs[attr] = (parse_fn, kwds)
   
@@ -205,10 +219,11 @@ class ElementAccessor(object):
   
   def elt_to_string(self, attr, value, static, valid_set=[]):
     assert isinstance(value, basestring)
-    if valid_set is not None and value not in valid_set:
+    if valid_set and value not in valid_set:
       self.parent.parse_error("%s='%s' not in valid set: %s" 
                               % (attr, value, valid_set),
                               exc_cls=VisualizerParseValidationError)
+    return value
     
   def elt_to_int(self, attr, value, static, valid_min=None, valid_max=None):
     if isinstance(value, basestring):
@@ -263,14 +278,18 @@ class ParsedElement(object):
     """Helper function to throw a fatal error, indicating the broken element
     along with filename and line number.
     """
-    raise exc_cls("Error parsing %s (%s:%i): %s" % 
-                  (self.tag, self.filename, self.lineno, message))
+    raise exc_cls("Error parsing %s '%s' (%s:%i): %s" % 
+                  (self.tag, self.ref, self.filename, self.lineno, message))
   
   def __init__(self, tag_name, attr_map, filename, lineno):
     self.tag = tag_name
     self.attr_map = self.canonicalize_attr_map(attr_map)
     self.filename = filename
     self.lineno = lineno
+    self.ref = '(anon)'
+  
+  def set_ref(self, ref):
+    self.ref = ref
   
   @staticmethod
   def canonicalize_attr_map(attr_map):

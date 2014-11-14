@@ -11,10 +11,10 @@ import wx
 class AbstractVisualizer(Base.Base):
   """Abstract base class for Chisel visualizer objects. Defines interface 
   methods and provides common functionality, like paths."""
-  def __init__(self, element, parent):
-    super(AbstractVisualizer, self).__init__(element, parent)
+  def __init__(self, elt, parent):
+    super(AbstractVisualizer, self).__init__(elt, parent)
     
-    self.path_component = element.get_attr_string('path')
+    self.path_component = elt.get_static_attr(elt.elt_to_string, 'path')
     self.path = parent.path + self.path_component
     
     self.node = None
@@ -76,16 +76,20 @@ class AbstractVisualizer(Base.Base):
 
 class FramedVisualizer(AbstractVisualizer):
   """Base class for visualizers providing visual framing (borders)."""
-  def __init__(self, element, parent):
-    super(FramedVisualizer, self).__init__(element, parent)
+  def __init__(self, elt, parent):
+    super(FramedVisualizer, self).__init__(elt, parent)
     
-    self.border_size = element.get_attr_int('border_size', valid_min=1)
-    self.border_margin = element.get_attr_int('border_margin', valid_min=1)
-    self.label = element.get_attr_string('label')
+    self.border_size = elt.get_static_attr(elt.elt_to_int, 'border_size',
+                                           valid_min = 1) 
+    self.border_margin = elt.get_static_attr(elt.elt_to_int, 'border_margin', 
+                                             valid_min=1)
+    
+    self.label = elt.get_static_attr(elt.elt_to_string, 'label')
     if not self.label:
       self.label = None
-    self.label_size = element.get_attr_int('label_size', valid_min=1)
-    self.label_font = element.get_attr_string('label_font')
+    self.label_size = elt.get_static_attr(elt.elt_to_int,'label_size',
+                                          valid_min=1)
+    self.label_font = elt.get_static_attr(elt.elt_to_string,'label_font')
     
     self.collapsed = False
 
