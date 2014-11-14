@@ -215,6 +215,10 @@ class CairoPanel(wx.Panel):
     return self.visualizer_dc
 
   def draw_visualizer(self, cr):
+    timer_update = time.time()
+    self.desc.update()
+    timer_update = time.time() - timer_update
+    
     timer_lay = time.time()
     layout = self.desc.layout_cairo(cr)
     timer_lay = time.time() - timer_lay
@@ -234,6 +238,7 @@ class CairoPanel(wx.Panel):
     surface_test = cairo.SVGSurface(f, 1, 1)  # dummy surface to get layout size
     # TODO make cross platform, 
     cr_test = cairo.Context(surface_test)
+    self.desc.update()
     layout = self.desc.layout_cairo(cr_test)
     surface_test.finish()
     

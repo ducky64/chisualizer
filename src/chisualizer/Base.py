@@ -99,6 +99,9 @@ class VisualizerRoot(object):
     from chisualizer.visualizers.VisualizerBase import AbstractVisualizer
     self.visualizer = self.registry.display_elements[0].instantiate(self, valid_subclass=AbstractVisualizer)
 
+  def update(self):
+    self.visualizer.update()
+
   def layout_cairo(self, cr):
     size_x, size_y = self.visualizer.layout_cairo(cr)
     return Rectangle((0, 0), (size_x, size_y))
@@ -179,6 +182,7 @@ class ElementDataType(object):
     new_list = []
     for elt in value_list:
       new_list.append(cls.dynamic_elt_instantiate(accessor, attr, elt))
+    return new_list
 
   @classmethod
   def dynamic_elt_instantiate(cls, accessor, attr, value):
@@ -278,16 +282,12 @@ class ElementAccessor(object):
   def get_dynamic_attrs(self):
     """Returns a dict of dynamic attrs -> parsed value."""
     rtn = {}
-    for attr_name, parse_fn_tuple in self.dynamic_attrs:
-      parse_fn, parse_fn_kwds = parse_fn_tuple
-      attr_list = self.get_attr_list(attr_name)
-      if len(attr_list) < 1:
-        self.parent.parse_error("Attribute %s not found.")
-      for elt in attr_list:
-        parsed = parse_fn(attr_name, elt, static=False, **parse_fn_kwds)
-        if parsed:
-          rtn[attr_name] = parsed
-          break
+    for attr_name, parse_fn_tuple in self.dynamic_attrs.iteritems():
+      
+      datatype, parsed_list, parse_fn_kwds = parse_fn_tuple
+      parsed = datatype.list_to_data(self, attr_name, parsed_list, static=False,
+                                     **parse_fn_kwds)
+      rtn[attr_name] = parsed
     return rtn
   
   def attrs_not_accessed(self):

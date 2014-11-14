@@ -22,6 +22,7 @@ class AbstractVisualizer(Base.Base):
       self.node = self.root.get_api().get_node_reference(self.path)
     
     # Attributes dict, updated once per cycle by update()
+    self.elt = elt
     self.dynamic_attrs = {}
     
     self.register_attrs()
@@ -32,13 +33,13 @@ class AbstractVisualizer(Base.Base):
     pass
     
   def update(self):
-    """Called once per visualizer update, refreshes my attrs dict based on
-    new circuit values / modifiers / whatever.
-    """
-    # Handle modifiers
+    """Called once per visualizer update (before the layout phase), refreshing
+    my attrs dict based on new circuit values / modifiers / whatever.
+    Classes with elements should also have their children update."""
+    # TODO: Handle modifiers
     
     # Update attrs - common infrastructure
-    
+    self.dynamic_attrs = self.elt.get_dynamic_attrs()
     
   def get_node_ref(self):
     """Returns my associated Chisel API node, or None."""

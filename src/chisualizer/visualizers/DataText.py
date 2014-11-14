@@ -16,6 +16,9 @@ class TextBox(FramedVisualizer):
                                             valid_min=1)
     self.display_font = elt.get_static_attr(Base.StringType, 'display_font')
 
+    elt.register_dynamic_attr(Base.StringType, 'text')
+    elt.register_dynamic_attr(Base.StringType, 'text_color')
+
   def draw_element_cairo(self, cr, rect, depth):
     cr.set_source_rgba(*self.get_theme().default_color())
     cr.set_line_width (1)
@@ -23,11 +26,9 @@ class TextBox(FramedVisualizer):
                         cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
     cr.set_font_size(self.display_size)
     
-    text = "err"  # TODO FIXME
-    cr.set_source_rgb(1, 0, 0)
-    
-    # TODO ADD COLORS
-             
+    text = self.dynamic_attrs['text']
+    cr.set_source_rgba(*self.get_theme().color(self.dynamic_attrs['text_color']))
+
     cr.move_to(rect.left(), rect.center_vert() + self.text_max_height / 2)
     cr.show_text(text)
     
