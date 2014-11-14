@@ -79,6 +79,5 @@ lib:
     - !TextBox {path: _results_bits_data, template: text_decimal}
     - !TextBox {path: _results_val, template: text_bool}
     - !TextBox {path: _results_rdy, template: text_bool}
-
 display:
 - !Ref {target: gcd, path: gcd}
