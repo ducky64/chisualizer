@@ -12,9 +12,9 @@ class TextBox(FramedVisualizer):
   def __init__(self, elt, parent):
     super(TextBox, self).__init__(elt, parent)
     
-    self.display_size = elt.get_static_attr(elt.elt_to_int, 'display_size',
+    self.display_size = elt.get_static_attr(Base.IntType, 'display_size',
                                             valid_min=1)
-    self.display_font = elt.get_static_attr(elt.elt_to_string, 'display_font')
+    self.display_font = elt.get_static_attr(Base.StringType, 'display_font')
 
   def draw_element_cairo(self, cr, rect, depth):
     cr.set_source_rgba(*self.get_theme().default_color())
