@@ -23,25 +23,10 @@ class TextBox(FramedVisualizer):
                         cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
     cr.set_font_size(self.display_size)
     
-    modifiers = self.display.apply(self.node)
-    if 'text' in modifiers:
-      text = modifiers['text']
-      del modifiers['text']
-    else:
-      logging.warn("%s (%s): no 'text' in modifiers: %s", self.path, self.__class__.__name__, modifiers)
-      text = "err"
-      cr.set_source_rgb(1, 0, 0)
+    text = "err"  # TODO FIXME
+    cr.set_source_rgb(1, 0, 0)
     
-    if 'color' in modifiers:
-      color = modifiers['color']
-      if type(color) is tuple:
-        cr.set_source_rgba(*color)
-      else:
-        cr.set_source_rgba(*self.get_theme().color(color))
-      del modifiers['color']
-    
-    if modifiers:
-      logging.warn("%s (%s): unprocessed modifiers: %s", self.path, self.__class__.__name__, modifiers)
+    # TODO ADD COLORS
              
     cr.move_to(rect.left(), rect.center_vert() + self.text_max_height / 2)
     cr.show_text(text)
@@ -49,7 +34,8 @@ class TextBox(FramedVisualizer):
     return []
   
   def layout_element_cairo(self, cr):
-    texts = self.display.get_longest_text(self.node)
+    texts = ["aaaaaaaa"]  #TODO FIXME
+    
     self.text_max_width = 0
     cr.set_line_width (1)
     cr.select_font_face(self.display_font,
