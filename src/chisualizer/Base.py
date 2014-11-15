@@ -175,17 +175,17 @@ class ElementDataType(object):
     raise NotImplementedError()
   
   @classmethod
-  def dynamic_attr_instantiate(cls, accessor, attr, value_list):
+  def dynamic_attr_instantiate(cls, accessor, attr, value_list, parent):
     """When a dynamic attribute is registered, instantiate and/or semantically
     desugar its value list into a usable internal format. This is stored as
     the 'parsed list' in the dynamic_attrs in ElementAccessor.""" 
     new_list = []
     for elt in value_list:
-      new_list.append(cls.dynamic_elt_instantiate(accessor, attr, elt))
+      new_list.append(cls.dynamic_elt_instantiate(accessor, attr, elt, parent))
     return new_list
 
   @classmethod
-  def dynamic_elt_instantiate(cls, accessor, attr, value):
+  def dynamic_elt_instantiate(cls, accessor, attr, value, parent):
     raise NotImplementedError()
 
   @classmethod
@@ -221,9 +221,12 @@ class StringType(SingleElementDataType):
     return value
   
   @classmethod
-  def dynamic_elt_instantiate(cls, accessor, attr, value):
+  def dynamic_elt_instantiate(cls, accessor, attr, value, parent):
     if isinstance(value, basestring):
       return value
+    elif isinstance(value, ParsedElement):
+      from chisualizer.display.VisualizerToString import VisualizerToString
+      return value.instantiate(parent, valid_subclass=VisualizerToString)
     else:
       accessor.parent.parse_error("%s='%s' has invalid type" % attr, value)
 
@@ -256,11 +259,12 @@ class IntType(SingleElementDataType):
                                   exc_cls=VisualizerParseTypeError)
   
   @classmethod
-  def dynamic_elt_instantiate(cls, accessor, attr, value):
+  def dynamic_elt_instantiate(cls, accessor, attr, value, parent):
     if isinstance(value, basestring):
       return value
     else:
-      accessor.parent.parse_error("%s='%s' has invalid type" % attr, value)
+      accessor.parent.parse_error("%s='%s' has invalid type: %s" 
+                                  % attr, value, value.__class__.__name__)
   
   
 class ElementAccessor(object):
