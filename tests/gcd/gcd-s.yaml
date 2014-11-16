@@ -1,0 +1,20 @@
+lib:
+  text_binary:
+    !Template
+    text: !NumericalString {prefix: 0b, radix: 2}
+  text_decimal:
+    !Template
+    text: !NumericalString {radix: 10}
+  text_hexadecimal:
+    !Template
+    text: !NumericalString {prefix: 0x, radix: 16}
+  text_bool:
+    !DictTemplate
+    0: {text: "false", text_color: red}
+    1: {text: "true", text_color: green}
+    default: {text: "true*", text_color: green}
+
+display:
+- !TextBox {path: GCD.state, text_size: 12, text_font: Mono, border_size: 1, border_margin: 10, label: ducks, label_size: 10, label_font: Mono, text: !NumericalString {prefix: 0x, radix: 16}, text_color: "red"}
+
+# template: gcd_state_map, 
