@@ -12,12 +12,11 @@ class TextBox(FramedVisualizer):
   def __init__(self, elt, parent):
     super(TextBox, self).__init__(elt, parent)
     
-    self.text_size = elt.get_static_attr(Base.IntType, 'text_size',
-                                            valid_min=1)
-    self.text_font = elt.get_static_attr(Base.StringType, 'text_font')
+    self.text_size = self.attr(Base.IntAttr, 'text_size', valid_min=1).get_static()
+    self.text_font = self.attr(Base.StringAttr, 'text_font').get_static()
 
-    elt.register_dynamic_attr(Base.StringType, 'text')
-    elt.register_dynamic_attr(Base.StringType, 'text_color')
+    self.text = self.attr(Base.StringAttr, 'text', dynamic=True)
+    self.text_color = self.attr(Base.StringAttr, 'text_color', dynamic=True)
 
   def draw_element_cairo(self, cr, rect, depth):
     cr.set_source_rgba(*self.get_theme().default_color())
@@ -26,8 +25,8 @@ class TextBox(FramedVisualizer):
                         cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
     cr.set_font_size(self.text_size)
     
-    text = self.dynamic_attrs['text']
-    cr.set_source_rgba(*self.get_theme().color(self.dynamic_attrs['text_color']))
+    text = self.text.get_dynamic()
+    cr.set_source_rgba(*self.get_theme().color(self.text_color.get_dynamic()))
 
     cr.move_to(rect.left(), rect.center_vert() + self.text_max_height / 2)
     cr.show_text(text)
@@ -35,7 +34,7 @@ class TextBox(FramedVisualizer):
     return []
   
   def layout_element_cairo(self, cr):
-    texts = ["aaaaaaaa"]  #TODO FIXME
+    texts = self.text.get_longest_strings()
     
     self.text_max_width = 0
     cr.set_line_width (1)
@@ -62,7 +61,7 @@ class TextBox(FramedVisualizer):
     return super(TextBox, self).wx_popupmenu_populate(menu) or has_node
     
   def wx_popupmenu_set(self, evt):
-    curr_value = self.dynamic_attrs['text']
+    curr_value = self.text.get_dynamic()
       
     dlg = wx.TextEntryDialog(None, self.path, 'New Value', curr_value)
     while True:

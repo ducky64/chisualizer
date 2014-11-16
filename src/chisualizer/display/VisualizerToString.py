@@ -49,9 +49,9 @@ class VisualizerToString(Base.Base):
 class NumericalString(VisualizerToString):
   def __init__(self, element, parent):
     super(NumericalString, self).__init__(element, parent)
-    self.prefix = element.get_attr_string('prefix')
-    self.radix = element.get_attr_int('radix', valid_min=1)
-    self.charmap = element.get_attr_string('charmap')
+    self.prefix = Base.StringAttr(self, element, 'prefix').get_static() 
+    self.radix = Base.IntAttr(self, element, 'radix', valid_min=1).get_static()
+    self.charmap = Base.StringAttr(self, element, 'charmap').get_static()
     if len(self.charmap) < self.radix:
       element.parse_error("charmap must be longer than radix (%i), got %i" %
                           (self.radix, len(self.charmap)))    

@@ -14,23 +14,23 @@ class AbstractVisualizer(Base.Base):
   def __init__(self, elt, parent):
     super(AbstractVisualizer, self).__init__(elt, parent)
     
-    self.path_component = elt.get_static_attr(Base.StringType, 'path')
+    self.elt = elt
+    self.dynamic_attrs = []
+    
+    self.path_component = self.attr(Base.StringAttr, 'path').get_static()
     self.path = parent.path + self.path_component
     
     self.node = None
     if self.root.get_api().has_node(self.path):
       self.node = self.root.get_api().get_node_reference(self.path)
     
-    # Attributes dict, updated once per cycle by update()
-    self.elt = elt
-    self.dynamic_attrs = {}
-    
-    self.register_attrs()
-    
-  def register_attrs(self):
+  def attr(self, datatype_cls, attr_name, dynamic=False, **kwds):
     """Registers my attributes, so update() will look for and appropriately
     type-convert attribute values."""
-    pass
+    attr_obj = datatype_cls(self, self.elt, attr_name, **kwds)
+    if dynamic:
+      self.dynamic_attrs.append(attr_obj)
+    return attr_obj
     
   def update(self):
     """Called once per visualizer update (before the layout phase), refreshing
@@ -39,7 +39,8 @@ class AbstractVisualizer(Base.Base):
     # TODO: Handle modifiers
     
     # Update attrs - common infrastructure
-    self.dynamic_attrs = self.elt.get_dynamic_attrs()
+    for dynamic_attr in self.dynamic_attrs:
+      dynamic_attr.update()
     
   def get_node_ref(self):
     """Returns my associated Chisel API node, or None."""
@@ -80,17 +81,14 @@ class FramedVisualizer(AbstractVisualizer):
   def __init__(self, elt, parent):
     super(FramedVisualizer, self).__init__(elt, parent)
     
-    self.border_size = elt.get_static_attr(Base.IntType, 'border_size',
-                                           valid_min = 1) 
-    self.border_margin = elt.get_static_attr(Base.IntType, 'border_margin', 
-                                             valid_min=1)
+    self.border_size = self.attr(Base.IntAttr, 'border_size', valid_min=1).get_static() 
+    self.border_margin = self.attr(Base.IntAttr, 'border_margin', valid_min=1).get_static()
     
-    self.label = elt.get_static_attr(Base.StringType, 'label')
+    self.label = self.attr(Base.StringAttr, 'label').get_static()
     if not self.label:
       self.label = None
-    self.label_size = elt.get_static_attr(Base.IntType,'label_size',
-                                          valid_min=1)
-    self.label_font = elt.get_static_attr(Base.StringType,'label_font')
+    self.label_size = self.attr(Base.IntAttr,'label_size', valid_min=1).get_static()
+    self.label_font = self.attr(Base.StringAttr,'label_font').get_static()
     
     self.collapsed = False
 

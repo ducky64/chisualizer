@@ -165,12 +165,12 @@ class VisualizerParseAttributeNotUsed(VisualizerParseError):
   """A specified attribute was not used."""
   pass
 
-class ElementAttribute(object):
+class ElementAttr(object):
   """Object representing an attribute, handling dynamic values and data type
   conversions."""
   def parse_error(self, message, exc_cls):
-    self.parent.parse_error("Error in attribute %s: %s"
-                            % (self.attr_name, message))
+    self.element.parse_error("Error in attribute %s: %s"
+                             % (self.attr_name, message))
   
   def __init__(self, parent, element, attr_name):
     self.parent = parent
@@ -197,7 +197,7 @@ class ElementAttribute(object):
     called before."""
     raise NotImplementedError()
 
-class SingleElementAttribute(ElementAttribute):
+class SingleElementAttr(ElementAttr):
   """ElementAttribute subclass for attributes using the first valid element of 
   the value list."""
   def create_value_list(self, attr_value_list):
@@ -222,6 +222,7 @@ class SingleElementAttribute(ElementAttribute):
       conv = self.value_elt_to_data(value_elt, static=False)
       if conv is not None:
         self.dynamic_value = conv
+        return
     self.parse_error("No valid value in list",
                      exc_cls=VisualizerParseValidationError)
 
@@ -236,9 +237,9 @@ class SingleElementAttribute(ElementAttribute):
   def get_dynamic(self):
     return self.dynamic_value
   
-class StringAttribute(SingleElementAttribute):
+class StringAttr(SingleElementAttr):
   def __init__(self, parent, element, attr_name, valid_set=None):
-    super(StringAttribute, self).__init__(parent, element, attr_name)
+    super(StringAttr, self).__init__(parent, element, attr_name)
     self.valid_set = valid_set
   
   def create_value_elt(self, attr_value_elt):
@@ -254,10 +255,13 @@ class StringAttribute(SingleElementAttribute):
                        exc_cls=VisualizerParseValidationError)
   
   def value_elt_to_data(self, value_elt, static=False):
+    from chisualizer.display.VisualizerToString import VisualizerToString # TODO HACKY
     if isinstance(value_elt, basestring):
       conv = value_elt
+    elif isinstance(value_elt, VisualizerToString):
+      conv = value_elt.get_string(self.parent)
     else:
-      assert False, "Unknown type"
+      assert False, "Unknown type: %s" % value_elt.__class__.__name__
     
     if self.valid_set is not None and conv not in self.valid_set:
       self.parse_error("%s='%s' not in valid set: %s" 
@@ -267,12 +271,21 @@ class StringAttribute(SingleElementAttribute):
     return conv
 
   def get_longest_strings(self):
-    raise NotImplementedError()
-
-class IntAttribute(SingleElementAttribute):
+    from chisualizer.display.VisualizerToString import VisualizerToString # TODO HACKY
+    longest_strings = []
+    for value_elt in self.attr_values:
+      if isinstance(value_elt, basestring):
+        longest_strings.append(value_elt)
+      elif isinstance(value_elt, VisualizerToString):
+        longest_strings.extend(value_elt.get_longest_strings(self.parent))
+      else:
+        assert False, "Unknown type: %s" % value_elt.__class__.__name__
+    return longest_strings
+  
+class IntAttr(SingleElementAttr):
   def __init__(self, parent, element, attr_name, 
                valid_min=None, valid_max=None):
-    super(IntAttribute, self).__init__(parent, element, attr_name)
+    super(IntAttr, self).__init__(parent, element, attr_name)
     self.valid_min = valid_min
     self.valid_max = valid_max
   
@@ -298,7 +311,7 @@ class IntAttribute(SingleElementAttribute):
     if isinstance(value_elt, int):
       conv = value_elt
     else:
-      assert False, "Unknown type"
+      assert False, "Unknown type: %s" % value_elt.__class__.__name__ 
     
     if self.valid_min is not None and conv < self.valid_min:
       self.parse_error("%i < min (%i)" % (conv, self.valid_min),
