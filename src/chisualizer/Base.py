@@ -165,155 +165,170 @@ class VisualizerParseAttributeNotUsed(VisualizerParseError):
   """A specified attribute was not used."""
   pass
 
-# TODO: refactor the data types internals to be less janky.
-# Code smells: way too large method signature...
-class ElementDataType(object):
-  """Helper methods for attribute to data type conversions."""
-  @classmethod
-  def list_to_data(cls, accessor, attr, value_list, static, **kwds):
-    """Converts a attribute list to the data type."""
-    raise NotImplementedError()
-  
-  @classmethod
-  def dynamic_attr_instantiate(cls, accessor, attr, value_list, parent):
-    """When a dynamic attribute is registered, instantiate and/or semantically
-    desugar its value list into a usable internal format. This is stored as
-    the 'parsed list' in the dynamic_attrs in ElementAccessor.""" 
-    new_list = []
-    for elt in value_list:
-      new_list.append(cls.dynamic_elt_instantiate(accessor, attr, elt, parent))
-    return new_list
-
-  @classmethod
-  def dynamic_elt_instantiate(cls, accessor, attr, value, parent):
-    raise NotImplementedError()
-
-  @classmethod
-  def error_if_static(cls, accessor, attr, value, static):
-    if static:
-      accessor.parent.parse_error("%s='%s' is non-static" 
-                                  % (attr, value),
-                                  exc_cls=VisualizerParseValidationError)
-
-class SingleElementDataType(ElementDataType):
-  """Helper methods for single-value (first in list) attribute to data type
+class ElementAttribute(object):
+  """Object representing an attribute, handling dynamic values and data type
   conversions."""
-  @classmethod
-  def list_to_data(cls, accessor, attr, value_list, static, **kwds):
-    for elt in value_list:
-      parsed = cls.elt_to_data(accessor, attr, elt, static, **kwds)
-      if parsed is not None:
-        return parsed
-    accessor.parent.parse_error("Attribute %s has no valid value" % attr)
+  def parse_error(self, message, exc_cls):
+    self.parent.parse_error("Error in attribute %s: %s"
+                            % (self.attr_name, message))
   
-  @classmethod
-  def elt_to_data(cls, accessor, attr, value, static):
-    raise NotImplementedError
+  def __init__(self, parent, element, attr_name):
+    self.parent = parent
+    self.element = element
+    self.attr_name = attr_name
+    self.attr_values = self.create_value_list(element.get_attr_list(attr_name))
 
-class StringType(SingleElementDataType):
-  @classmethod
-  def elt_to_data(cls, accessor, attr, value, static, valid_set=[]):
-    assert isinstance(value, basestring)
-    if valid_set and value not in valid_set:
-      accessor.parent.parse_error("%s='%s' not in valid set: %s" 
-                                  % (attr, value, valid_set),
-                                  exc_cls=VisualizerParseValidationError)
-    return value
+  def update(self):
+    """Call to update dynamic values."""
+    raise NotImplementedError()
+
+  def create_value_list(self, attr_value_list):
+    """Parses the attr's value list and returns it in a format suitable for
+    internal use. Does type checking here; can raise parsing errors."""
+    raise NotImplementedError()
+
+  def get_static(self):
+    """Returns the static value for this attribute. Raises an error if the
+    attribute contains a non-static value."""
+    raise NotImplementedError()
   
-  @classmethod
-  def dynamic_elt_instantiate(cls, accessor, attr, value, parent):
-    if isinstance(value, basestring):
-      return value
-    elif isinstance(value, ParsedElement):
+  def get_dynamic(self):
+    """Returns the dynamic value for this attribute. update() must have been
+    called before."""
+    raise NotImplementedError()
+
+class SingleElementAttribute(ElementAttribute):
+  """ElementAttribute subclass for attributes using the first valid element of 
+  the value list."""
+  def create_value_list(self, attr_value_list):
+    parsed_value_list = []
+    for attr_value_elt in attr_value_list:
+      parsed_value_list.append(self.create_value_elt(attr_value_elt))
+    return parsed_value_list
+    
+  def create_value_elt(self, attr_value_elt):
+    """create_value_list becomes a wrapper for this, which handles the case for
+    a single value element."""
+    raise NotImplementedError()
+  
+  def value_elt_to_data(self, value_elt, static=False):
+    """Converts a value list element to data, or returns None if the element
+    cannot produce the relevant data (and to move onto the next element in the
+    list. Raises an error if static if False but the element is dynamic."""
+    raise NotImplementedError()
+
+  def update(self):
+    for value_elt in self.attr_values:
+      conv = self.value_elt_to_data(value_elt, static=False)
+      if conv is not None:
+        self.dynamic_value = conv
+    self.parse_error("No valid value in list",
+                     exc_cls=VisualizerParseValidationError)
+
+  def get_static(self):
+    for value_elt in self.attr_values:
+      conv = self.value_elt_to_data(value_elt, static=True)
+      if conv is not None:
+        return conv
+    self.parse_error("No valid value in list",
+                     exc_cls=VisualizerParseValidationError)
+  
+  def get_dynamic(self):
+    return self.dynamic_value
+  
+class StringAttribute(SingleElementAttribute):
+  def __init__(self, parent, element, attr_name, valid_set=None):
+    super(StringAttribute, self).__init__(parent, element, attr_name)
+    self.valid_set = valid_set
+  
+  def create_value_elt(self, attr_value_elt):
+    if isinstance(attr_value_elt, basestring):
+      return attr_value_elt
+    elif isinstance(attr_value_elt, ParsedElement):
       from chisualizer.display.VisualizerToString import VisualizerToString
-      return value.instantiate(parent, valid_subclass=VisualizerToString)
+      return attr_value_elt.instantiate(self.parent, 
+                                        valid_subclass=VisualizerToString)
     else:
-      accessor.parent.parse_error("%s='%s' has invalid type" % attr, value)
-
-class IntType(SingleElementDataType):
-  @classmethod
-  def elt_to_data(cls, accessor, attr, value, static,
-                  valid_min=None, valid_max=None):
-    if isinstance(value, basestring):
-      conv = cls.string_to_int(accessor, attr, value)
-    elif isinstance(value, Number):
-      conv = int(value)
+      self.parse_error("Invalid type for '%s': %s"
+                       % (attr_value_elt, attr_value_elt.__class__.__name__),
+                       exc_cls=VisualizerParseValidationError)
+  
+  def value_elt_to_data(self, value_elt, static=False):
+    if isinstance(value_elt, basestring):
+      conv = value_elt
     else:
-      assert False  # TODO more descriptive error here
+      assert False, "Unknown type"
+    
+    if self.valid_set is not None and conv not in self.valid_set:
+      self.parse_error("%s='%s' not in valid set: %s" 
+                       % (self.attr_name, conv, self.valid_set),
+                       exc_cls=VisualizerParseValidationError)
       
-    if valid_min is not None and conv < valid_min:
-      accessor.parent.parse_error("%s=%i < min (%i)" % (attr, conv, valid_min),
-                                  exc_cls=VisualizerParseValidationError)
-    if valid_max is not None and conv > valid_max:
-      accessor.parent.parse_error("%s=%i < max (%i)" % (attr, conv, valid_max),
-                                  exc_cls=VisualizerParseValidationError)
-    return conv 
+    return conv
+
+  def get_longest_strings(self):
+    raise NotImplementedError()
+
+class IntAttribute(SingleElementAttribute):
+  def __init__(self, parent, element, attr_name, 
+               valid_min=None, valid_max=None):
+    super(IntAttribute, self).__init__(parent, element, attr_name)
+    self.valid_min = valid_min
+    self.valid_max = valid_max
   
-  @classmethod
-  def string_to_int(self, accessor, attr, value):
-    assert isinstance(value, basestring)
-    try:
-      return int(value, 0)
-    except ValueError:
-      accessor.parent.parse_error("Unable to convert %s='%s' to int" % (attr, value),
-                                  exc_cls=VisualizerParseTypeError)
-  
-  @classmethod
-  def dynamic_elt_instantiate(cls, accessor, attr, value, parent):
-    if isinstance(value, basestring):
-      return value
+  def create_value_elt(self, attr_value_elt):
+    if isinstance(attr_value_elt, basestring):
+      try:
+        return int(attr_value_elt, 0)
+      except ValueError:
+        self.parse_error("Can't covert '%s' to int" % attr_value_elt,
+                         exc_cls=VisualizerParseTypeError)
+    elif isinstance(attr_value_elt, Number):
+      return int(attr_value_elt)
+    elif isinstance(attr_value_elt, ParsedElement):
+      from chisualizer.display.VisualizerToString import VisualizerToString
+      return attr_value_elt.instantiate(self.parent, 
+                                        valid_subclass=VisualizerToString)
     else:
-      accessor.parent.parse_error("%s='%s' has invalid type: %s" 
-                                  % attr, value, value.__class__.__name__)
+      self.parse_error("Invalid type in '%s': %s"
+                       % (attr_value_elt, attr_value_elt.__class__.__name__),
+                       exc_cls=VisualizerParseValidationError)
   
+  def value_elt_to_data(self, value_elt, static=False):
+    if isinstance(value_elt, int):
+      conv = value_elt
+    else:
+      assert False, "Unknown type"
+    
+    if self.valid_min is not None and conv < self.valid_min:
+      self.parse_error("%i < min (%i)" % (conv, self.valid_min),
+                       exc_cls=VisualizerParseValidationError)
+    if self.valid_max is not None and conv > self.valid_max:
+      self.parse_error("%i > max (%i)" % (conv, self.valid_max),
+                       exc_cls=VisualizerParseValidationError)
+            
+    return conv  
   
 class ElementAccessor(object):
-  """Accessor object for ParsedElement. Provides type-conversion functions,
-  static attribute access & checking, dynamic attribute registration and
-  resolution, and checks to ensure all attributes were used.
-  The elt_to_* functions are the parse_fn s referred below, provide type
-  conversion and validation.
+  """Accessor object for ParsedElement. Provides a method to track accesses,
+  to ensure all attributes specified in the descriptors are actually used.
   """
+  def parse_error(self, *args, **kwargs):
+    self.parent.parse_error(*args, **kwargs)
+  
   def __init__(self, parent_element):
     self.parent = parent_element
-    self.dynamic_overloads = [] # TODO implement support for this later
     self.accessed_attrs = set()
-    self.dynamic_attrs = {} # mapping of attr name to (datatype cls, parsed list, kwds)
   
   def get_ref(self):
     return self.parent.ref
-  
-  def get_dynamic_attrs(self):
-    """Returns a dict of dynamic attrs -> parsed value."""
-    rtn = {}
-    for attr_name, parse_fn_tuple in self.dynamic_attrs.iteritems():
-      
-      datatype, parsed_list, parse_fn_kwds = parse_fn_tuple
-      parsed = datatype.list_to_data(self, attr_name, parsed_list, static=False,
-                                     **parse_fn_kwds)
-      rtn[attr_name] = parsed
-    return rtn
   
   def attrs_not_accessed(self):
     return self.parent.get_all_attrs() - self.accessed_attrs
   
   def get_attr_list(self, attr):
-    # TODO support dynamic overload attrs
+    self.accessed_attrs.add(attr)
     return self.parent.get_attr_list(attr)
-  
-  def get_static_attr(self, datatype, attr, **kwds):
-    assert issubclass(datatype, ElementDataType)
-    self.accessed_attrs.add(attr)
-    return datatype.list_to_data(self, attr, self.get_attr_list(attr), True)
-    
-  def register_dynamic_attr(self, datatype, attr, **kwds):
-    assert issubclass(datatype, ElementDataType)
-    self.accessed_attrs.add(attr)
-    assert attr not in self.dynamic_attrs
-    
-    parsed_list = datatype.dynamic_attr_instantiate(self, attr, 
-                                                    self.get_attr_list(attr))
-    self.dynamic_attrs[attr] = (datatype, parsed_list, kwds)
   
 class ParsedElement(object):
   """
