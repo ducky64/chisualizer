@@ -96,7 +96,6 @@ class DictString(VisualizerToString):
                                % mapping)
     self.mapping_to_string = {}
     self.mapping_to_int = {}
-    ambiguous_vals = set()
     self.default = None
     for mapping_key, mapping_val in mapping.iteritems():
       print mapping_key
