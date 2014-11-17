@@ -146,24 +146,30 @@ class DictString(VisualizerToString):
     
 @Base.desugar_tag('DictTemplate')
 def desugar_dict_template(parsed_element, registry):
+  # TODO: handle multiple mapping dicts
+  assert len(parsed_element.get_attr_list('mapping')) == 1, "TODO Generalize this"
+  mapping = parsed_element.get_attr_list('mapping')[0]
+  del parsed_element.attr_map['mapping']
+  
   intermediate_attr_map = {}
-  for mapping_key, mapping_value_list in parsed_element.attr_map.iteritems():
-    # TODO: handle multiple levels of mapping here
-    assert len(mapping_value_list) == 1, "TODO Generalize this"
-    if not isinstance(mapping_value_list[0], dict):
+  for mapping_key, mapping_dict in mapping.iteritems():
+    if not isinstance(mapping_dict, dict):
       parsed_element.parse_error("Expected dict value for key '%s'" 
                                  % mapping_key)
-    for attr_name, attr_value in mapping_value_list[0].iteritems():
+    for attr_name, attr_value in mapping_dict.iteritems():
       if attr_name not in intermediate_attr_map:
         intermediate_attr_map[attr_name] = {}
       intermediate_attr_map[attr_name][mapping_key] = attr_value
-  new_attr_map = {}
+
   for attr_name, attr_value_map in intermediate_attr_map.iteritems():
     print attr_name
     print attr_value_map
-    new_attr_map[attr_name] = [Base.ParsedElement('DictString',
-                                                  {'mapping': attr_value_map},
-                                                  parsed_element.filename,
-                                                  parsed_element.lineno)]
-  parsed_element.attr_map = new_attr_map
+    new_dict_string =  Base.ParsedElement('DictString', 
+                                          {'mapping': attr_value_map},
+                                          parsed_element.filename,
+                                          parsed_element.lineno)
+    if attr_name not in parsed_element.attr_map:
+      parsed_element.attr_map[attr_name] = []
+    parsed_element.attr_map[attr_name].insert(0, new_dict_string) 
+
   parsed_element.tag = 'Template'

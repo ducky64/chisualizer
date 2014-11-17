@@ -10,9 +10,10 @@ lib:
     text: !NumericalString {charmap: 0123456789abcdef, prefix: 0x, radix: 16}
   text_bool:
     !DictTemplate
-    0: {text: "false", text_color: red}
-    1: {text: "true", text_color: green}
-    default: {text: "true*", text_color: green}
+    mapping:
+      0: {text: "false", text_color: red}
+      1: {text: "true", text_color: green}
+      default: {text: "true*", text_color: green}
 
   gcd_state_text:
     !DictString
