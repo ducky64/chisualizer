@@ -90,6 +90,8 @@ class DictString(VisualizerToString):
   def __init__(self, element, parent):
     super(DictString, self).__init__(element, parent)
     mapping_attr = Base.ObjectAttr(self, element, 'mapping')
+    # TODO: handle multiple levels of mapping dicts
+    assert len(mapping_attr.get_static()) == 1, "TODO Generalize this"
     mapping = mapping_attr.get_static()[0]
     if not isinstance(mapping, dict):
       mapping_attr.parse_error("Expected type dict, got %s"
@@ -98,7 +100,6 @@ class DictString(VisualizerToString):
     self.mapping_to_int = {}
     self.default = None
     for mapping_key, mapping_val in mapping.iteritems():
-      print mapping_key
       if mapping_key == 'default':
         self.default = mapping_val
       else:
@@ -145,5 +146,9 @@ class DictString(VisualizerToString):
     
 @Base.desugar_tag('DictTemplate')
 def desugar_dict_template(parsed_element, registry):
-  parsed_element.tag = "ducks"
+  new_attr_map = {}
+  for attr_name, attr_value_list in parsed_element.attr_map.iteritems():
+    
+    pass
+  
 

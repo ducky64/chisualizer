@@ -45,6 +45,8 @@ def desugar_all():
 
 @desugar_tag("Ref")
 def desugar_ref(parsed_element, registry):
+  if len(parsed_element.get_attr_list('ref')) != 1:
+    parsed_element.parse_error("Can only have one ref")
   ref_name = parsed_element.get_attr_list('ref')[0]
   assert isinstance(ref_name, basestring) # TODO: more elegant typing in desugaring
   ref = registry.get_ref(ref_name)
@@ -71,6 +73,8 @@ def desugar_ref(parsed_element, registry):
 @desugar_all()
 def desugar_template(parsed_element, registry):
   if 'template' in parsed_element.attr_map:
+    # TODO handle multiple templates
+    assert len(parsed_element.get_attr_list('template')) == 1, "TODO Generalize me"
     template_name = parsed_element.get_attr_list('template')[0]
     del parsed_element.attr_map['template']
     template = registry.get_ref(template_name)
