@@ -61,6 +61,8 @@ class NumericalString(VisualizerToString):
                           (self.radix, len(self.charmap)))    
   
   def get_string(self, visualizer):
+    if visualizer.get_node_ref() is None:
+      return "err"
     value = visualizer.get_node_ref().get_value()
     value_string = ''
     while value > 0:
@@ -72,6 +74,8 @@ class NumericalString(VisualizerToString):
     return value_string
   
   def get_longest_strings(self, visualizer):
+    if visualizer.get_node_ref() is None:
+      return ["err"]
     width = visualizer.get_node_ref().get_width()
     digits = int(math.ceil(math.log(2 ** width - 1, self.radix)))
     return [self.prefix + self.charmap[0]*digits]

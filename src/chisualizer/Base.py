@@ -17,43 +17,84 @@ def tag_register(tag_name=None):
   return wrap
 
 # A registry of desugaring structural transforms, a map from the tag name to a
-# function which takes in the ParsedElement and returns the desugared version
-# (which may or may not be the same. Desugaring runs in the same order as 
-# elements were read in. Returned elements may alias with other elements.
+# function which takes in the ParsedElement and desugars it via in-place 
+# mutation. The desugared element must have a different tag.
+# Desugaring runs in the same order as elements were read in, postorder.
+# Returned elements may alias with other elements. 
 # TODO: is aliasing a good idea? should ParsedElements be able to clone()?
 # TODO: is the ordering guarantee good enough? better ways to do that?  
-desugar_registry = {}
-def desugar_register(tag_name):
+desugar_tag_registry = {} 
+def desugar_tag(tag_name):
   def wrap(fun):
-    assert tag_name not in desugar_registry, "Duplicate desugar tag '%s'" % tag_name
-    desugar_registry[tag_name] = fun
+    assert tag_name not in desugar_tag_registry, "Duplicate desugaring tag '%s'" % tag_name
+    desugar_tag_registry[tag_name] = fun
     logging.debug("Registered desugaring transform for '%s'" % tag_name)
     return fun
   return wrap
 
-@desugar_register("Ref")
-def desugar_ref(parsed_element):
-  return None
+# A registry of desugaring structural transforms, run on ALL tagged elements.
+# Same guarantees and conditions as the tagged version, except the desugared
+# version need not have a different tag. Each registered desugaring function
+# runs once per ParsedElement, and there are no guarantees on the ordering of
+# the degsugaring functions.
+desugar_all_registry = []
+def desugar_all():
+  def wrap(fun):
+    assert fun not in desugar_all_registry, "Duplicate desugaring function %s" % fun
+    desugar_all_registry.append(fun)
+    return fun
+  return wrap
+
+@desugar_tag("Ref")
+def desugar_ref(parsed_element, registry):
+  ref_name = parsed_element.get_attr_list('ref')[0]
+  assert isinstance(ref_name, basestring) # TODO: more elegant typing in desugaring
+  ref = registry.get_ref(ref_name)
+  if ref is None:
+    parsed_element.parse_error("Ref not found: '%s'" % ref_name)
+  if 'path' in parsed_element.attr_map:
+    path_prefix = parsed_element.get_attr_list('path')[0]
+  else:
+    path_prefix = None
+  
+  parsed_element.tag = ref.tag
+  parsed_element.attr_map = ref.attr_map
+  if path_prefix is not None:
+    if 'path' in parsed_element.attr_map:
+      parsed_element.attr_map['path'] = [path_prefix + path_elt
+                                         for path_elt 
+                                         in parsed_element.attr_map['path']]
+    else:
+      parsed_element.attr_map['path'] = path_prefix
 
 class YAMLVisualizerRegistry():
   def __init__(self):
     self.lib_elements = {}
     self.display_elements = []
 
+  def get_ref(self, ref_name):
+    """Returns the referenced ParsedElement or None"""
+    return self.lib_elements.get(ref_name, None)
+
   def read_descriptor(self, filename):
     loader = yaml.SafeLoader(file(filename, 'r'))
     
+    desugar_queue = []
+    
     def create_obj_constructor(tag_name):
       def obj_constructor(loader, node):
-        return ParsedElement(tag_name, loader.construct_mapping(node),
-                             filename, -1)
+        elt = ParsedElement(tag_name, loader.construct_mapping(node),
+                            filename, -1)
+        desugar_queue.append(elt)
+        return elt
+        
         # TODO: add line numbers
       return obj_constructor
     
     for tag_name in tag_registry:
       loader.add_constructor("!" + tag_name, create_obj_constructor(tag_name))
       
-    for tag_name in desugar_registry:
+    for tag_name in desugar_tag_registry:
       loader.add_constructor("!" + tag_name, create_obj_constructor(tag_name))
     
     yaml_dict = loader.get_data()
@@ -71,7 +112,15 @@ class YAMLVisualizerRegistry():
         self.display_elements.append(elt)
       
     # TODO: desugaring pass
-
+    for elt in desugar_queue:
+      while elt.tag in desugar_tag_registry:
+        old_tag = elt.tag
+        desugar_tag_registry[elt.tag](elt, self)
+        assert elt.tag != old_tag
+        
+      for desugar_all_fn in desugar_all_registry:
+        elt = desugar_all_fn(elt, self)
+      
 class VisualizerRoot(object):
   """An visualizer descriptor file."""
   def __init__(self, filename, api):
@@ -196,6 +245,24 @@ class ElementAttr(object):
     """Returns the dynamic value for this attribute. update() must have been
     called before."""
     raise NotImplementedError()
+
+class ObjectAttr(ElementAttr):
+  """Straight pass-through of the attribute value list, for uncommon attribute
+  types where a general framework is not worth the trouble."""
+  def __init__(self, parent, element, attr_name):
+    super(ObjectAttr, self).__init__(parent, element, attr_name)
+
+  def update(self):
+    pass
+
+  def create_value_list(self, attr_value_list):
+    return attr_value_list
+
+  def get_static(self):
+    return self.attr_values
+  
+  def get_dynamic(self):
+    return self.attr_values
 
 class SingleElementAttr(ElementAttr):
   """ElementAttribute subclass for attributes using the first valid element of 
