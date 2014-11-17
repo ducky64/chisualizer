@@ -59,6 +59,8 @@ def desugar_ref(parsed_element, registry):
   
   parsed_element.tag = ref.tag
   parsed_element.attr_map = ref.attr_map
+  
+  # TODO: make this mechanism more general?
   if path_prefix is not None:
     if 'path' in parsed_element.attr_map:
       parsed_element.attr_map['path'] = [path_prefix + path_elt
