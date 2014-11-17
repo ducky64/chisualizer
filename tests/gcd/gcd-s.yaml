@@ -20,6 +20,7 @@ lib:
       0x0: idle
       0x1: calc
       0x2: done
+      default: "what the flying"
 
   str_numerical: !NumericalString {charmap: 0123456789abcdef, prefix: 0x, radix: 16}
 

@@ -128,10 +128,10 @@ class DictString(VisualizerToString):
       return self.default
   
   def get_longest_strings(self, visualizer):
-    if visualizer.get_node_ref() is None:
-      return []
-    
-    return list(self.mapping_to_int.iterkeys())
+    longest_strings = list(self.mapping_to_int.iterkeys())
+    if self.default is not None:
+      longest_strings.append(self.default)
+    return longest_strings
     
   def set_from_string(self, visualizer, in_text):
     if visualizer.get_node_ref() is None:
@@ -142,3 +142,8 @@ class DictString(VisualizerToString):
       return True
     else:
       return False
+    
+@Base.desugar_tag('DictTemplate')
+def desugar_dict_template(parsed_element, registry):
+  parsed_element.tag = "ducks"
+

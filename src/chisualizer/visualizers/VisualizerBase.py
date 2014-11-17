@@ -7,7 +7,6 @@ import cairo
 import wx
 
 @Base.tag_register("Template")
-@Base.tag_register("DictTemplate")
 class AbstractVisualizer(Base.Base):
   """Abstract base class for Chisel visualizer objects. Defines interface 
   methods and provides common functionality, like paths."""
