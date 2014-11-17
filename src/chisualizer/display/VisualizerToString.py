@@ -142,13 +142,28 @@ class DictString(VisualizerToString):
       visualizer.get_node_ref().set_value(self.mapping_to_int[in_text])
       return True
     else:
-      return False
+      return super(DictString, self).set_from_string(visualizer, in_text)
     
 @Base.desugar_tag('DictTemplate')
 def desugar_dict_template(parsed_element, registry):
+  intermediate_attr_map = {}
+  for mapping_key, mapping_value_list in parsed_element.attr_map.iteritems():
+    # TODO: handle multiple levels of mapping here
+    assert len(mapping_value_list) == 1, "TODO Generalize this"
+    if not isinstance(mapping_value_list[0], dict):
+      parsed_element.parse_error("Expected dict value for key '%s'" 
+                                 % mapping_key)
+    for attr_name, attr_value in mapping_value_list[0].iteritems():
+      if attr_name not in intermediate_attr_map:
+        intermediate_attr_map[attr_name] = {}
+      intermediate_attr_map[attr_name][mapping_key] = attr_value
   new_attr_map = {}
-  for attr_name, attr_value_list in parsed_element.attr_map.iteritems():
-    
-    pass
-  
-
+  for attr_name, attr_value_map in intermediate_attr_map.iteritems():
+    print attr_name
+    print attr_value_map
+    new_attr_map[attr_name] = [Base.ParsedElement('DictString',
+                                                  {'mapping': attr_value_map},
+                                                  parsed_element.filename,
+                                                  parsed_element.lineno)]
+  parsed_element.attr_map = new_attr_map
+  parsed_element.tag = 'Template'
