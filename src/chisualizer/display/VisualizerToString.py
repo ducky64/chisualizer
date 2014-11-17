@@ -1,4 +1,5 @@
 import math
+from numbers import Number
 
 import chisualizer.Base as Base
 
@@ -38,7 +39,9 @@ class VisualizerToString(Base.Base):
     Returns True if set correctly, and False if the input was not able to be
     parsed (and to punt to the next level).
     """
-    assert visualizer.get_node_ref() is not None  # check with can_set_from_string
+    if visualizer.get_node_ref() is None:
+      return False
+    
     try:
       val = int(in_text, 0)
       visualizer.get_node_ref().set_value(val)
@@ -62,7 +65,8 @@ class NumericalString(VisualizerToString):
   
   def get_string(self, visualizer):
     if visualizer.get_node_ref() is None:
-      return "err"
+      return None
+    
     value = visualizer.get_node_ref().get_value()
     value_string = ''
     while value > 0:
@@ -75,8 +79,67 @@ class NumericalString(VisualizerToString):
   
   def get_longest_strings(self, visualizer):
     if visualizer.get_node_ref() is None:
-      return ["err"]
+      return [] 
+      
     width = visualizer.get_node_ref().get_width()
     digits = int(math.ceil(math.log(2 ** width - 1, self.radix)))
     return [self.prefix + self.charmap[0]*digits]
+
+@Base.tag_register('DictString')
+class DictString(VisualizerToString):
+  def __init__(self, element, parent):
+    super(DictString, self).__init__(element, parent)
+    mapping_attr = Base.ObjectAttr(self, element, 'mapping')
+    mapping = mapping_attr.get_static()[0]
+    if not isinstance(mapping, dict):
+      mapping_attr.parse_error("Expected type dict, got %s"
+                               % mapping)
+    self.mapping_to_string = {}
+    self.mapping_to_int = {}
+    ambiguous_vals = set()
+    self.default = None
+    for mapping_key, mapping_val in mapping.iteritems():
+      print mapping_key
+      if mapping_key == 'default':
+        self.default = mapping_val
+      else:
+        if isinstance(mapping_key, basestring):
+          try:
+            mapping_key = int(mapping_key, 0)
+          except ValueError:
+            mapping_attr.parse_error("Expected key '%s' castable to int" 
+                                     % mapping_key)
+        else:
+          mapping_key = int(mapping_key)
+          # TODO: better error handling here?
+
+        self.mapping_to_string[mapping_key] = mapping_val
+        if mapping_val in self.mapping_to_int:
+          mapping_attr.parse_error("Duplicate value '%s'" % mapping_val)
+        self.mapping_to_int[mapping_val] = mapping_key
   
+  def get_string(self, visualizer):
+    if visualizer.get_node_ref() is None:
+      return None
+    
+    value = visualizer.get_node_ref().get_value()
+    if value in self.mapping_to_string:
+      return self.mapping_to_string[value]
+    else:
+      return self.default
+  
+  def get_longest_strings(self, visualizer):
+    if visualizer.get_node_ref() is None:
+      return []
+    
+    return list(self.mapping_to_int.iterkeys())
+    
+  def set_from_string(self, visualizer, in_text):
+    if visualizer.get_node_ref() is None:
+      return False
+
+    if in_text in self.mapping_to_int:
+      visualizer.get_node_ref().set_value(self.mapping_to_int[in_text])
+      return True
+    else:
+      return False

@@ -234,9 +234,10 @@ class VisualizerParseAttributeNotUsed(VisualizerParseError):
 class ElementAttr(object):
   """Object representing an attribute, handling dynamic values and data type
   conversions."""
-  def parse_error(self, message, exc_cls):
+  def parse_error(self, message, **kwds):
     self.element.parse_error("Error in attribute %s: %s"
-                             % (self.attr_name, message))
+                             % (self.attr_name, message),
+                             **kwds)
   
   def __init__(self, parent, element, attr_name):
     self.parent = parent

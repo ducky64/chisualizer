@@ -14,9 +14,16 @@ lib:
     1: {text: "true", text_color: green}
     default: {text: "true*", text_color: green}
 
+  gcd_state_text:
+    !DictString
+    mapping:
+      0x0: idle
+      0x1: calc
+      0x2: done
+
   str_numerical: !NumericalString {charmap: 0123456789abcdef, prefix: 0x, radix: 16}
 
-  gcd_state: !TextBox {template: text_decimal, path: .state, text_size: 12, text_font: Mono, border_size: 1, border_margin: 10, label: ducks, label_size: 10, label_font: Mono, text_color: "red"}
+  gcd_state: !TextBox {template: text_decimal, text: !Ref {ref: gcd_state_text}, path: .state, text_size: 12, text_font: Mono, border_size: 1, border_margin: 10, label: ducks, label_size: 10, label_font: Mono, text_color: "red"}
 
 display:
 - !Ref {ref: gcd_state, path: GCD}
