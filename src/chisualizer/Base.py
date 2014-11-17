@@ -12,7 +12,6 @@ def tag_register(tag_name=None):
   def wrap(cls):
     assert tag_name not in tag_registry, "Duplicate tag '%s'" % tag_name
     tag_registry[tag_name] = cls
-    logging.debug("Registered tag '%s'" % tag_name)
     return cls
   return wrap
 
@@ -28,7 +27,6 @@ def desugar_tag(tag_name):
   def wrap(fun):
     assert tag_name not in desugar_tag_registry, "Duplicate desugaring tag '%s'" % tag_name
     desugar_tag_registry[tag_name] = fun
-    logging.debug("Registered desugaring transform for '%s'" % tag_name)
     return fun
   return wrap
 
