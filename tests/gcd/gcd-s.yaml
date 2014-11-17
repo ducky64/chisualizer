@@ -4,7 +4,7 @@ lib:
     text: !NumericalString {charmap: 0123456789abcdef, prefix: 0b, radix: 2}
   text_decimal:
     !Template
-    text: !NumericalString {charmap: 0123456789abcdef, radix: 10}
+    text: !NumericalString {charmap: 0123456789abcdef, prefix: "", radix: 10}
   text_hexadecimal:
     !Template
     text: !NumericalString {charmap: 0123456789abcdef, prefix: 0x, radix: 16}
@@ -16,7 +16,7 @@ lib:
 
   str_numerical: !NumericalString {charmap: 0123456789abcdef, prefix: 0x, radix: 16}
 
-  gcd_state: !TextBox {path: .state, text_size: 12, text_font: Mono, border_size: 1, border_margin: 10, label: ducks, label_size: 10, label_font: Mono, text: !Ref {ref: str_numerical}, text_color: "red"}
+  gcd_state: !TextBox {template: text_decimal, path: .state, text_size: 12, text_font: Mono, border_size: 1, border_margin: 10, label: ducks, label_size: 10, label_font: Mono, text_color: "red"}
 
 display:
 - !Ref {ref: gcd_state, path: GCD}

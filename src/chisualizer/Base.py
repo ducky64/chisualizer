@@ -61,11 +61,28 @@ def desugar_ref(parsed_element, registry):
   # TODO: make this mechanism more general?
   if path_prefix is not None:
     if 'path' in parsed_element.attr_map:
+      # TODO: should type check things here
       parsed_element.attr_map['path'] = [path_prefix + path_elt
                                          for path_elt 
                                          in parsed_element.attr_map['path']]
     else:
       parsed_element.attr_map['path'] = path_prefix
+
+@desugar_all()
+def desugar_template(parsed_element, registry):
+  if 'template' in parsed_element.attr_map:
+    template_name = parsed_element.get_attr_list('template')[0]
+    del parsed_element.attr_map['template']
+    template = registry.get_ref(template_name)
+    if template is None:
+      parsed_element.parse_error("Template not found: '%s'" % template_name)
+    if template.tag != 'Template':
+      # TODO: is this checking too strict?
+      parsed_element.parse_error("Not a template: '%s'" % template_name)
+    for template_attr, template_value_list in template.attr_map.iteritems():
+      if template_attr not in parsed_element.attr_map:
+        parsed_element.attr_map[template_attr] = []
+      parsed_element.attr_map[template_attr].extend(template_value_list)  
 
 class YAMLVisualizerRegistry():
   def __init__(self):
