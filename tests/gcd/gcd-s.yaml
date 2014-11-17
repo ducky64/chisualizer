@@ -15,7 +15,7 @@ lib:
     default: {text: "true*", text_color: green}
 
 display:
-- !TextBox {path: GCD.state, text_size: 12, text_font: Mono, border_size: 1, border_margin: 10, label: ducks, label_size: 10, label_font: Mono, text: "lols", text_color: "red"}
+- !TextBox {path: GCD.state, text_size: 12, text_font: Mono, border_size: 1, border_margin: 10, label: ducks, label_size: 10, label_font: Mono, text: !NumericalString {charmap: 0123456789abcdef, prefix: 0x, radix: 16}, text_color: "red"}
 
 # template: gcd_state_map, 
-# !NumericalString {charmap: 0123456789abcdef, prefix: 0x, radix: 16}
+# 

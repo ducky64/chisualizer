@@ -282,6 +282,26 @@ class StringAttr(SingleElementAttr):
         assert False, "Unknown type: %s" % value_elt.__class__.__name__
     return longest_strings
   
+  def can_set_from_string(self):
+    """Returns whether set_from_string can possibly succeed or will always 
+    fail."""
+    from chisualizer.display.VisualizerToString import VisualizerToString # TODO HACKY
+    for value_elt in self.attr_values:
+      if isinstance(value_elt, VisualizerToString):
+        if value_elt.can_set_from_string(self.parent):
+          return True
+    return False
+  
+  def set_from_string(self, set_string):
+    """Attempt to set the node of the text being displayed using an arbitrary
+    input string. Returns True if successful, False otherwise."""
+    from chisualizer.display.VisualizerToString import VisualizerToString # TODO HACKY
+    for value_elt in self.attr_values:
+      if isinstance(value_elt, VisualizerToString):
+        if value_elt.set_from_string(self.parent, set_string):
+          return True
+    return False
+  
 class IntAttr(SingleElementAttr):
   def __init__(self, parent, element, attr_name, 
                valid_min=None, valid_max=None):

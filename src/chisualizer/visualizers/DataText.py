@@ -69,7 +69,7 @@ class TextBox(FramedVisualizer):
       if ret != wx.ID_OK:
         return
       curr_value = dlg.GetValue()
-      if self.display.set_from_text(self.node, curr_value):
+      if self.text.set_from_string(curr_value):
         logging.info("Set '%s' to '%s'" % (self.path, curr_value))
         return
     

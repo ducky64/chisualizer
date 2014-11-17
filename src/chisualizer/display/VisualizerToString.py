@@ -38,12 +38,16 @@ class VisualizerToString(Base.Base):
     Returns True if set correctly, and False if the input was not able to be
     parsed (and to punt to the next level).
     """
+    assert visualizer.get_node_ref() is not None  # check with can_set_from_string
     try:
       val = int(in_text, 0)
-      visualizer.get_node_ref.set_value(val)
+      visualizer.get_node_ref().set_value(val)
       return True
     except ValueError:
       return False
+    
+  def can_set_from_string(self, visualizer):
+    return visualizer.get_node_ref is not None
     
 @Base.tag_register('NumericalString')
 class NumericalString(VisualizerToString):
@@ -68,7 +72,7 @@ class NumericalString(VisualizerToString):
     return value_string
   
   def get_longest_strings(self, visualizer):
-    width = visualizer.get_node().get_width()
+    width = visualizer.get_node_ref().get_width()
     digits = int(math.ceil(math.log(2 ** width - 1, self.radix)))
     return [self.prefix + self.charmap[0]*digits]
   
