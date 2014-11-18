@@ -125,14 +125,16 @@ class YAMLVisualizerRegistry():
         logging.debug("Loaded library element ref='%s'", ref_name)
         elt.set_ref(ref_name)
         self.lib_elements[ref_name] = elt
-
+    logging.debug("Finished loading library elements")
+    
     if 'display' in yaml_dict:
       assert isinstance(yaml_dict['display'], list)
       for idx, elt in enumerate(yaml_dict['display']):
         elt.set_ref("(display %i)" % idx)
         self.display_elements.append(elt)
+    logging.debug("Finished loading display elements")
       
-    # TODO: desugaring pass
+    # Run desugaring pass
     for elt in desugar_queue:
       while elt.tag in desugar_tag_registry:
         old_tag = elt.tag
@@ -141,6 +143,7 @@ class YAMLVisualizerRegistry():
         
       for desugar_all_fn in desugar_all_registry:
         elt = desugar_all_fn(elt, self)
+    logging.debug("Finished desugaring pass")
       
 class VisualizerRoot(object):
   """An visualizer descriptor file."""
@@ -479,7 +482,7 @@ class ParsedElement(object):
     """Canonicalizes the attr map, making everything that isn't a list into a
     list. Modification is done in-place."""
     for attr, val in attr_map.iteritems():
-      if val is not list:
+      if not isinstance(val, list):
         attr_map[attr] = [val] 
     return attr_map
   

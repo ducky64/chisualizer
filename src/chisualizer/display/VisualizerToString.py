@@ -166,8 +166,6 @@ def desugar_dict_template(parsed_element, registry):
       intermediate_attr_map[attr_name][mapping_key] = attr_value
 
   for attr_name, attr_value_map in intermediate_attr_map.iteritems():
-    print attr_name
-    print attr_value_map
     new_dict_string =  Base.ParsedElement('DictString', 
                                           {'mapping': attr_value_map},
                                           parsed_element.filename,

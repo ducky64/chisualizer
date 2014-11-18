@@ -9,9 +9,9 @@ defaults:
     label: 
     label_size: 8
     label_font: Mono
-  AutoGrid:
+  LineGrid:
     !Template
-    step: row
+    dir: row
   Text:
     !Template
     text: !NumericalString {radix: 10}
@@ -19,65 +19,109 @@ defaults:
     text_font: Mono
   MemoryArray:
     !Template
-    step: row
+    dir: row
     offset: 0
     offset_anchor: 0
     rows: 1
     cols: 1
     
 lib:
+  defNumericalString:
+    !Template
+    charmap: 01234567890abcdefghijklmnopqrstuvwxyz
+  defFramedBase:
+    !Template
+    path: ""
+    border_size: 1
+    border_margin: 6
+    label: ""
+    label_size: 8
+    label_font: Mono
+  defLineGrid:
+    !Template
+    template: defFramedBase
+    dir: row
+  defTextBox:
+    !Template
+    template: defFramedBase
+    text: ""
+    text_color: "white"
+    text_size: 14
+    text_font: Mono
+  defMemoryArray:
+    !Template
+    template: defFramedBase
+    step: row
+    offset: 0
+    offset_anchor: 0
+    rows: 1
+    cols: 1
+
   text_binary:
     !Template
-    text: !NumericalString {prefix: 0b, radix: 2}
+    template: defTextBox
+    text: !NumericalString {charmap: 01, prefix: 0b, radix: 2}
   text_decimal:
     !Template
-    text: !NumericalString {radix: 10}
+    template: defTextBox
+    text: !NumericalString {charmap: 01234567890, prefix: "", radix: 10}
   text_hexadecimal:
     !Template
-    text: !NumericalString {prefix: 0x, radix: 16}
+    template: defTextBox
+    text: !NumericalString {charmap: 01234567890abcdef, prefix: 0x, radix: 16}
   text_bool:
     !DictTemplate
-    0: {text: "false", text_color: red}
-    1: {text: "true", text_color: green}
-    default: {text: "true*", text_color: green}
+    template: defTextBox
+    mapping:
+      0: {text: "false", text_color: red}
+      1: {text: "true", text_color: green}
+      default: {text: "true*", text_color: green}
     
   gcd_state_map:
     !DictTemplate
-    0: {text: idle, text_color: pink}
-    1: {text: calc, text_color: yellow}
-    2: {text: done, text_color: green}
+    template: defTextBox
+    mapping:
+      0: {text: idle, text_color: pink}
+      1: {text: calc, text_color: yellow}
+      2: {text: done, text_color: green}
       
-  gcd:
-    !AutoGrid
-    step: row
-    cells:
-    - ref: GCD_io_in
-    - ref: GCD_state
-    - ref: GCD_io_out
   gcd_state:
-    !AutoGrid
+    !LineGrid
+    template: defLineGrid
     label: state
-    step: col
+    dir: col
     cells:
     - !TextBox {path: .state, template: gcd_state_map}
     - !TextBox {path: .latch_A, template: text_decimal}
     - !TextBox {path: .latch_B, template: text_decimal}
   gcd_io_in:
-    !AutoGrid
+    !LineGrid
+    template: defLineGrid
     label: io (in)
-    step: col
+    dir: col
     cells:
     - !TextBox {path: _operands_bits_A, template: text_decimal}
     - !TextBox {path: _operands_bits_B, template: text_decimal}
     - !TextBox {path: _operands_val, template: text_bool}
     - !TextBox {path: _operands_rdy, template: text_bool}
   gcd_io_out:
-    !AutoGrid
+    !LineGrid
+    template: defLineGrid
     label: io (out)
-    step: col
+    dir: col
     cells:
-    - !TextBox {path: _results_bits_data, template: text_decimal}
-    - !TextBox {path: _results_val, template: text_bool}
-    - !TextBox {path: _results_rdy, template: text_bool}
+    - !TextBox {path: _result_bits_data, template: text_decimal}
+    - !TextBox {path: _result_val, template: text_bool}
+    - !TextBox {path: _result_rdy, template: text_bool}
+
+  gcd:
+    !LineGrid
+    template: defLineGrid
+    dir: row
+    cells:
+    - !Ref {ref: gcd_io_in, path: .io}
+    - !Ref {ref: gcd_state}
+    - !Ref {ref: gcd_io_out, path: .io}
+
 display:
-- !Ref {target: gcd, path: gcd}
+- !Ref {ref: gcd, path: GCD}

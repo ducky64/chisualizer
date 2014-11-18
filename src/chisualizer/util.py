@@ -41,4 +41,3 @@ class Rectangle:
       return True
     else:
       return False 
-    
