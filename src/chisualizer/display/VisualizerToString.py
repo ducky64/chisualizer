@@ -54,6 +54,7 @@ class VisualizerToString(Base.Base):
     
 @Base.tag_register('NumericalString')
 class NumericalString(VisualizerToString):
+  """Generalized numerical text representation of a number.""" 
   def __init__(self, element, parent):
     super(NumericalString, self).__init__(element, parent)
     self.prefix = Base.StringAttr(self, element, 'prefix').get_static() 
@@ -87,6 +88,7 @@ class NumericalString(VisualizerToString):
 
 @Base.tag_register('DictString')
 class DictString(VisualizerToString):
+  """Map specific numbers to specific strings."""
   def __init__(self, element, parent):
     super(DictString, self).__init__(element, parent)
     mapping_attr = Base.ObjectAttr(self, element, 'mapping')
@@ -146,6 +148,8 @@ class DictString(VisualizerToString):
     
 @Base.desugar_tag('DictTemplate')
 def desugar_dict_template(parsed_element, registry):
+  """Template for mapping multiple string attributes to a single numerical key.
+  """
   # TODO: handle multiple mapping dicts
   assert len(parsed_element.get_attr_list('mapping')) == 1, "TODO Generalize this"
   mapping = parsed_element.get_attr_list('mapping')[0]
