@@ -46,23 +46,25 @@ class LineGrid(FramedVisualizer):
   def draw_element_cairo(self, cr, rect, depth):
     if self.dir == 'row':    # cells along x-dir
       step_pos = rect.center_horiz() - self.x_size / 2
-      center_pos = rect.center_vert()
+      center_low = rect.bottom()
+      center_high = rect.top()
     elif self.dir == 'col':  # cells along y-dir
-      center_pos = rect.center_horiz()
+      center_low = rect.left()
+      center_high = rect.right()
       step_pos = rect.center_vert() - self.y_size / 2
     
     elements = []  
     for cell, cell_size in zip(self.cells, self.cell_sizes):
       if self.dir == 'row':
         elements.extend(cell.draw_cairo(cr,
-                                        Rectangle((step_pos, center_pos-cell_size[1]),
-                                                  (step_pos+cell_size[0], center_pos+cell_size[1])),
+                                        Rectangle((step_pos, center_low),
+                                                  (step_pos+cell_size[0], center_high)),
                                         depth+1))
         step_pos += cell_size[0]
       elif self.dir == 'col':
         elements.extend(cell.draw_cairo(cr,
-                                        Rectangle((center_pos-cell_size[0], step_pos),
-                                                  (center_pos+cell_size[0], step_pos+cell_size[1])),
+                                        Rectangle((center_low, step_pos),
+                                                  (center_high, step_pos+cell_size[1])),
                                         depth+1))
         step_pos += cell_size[1]
         
