@@ -1,3 +1,4 @@
+from collections import OrderedDict
 import logging
 from numbers import Number
 import yaml
@@ -71,6 +72,12 @@ def desugar_ref(parsed_element, registry):
     else:
       parsed_element.attr_map['path'] = path_prefix
 
+def apply_template(element, template):
+  for template_attr, template_value_list in template.attr_map.iteritems():
+    if template_attr not in element.attr_map:
+      element.attr_map[template_attr] = []
+    element.attr_map[template_attr].extend(template_value_list)
+      
 @desugar_all()
 def desugar_template(parsed_element, registry):
   if 'template' in parsed_element.attr_map:
@@ -79,19 +86,17 @@ def desugar_template(parsed_element, registry):
     template_name = parsed_element.get_attr_list('template')[0]
     del parsed_element.attr_map['template']
     template = registry.get_ref(template_name)
-    assert "template" not in template.attr_map  # should have already been desugared
     if template is None:
       parsed_element.parse_error("Template not found: '%s'" % template_name)
     if template.tag != 'Template':
       # TODO: is this checking too strict?
       parsed_element.parse_error("Not a template: '%s'" % template_name)
-    for template_attr, template_value_list in template.attr_map.iteritems():
-      if template_attr not in parsed_element.attr_map:
-        parsed_element.attr_map[template_attr] = []
-      parsed_element.attr_map[template_attr].extend(template_value_list)  
+    assert "template" not in template.attr_map  # should have already been desugared
+    apply_template(parsed_element, template)
 
 class YAMLVisualizerRegistry():
   def __init__(self):
+    self.default_templates = OrderedDict()
     self.lib_elements = {}
     self.display_elements = []
 
@@ -99,7 +104,36 @@ class YAMLVisualizerRegistry():
     """Returns the referenced ParsedElement or None"""
     return self.lib_elements.get(ref_name, None)
 
+  def process_default_template(self, name, elt):
+    """Processes a default template, like inheriting parents (by the 
+    corresponding class hierarchy) and doing various sanity checks."""
+    if elt.tag != "Template":
+      elt.parse_error("Default templates must be Template tag")
+    if name not in tag_registry:
+      elt.parse_error("Unrecognized tag '%s'" % name)
+    cls = tag_registry[name]
+    
+    # Ensure no children have already been parsed as defaults.
+    for loaded_name in self.default_templates.iterkeys():
+      loaded_cls = tag_registry[loaded_name]
+      if issubclass(loaded_cls, cls):
+        elt.parse_error("Child tag defaults for '%s' loaded before parent '%s'"
+                        % (loaded_name, name))
+    
+    # Find closest parent and apply as template
+    for parent_name, parent_elt in reversed(self.default_templates.items()):
+      if issubclass(cls, tag_registry[parent_name]):
+        apply_template(elt, parent_elt)
+        break
+      
+  def apply_default_template(self, elt):
+    """Applies the default template to an element. Should only be run after
+    the element has been fully desugared."""
+    if elt.tag in self.default_templates:
+      apply_template(elt, self.default_templates[elt.tag])
+
   def read_descriptor(self, filename):
+    """Reads in a YAML descriptor."""
     loader = yaml.SafeLoader(open(filename).read())
     
     desugar_queue = []
@@ -130,6 +164,14 @@ class YAMLVisualizerRegistry():
       loader.add_constructor("!" + tag_name, create_obj_constructor(tag_name))
     
     yaml_dict = loader.get_data()
+    if 'defaults' in yaml_dict:
+      assert isinstance(yaml_dict['defaults'], dict)
+      for tag_name, elt in yaml_dict['defaults'].iteritems():
+        self.process_default_template(tag_name, elt)
+        logging.debug("Loaded default template tag='%s'", tag_name)
+        self.default_templates[tag_name] = elt
+    logging.debug("Finished loading default templates")
+    
     if 'lib' in yaml_dict:
       assert isinstance(yaml_dict['lib'], dict)
       for ref_name, elt in yaml_dict['lib'].iteritems():
@@ -156,7 +198,10 @@ class YAMLVisualizerRegistry():
         assert elt.tag != old_tag
         
       for desugar_all_fn in desugar_all_registry:
-        elt = desugar_all_fn(elt, self)
+        desugar_all_fn(elt, self)
+      
+      self.apply_default_template(elt)
+      
     logging.debug("Finished desugaring pass")
       
 class VisualizerRoot(object):

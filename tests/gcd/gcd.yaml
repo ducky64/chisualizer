@@ -1,7 +1,6 @@
 lib:
   gcd_state_map:
     !DictTemplate
-    template: defTextBox
     mapping:
       0: {text: idle, text_color: pink}
       1: {text: calc, text_color: yellow}
@@ -9,7 +8,6 @@ lib:
       
   gcd_state:
     !LineGrid
-    template: defLineGrid
     label: state
     dir: col
     cells:
@@ -18,7 +16,6 @@ lib:
     - !TextBox {path: .latch_B, template: text_decimal}
   gcd_io_in:
     !LineGrid
-    template: defLineGrid
     label: io (in)
     dir: col
     cells:
@@ -28,7 +25,6 @@ lib:
     - !TextBox {path: _operands_rdy, template: text_bool}
   gcd_io_out:
     !LineGrid
-    template: defLineGrid
     label: io (out)
     dir: col
     cells:
@@ -38,7 +34,6 @@ lib:
 
   gcd:
     !LineGrid
-    template: defLineGrid
     dir: row
     cells:
     - !Ref {ref: gcd_io_in, path: .io}

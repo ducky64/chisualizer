@@ -75,6 +75,7 @@ class AbstractVisualizer(Base.Base):
     Return True if items were added, False otherwise."""
     return False
 
+@Base.tag_register("FramedBase")
 class FramedVisualizer(AbstractVisualizer):
   """Base class for visualizers providing visual framing (borders)."""
   def __init__(self, elt, parent):
