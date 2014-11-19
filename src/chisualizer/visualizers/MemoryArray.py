@@ -1,6 +1,3 @@
-import sys
-import logging
-
 import chisualizer.Base as Base
 from VisualizerBase import AbstractVisualizer, FramedVisualizer, Rectangle
 
