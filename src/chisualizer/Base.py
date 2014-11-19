@@ -52,6 +52,7 @@ def desugar_ref(parsed_element, registry):
   ref = registry.get_ref(ref_name)
   if ref is None:
     parsed_element.parse_error("Ref not found: '%s'" % ref_name)
+  assert ref.tag != "Ref" # should have been already desugared
   if 'path' in parsed_element.attr_map:
     path_prefix = parsed_element.get_attr_list('path')[0]
   else:
@@ -78,6 +79,7 @@ def desugar_template(parsed_element, registry):
     template_name = parsed_element.get_attr_list('template')[0]
     del parsed_element.attr_map['template']
     template = registry.get_ref(template_name)
+    assert "template" not in template.attr_map  # should have already been desugared
     if template is None:
       parsed_element.parse_error("Template not found: '%s'" % template_name)
     if template.tag != 'Template':
