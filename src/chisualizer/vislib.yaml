@@ -44,4 +44,19 @@ lib:
       0: {text: "false", text_color: red}
       1: {text: "true", text_color: green}
       default: {text: "true*", text_color: green}
-    
+  
+  
+  readyvalid_color:
+    !DictString
+    mapping:
+      0: red
+      1: green
+      default: pink
+
+  readyvalid_in_left:
+    !LineGrid
+    dir: row
+    cells:
+    - !TextBox {path: _valid, text: [">V", !NumericalString {radix: 10}], text_color: !Ref {ref: readyvalid_color}}
+    - !TextBox {path: _ready, text: ["R>", !NumericalString {radix: 10}], text_color: !Ref {ref: readyvalid_color}}
+

@@ -1,4 +1,5 @@
 from collections import OrderedDict
+import copy
 import logging
 from numbers import Number
 import yaml
@@ -60,7 +61,7 @@ def desugar_ref(parsed_element, registry):
     path_prefix = None
   
   parsed_element.tag = ref.tag
-  parsed_element.attr_map = ref.attr_map
+  parsed_element.attr_map = copy.copy(ref.attr_map)
   
   # TODO: make this mechanism more general?
   if path_prefix is not None:
