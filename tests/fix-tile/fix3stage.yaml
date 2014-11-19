@@ -1,11 +1,4 @@
 lib:
-  fix_host_io_template:
-    !DictTemplate
-    mapping:
-      0: {text: NOP, text_color: grey}
-      1: {text: PEEK, text_color: green}
-      2: {text: POKE, text_color: cyan}
-
   text_fix_alu_op:
     !DictTemplate
     mapping:
@@ -84,26 +77,92 @@ lib:
     - !Ref {ref: fix_pipeline_x}
     - !Ref {ref: fix_pipeline_wb}
 
+  fix_muxedmemoryport_enable:
+    !LineGrid
+    dir: row
+    cells:
+    - !TextBox {path: _is, template: text_bool}
+    - !TextBox {path: _adr, template: text_decimal}
+    - !TextBox {path: _dat, template: text_hexadecimal}
+  fix_muxedmemoryport_noenable:
+    !LineGrid
+    dir: row
+    cells:
+    - !TextBox {path: _adr, template: text_decimal}
+    - !TextBox {path: _dat, template: text_hexadecimal}
+
+  fix_regfile:
+    !LineGrid
+    dir: col
+    cells:
+    #- !MemoryArray
+    #  path: .mem
+    #  cols: 4
+    #  rows: 8
+    #  step: row
+    #  cell: !TextBox {template: text_hexadecimal}
+    - !Ref {ref: fix_muxedmemoryport_noenable, path: .io_reads_0}
+    - !Ref {ref: fix_muxedmemoryport_noenable, path: .io_reads_1}
+    - !Ref {ref: fix_muxedmemoryport_noenable, path: .io_reads_2}
+    - !Ref {ref: fix_muxedmemoryport_enable, path: .io_reads_3}
+    - !Ref {ref: fix_muxedmemoryport_enable, path: .io_writes_0}
+    - !Ref {ref: fix_muxedmemoryport_enable, path: .io_writes_1}
+
   fix_tile_state:
     !LineGrid
     dir: row
     cells:
       - !Ref {ref: fix_pipeline}
 
-  fix_host_io:
+  text_fix_hostio_op:
+    !DictTemplate
+    mapping:
+      0: {text: NOP, text_color: grey}
+      1: {text: PEEK, text_color: green}
+      2: {text: POKE, text_color: cyan}
+  text_fix_hostio_target:
+    !DictTemplate
+    mapping:
+      0: {text: REG}
+      1: {text: CODE}
+      2: {text: DATA}
+      3: {text: RESET}
+      4: {text: NUM_INST}
+      5: {text: NUM_TC}
+      6: {text: NUM_HC}
+      7: {text: CLKHI_OFFS}
+  fix_hostio_data:
     !LineGrid
     dir: row
     cells:
-      - !Ref {ref: readyvalid_in_left}
+    - !TextBox {path: _bits_dst_x, template: text_decimal}
+    - !TextBox {path: _bits_dst_y, template: text_decimal}
+    - !TextBox {path: _bits_op, template: text_fix_hostio_op}
+    - !TextBox {path: _bits_target, template: text_fix_hostio_target}
+    - !TextBox {path: _bits_addr, template: text_hexadecimal}
+    - !TextBox {path: _bits_data, template: text_hexadecimal}
+  fix_hostio_in:
+    !LineGrid
+    dir: col
+    cells:
+    - !Ref {ref: readyvalid_in_left}
+    - !Ref {ref: fix_hostio_data}
+  fix_hostio_out:
+    !LineGrid
+    dir: col
+    cells:
+    - !Ref {ref: readyvalid_out_right}
+    - !Ref {ref: fix_hostio_data}
 
   fix_tile:
     !LineGrid
     dir: row
     cells: 
-      - !Ref {ref: fix_host_io, path: .io_hostIn}
-      - !Ref {ref: fix_pipeline}
-      - !Ref {ref: fix_host_io, path: .io_hostIn}
+    - !Ref {ref: fix_hostio_in, path: .io_hostIn}
+    - !Ref {ref: fix_regfile, path: .regfile}
+    - !Ref {ref: fix_pipeline}
+    - !Ref {ref: fix_hostio_out, path: .io_hostOut}
 
 display:
-  - !Ref {ref: fix_tile, path: Fix3Stage}
+- !Ref {ref: fix_tile, path: Fix3Stage}
 

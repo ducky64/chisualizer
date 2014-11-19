@@ -60,3 +60,10 @@ lib:
     - !TextBox {path: _valid, text: [">V", !NumericalString {radix: 10}], text_color: !Ref {ref: readyvalid_color}}
     - !TextBox {path: _ready, text: ["R>", !NumericalString {radix: 10}], text_color: !Ref {ref: readyvalid_color}}
 
+  readyvalid_out_right:
+    !LineGrid
+    dir: row
+    cells:
+    - !TextBox {path: _valid, text: [">V", !NumericalString {radix: 10}], text_color: !Ref {ref: readyvalid_color}}
+    - !TextBox {path: _ready, text: ["R>", !NumericalString {radix: 10}], text_color: !Ref {ref: readyvalid_color}}
+
