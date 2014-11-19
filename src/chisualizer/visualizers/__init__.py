@@ -2,5 +2,5 @@ import VisualizerBase
 
 import TextBox
 
-import AutoGrid
+import LineGrid
 import MemoryArray

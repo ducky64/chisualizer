@@ -47,15 +47,15 @@ class MemoryArray(FramedVisualizer):
       assert len(ary) == inst_max - inst_min + 1
       return ary
     
-    render_min = self.offset.get_dynamic() - int(self.offset_anchor * self.cells_count)
+    render_min = self.offset.get_dynamic() - int(self.offset_anchor/100.0 * self.cells_count)
     render_max = render_min + self.cells_count - 1
     
     if render_min < 0:
       render_max += 0 - render_min
       render_min = 0
     if render_max >= self.node.get_depth():
-      render_min += render_max - (self.node.get_depth()-1)
-      render_max = self.node.get_depth() - 1
+      render_min -= render_max - (self.node.get_depth()-1)
+      render_max = self.node.get_depth()-1
     if render_min < 0:
       render_min = 0
       
@@ -89,9 +89,9 @@ class MemoryArray(FramedVisualizer):
     
     self.cells_min = render_min
     self.cells_max = render_max
-    assert len(self.cells) == self.cells_count
-    assert len(self.cells) == self.cells_max - self.cells_min + 1
     
+    assert len(self.cells) <= self.cells_count
+    assert len(self.cells) == self.cells_max - self.cells_min + 1
     
   def layout_element_cairo(self, cr):
     self.cell_x = 0
