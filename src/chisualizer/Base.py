@@ -104,6 +104,7 @@ class YAMLVisualizerRegistry():
     
     desugar_queue = []
     
+    # https://stackoverflow.com/questions/13319067/parsing-yaml-return-with-line-number
     def compose_node(parent, index):
       line = loader.line
       node = yaml.composer.Composer.compose_node(loader, parent, index)
