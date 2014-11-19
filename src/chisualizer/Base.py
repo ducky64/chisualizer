@@ -100,19 +100,27 @@ class YAMLVisualizerRegistry():
     return self.lib_elements.get(ref_name, None)
 
   def read_descriptor(self, filename):
-    loader = yaml.SafeLoader(file(filename, 'r'))
+    loader = yaml.SafeLoader(open(filename).read())
     
     desugar_queue = []
     
+    def compose_node(parent, index):
+      line = loader.line
+      node = yaml.composer.Composer.compose_node(loader, parent, index)
+      node.__line__ = line + 1
+      return node
+        
     def create_obj_constructor(tag_name):
       def obj_constructor(loader, node):
         elt = ParsedElement(tag_name, loader.construct_mapping(node),
-                            filename, -1)
+                            filename, node.__line__)
         desugar_queue.append(elt)
         return elt
         
         # TODO: add line numbers
       return obj_constructor
+    
+    loader.compose_node = compose_node
     
     for tag_name in tag_registry:
       loader.add_constructor("!" + tag_name, create_obj_constructor(tag_name))
@@ -124,8 +132,11 @@ class YAMLVisualizerRegistry():
     if 'lib' in yaml_dict:
       assert isinstance(yaml_dict['lib'], dict)
       for ref_name, elt in yaml_dict['lib'].iteritems():
-        logging.debug("Loaded library element ref='%s'", ref_name)
+        # Check is a parsedelement
         elt.set_ref(ref_name)
+        if ref_name in self.lib_elements:
+          elt.parse_error("Duplicate ref")
+        logging.debug("Loaded library element ref='%s'", ref_name)
         self.lib_elements[ref_name] = elt
     logging.debug("Finished loading library elements")
     
@@ -163,6 +174,7 @@ class VisualizerRoot(object):
     self.registry = YAMLVisualizerRegistry()
     self.visualizer = None  # TODO: support multiple visualizers in different windows
 
+    self.registry.read_descriptor(os.path.dirname(__file__) + "/vislib.yaml")
     self.registry.read_descriptor(filename)
     
     if not self.registry.display_elements:
