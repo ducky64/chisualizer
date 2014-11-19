@@ -95,12 +95,12 @@ lib:
     !LineGrid
     dir: col
     cells:
-    #- !MemoryArray
-    #  path: .mem
-    #  cols: 4
-    #  rows: 8
-    #  step: row
-    #  cell: !TextBox {template: text_hexadecimal}
+    - !MemoryArray
+      path: .mem
+      cols: 4
+      rows: 8
+      dir: row
+      cell: !TextBox {template: text_hexadecimal}
     - !Ref {ref: fix_muxedmemoryport_noenable, path: .io_reads_0}
     - !Ref {ref: fix_muxedmemoryport_noenable, path: .io_reads_1}
     - !Ref {ref: fix_muxedmemoryport_noenable, path: .io_reads_2}

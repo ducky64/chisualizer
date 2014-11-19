@@ -22,9 +22,9 @@ defaults:
     text_font: Mono
   MemoryArray:
     !Template
-    step: row
+    dir: row
     offset: 0
-    offset_anchor: 0
+    offset_anchor: 50
     rows: 1
     cols: 1
     

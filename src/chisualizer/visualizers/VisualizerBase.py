@@ -41,6 +41,9 @@ class AbstractVisualizer(Base.Base):
     for dynamic_attr in self.dynamic_attrs:
       dynamic_attr.update()
     
+  def set_node_ref(self, node):
+    self.node = node
+    
   def get_node_ref(self):
     """Returns my associated Chisel API node, or None."""
     return self.node
