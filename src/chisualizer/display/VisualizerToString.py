@@ -101,6 +101,7 @@ class DictString(VisualizerToString):
     self.mapping_to_string = {}
     self.mapping_to_int = {}
     self.default = None
+    mapping_to_int_blacklist = set() # for duplicate values
     for mapping_key, mapping_val in mapping.iteritems():
       if mapping_key == 'default':
         self.default = mapping_val
@@ -117,8 +118,10 @@ class DictString(VisualizerToString):
 
         self.mapping_to_string[mapping_key] = mapping_val
         if mapping_val in self.mapping_to_int:
-          mapping_attr.parse_error("Duplicate value '%s'" % mapping_val)
-        self.mapping_to_int[mapping_val] = mapping_key
+          mapping_to_int_blacklist.add(mapping_val)
+          del self.mapping_to_int[mapping_val]
+        if mapping_val not in mapping_to_int_blacklist:
+          self.mapping_to_int[mapping_val] = mapping_key
   
   def get_string(self, visualizer):
     if visualizer.get_node_ref() is None:

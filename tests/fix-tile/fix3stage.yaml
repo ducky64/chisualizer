@@ -1,0 +1,109 @@
+lib:
+  fix_host_io_template:
+    !DictTemplate
+    mapping:
+      0: {text: NOP, text_color: grey}
+      1: {text: PEEK, text_color: green}
+      2: {text: POKE, text_color: cyan}
+
+  text_fix_alu_op:
+    !DictTemplate
+    mapping:
+      0: {text_color: grey, text: NOP}
+      1: {text_color: red, text: RST}
+      2: {text_color: blue, text: LIT}
+      3: {text_color: blue, text: LITH}
+      4: {text_color: blue, text: RND}
+      5: {text_color: blue, text: EAT}
+      6: {text_color: blue, text: NOT}
+      7: {text_color: blue, text: AND}
+      8: {text_color: blue, text: OR}
+      9: {text_color: blue, text: XOR}
+      10: {text_color: blue, text: EQ}
+      11: {text_color: blue, text: NEQ}
+      12: {text_color: blue, text: MUX}
+      13: {text_color: blue, text: LSH}
+      14: {text_color: blue, text: RSH}
+      15: {text_color: blue, text: ARSH}
+      16: {text_color: blue, text: MSK}
+      17: {text_color: blue, text: CAT}
+      18: {text_color: blue, text: ADD}
+      19: {text_color: blue, text: SUB}
+      20: {text_color: blue, text: LT}
+      21: {text_color: blue, text: GTE}
+      22: {text_color: blue, text: MUL}
+      23: {text_color: blue, text: LOG2}
+      24: {text_color: blue, text: LD}
+      25: {text_color: blue, text: ST}
+      26: {text_color: blue, text: LDI}
+      27: {text_color: blue, text: STI}
+
+  fix_alu:
+    !LineGrid
+    dir: col
+    cells:
+    - !TextBox {path: .io_op, template: text_fix_alu_op}
+    - !TextBox {path: .io_lit, template: text_hexadecimal}
+    - !TextBox {path: .io_x, template: text_hexadecimal}
+    - !TextBox {path: .io_y, template: text_hexadecimal}
+    - !TextBox {path: .io_z, template: text_hexadecimal}
+    - !TextBox {path: .io_result, template: text_hexadecimal}
+    - !TextBox {path: .io_cond, template: text_bool}
+  fix_pipeline_pif:
+    !LineGrid
+    dir: col
+    cells:
+    - !TextBox {path: .PC_PIF, template: text_decimal}
+    - !TextBox {path: .idle_PIF, template: text_bool}
+  fix_pipeline_if:
+    !LineGrid
+    dir: col
+    cells:
+    - !TextBox {path: .PC_IF, template: text_decimal}
+    - !TextBox {path: .idle_IF, template: text_bool}
+    - !TextBox {path: .inst_bits_IF, template: text_hexadecimal}
+  fix_pipeline_x:
+    !LineGrid
+    dir: col
+    cells:
+    - !TextBox {path: .idle_X, template: text_bool}
+    - !TextBox {path: .inst_bits_X, template: text_hexadecimal}
+    - !Ref {ref: fix_alu, path: .alu}
+  fix_pipeline_wb:
+    !LineGrid
+    dir: col
+    cells:
+    - !TextBox {path: .alu_result_WB, template: text_hexadecimal}
+    - !TextBox {path: .data_from_net_WB, template: text_hexadecimal}
+  fix_pipeline:
+    !LineGrid
+    dir: row
+    cells:
+    - !Ref {ref: fix_pipeline_pif}
+    - !Ref {ref: fix_pipeline_if}
+    - !Ref {ref: fix_pipeline_x}
+    - !Ref {ref: fix_pipeline_wb}
+
+  fix_tile_state:
+    !LineGrid
+    dir: row
+    cells:
+      - !Ref {ref: fix_pipeline}
+
+  fix_host_io:
+    !LineGrid
+    dir: row
+    cells:
+      - !Ref {ref: readyvalid_in_left}
+
+  fix_tile:
+    !LineGrid
+    dir: row
+    cells: 
+      - !Ref {ref: fix_host_io, path: .io_hostIn}
+      - !Ref {ref: fix_pipeline}
+      - !Ref {ref: fix_host_io, path: .io_hostIn}
+
+display:
+  - !Ref {ref: fix_tile, path: Fix3Stage}
+
