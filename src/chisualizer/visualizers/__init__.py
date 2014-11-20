@@ -1,7 +1,6 @@
 import VisualizerBase
 
-import DataText
+import TextBox
 
-import AutoGrid
-import VisualizerRef
+import LineGrid
 import MemoryArray

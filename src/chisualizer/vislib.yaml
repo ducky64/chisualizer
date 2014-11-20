@@ -1,0 +1,128 @@
+defaults:
+  NumericalString:
+    !Template
+    charmap: 01234567890abcdefghijklmnopqrstuvwxyz
+    prefix: ""
+  FramedBase:
+    !Template
+    path: ""
+    frame_margin: 6
+    frame_color: border
+    border_size: 1
+    label: ""
+    label_size: 8
+    label_font: Mono
+  LineGrid:
+    !Template
+    frame_style: border
+    dir: row
+  TextBox:
+    !Template
+    frame_style: label
+    text: ""
+    text_color: "white"
+    text_size: 14
+    text_font: Mono
+  MemoryArray:
+    !Template
+    frame_style: border
+    dir: row
+    offset: 0
+    offset_anchor: 50
+    rows: 1
+    cols: 1
+    
+lib:
+  text_binary:
+    !Template
+    text: !NumericalString {prefix: 0b, radix: 2}
+  text_decimal:
+    !Template
+    text: !NumericalString {radix: 10}
+  text_hexadecimal:
+    !Template
+    text: !NumericalString {prefix: 0x, radix: 16}
+  text_bool:
+    !DictTemplate
+    mapping:
+      0: {text: "false", text_color: red}
+      1: {text: "true", text_color: green}
+      default: {text: "true*", text_color: green}
+  text_bool_small:
+    !DictTemplate
+    mapping:
+      0: {text: "F", text_color: red}
+      1: {text: "T", text_color: green}
+      default: {text: "T*", text_color: green}
+  
+  readyvalid_color:
+    !DictString
+    mapping:
+      0: red
+      1: green
+      default: pink
+
+  text_readyvalid:
+    !Template
+    frame_style: none
+    text: !NumericalString {radix: 10} # provide a default base so the value can be set
+    text_color: !Ref {ref: readyvalid_color}
+
+  readyvalid_in_left:
+    !LineGrid
+    frame_style: none
+    dir: row
+    cells:
+    - !TextBox {path: _valid, text: " ▸V ", template: text_readyvalid}
+    - !TextBox {path: _ready, text: " R▸ ", template: text_readyvalid}
+  readyvalid_in_right:
+    !LineGrid
+    frame_style: none
+    dir: row
+    cells:
+    - !TextBox {path: _valid, text: " ◂R ", template: text_readyvalid}
+    - !TextBox {path: _ready, text: " V◂ ", template: text_readyvalid}
+  readyvalid_in_up:
+    !LineGrid
+    frame_style: none
+    dir: row
+    cells:
+    - !TextBox {path: _valid, text: " ▾V ", template: text_readyvalid}
+    - !TextBox {path: _ready, text: " ▾R ", template: text_readyvalid}
+  readyvalid_in_down:
+    !LineGrid
+    frame_style: none
+    dir: row
+    cells:
+    - !TextBox {path: _ready, text: " ▴R ", template: text_readyvalid}
+    - !TextBox {path: _valid, text: " ▴V ", template: text_readyvalid}
+
+  readyvalid_out_left:
+    !LineGrid
+    frame_style: none
+    dir: row
+    cells:
+    - !TextBox {path: _ready, text: " ◂R ", template: text_readyvalid}
+    - !TextBox {path: _valid, text: " V◂ ", template: text_readyvalid}
+  readyvalid_out_right:
+    !LineGrid
+    frame_style: none
+    dir: row
+    cells:
+    - !TextBox {path: _valid, text: " ▸V ", template: text_readyvalid}
+    - !TextBox {path: _ready, text: " R▸ ", template: text_readyvalid}
+  readyvalid_out_up:
+    !LineGrid
+    frame_style: none
+    dir: row
+    cells:
+    - !TextBox {path: _ready, text: " ▴R ", template: text_readyvalid}
+    - !TextBox {path: _valid, text: " ▴V ", template: text_readyvalid}
+  readyvalid_out_down:
+    !LineGrid
+    frame_style: none
+    dir: row
+    cells:
+    - !TextBox {path: _valid, text: " ▾V ", template: text_readyvalid}
+    - !TextBox {path: _ready, text: " ▾R ", template: text_readyvalid}
+

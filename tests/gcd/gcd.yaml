@@ -1,0 +1,44 @@
+lib:
+  gcd_state_map:
+    !DictTemplate
+    mapping:
+      0: {text: idle, text_color: pink}
+      1: {text: calc, text_color: yellow}
+      2: {text: done, text_color: green}
+      
+  gcd_state:
+    !LineGrid
+    label: state
+    dir: col
+    cells:
+    - !TextBox {path: .state, template: gcd_state_map}
+    - !TextBox {path: .latch_A, template: text_decimal}
+    - !TextBox {path: .latch_B, template: text_decimal}
+  gcd_io_in:
+    !LineGrid
+    label: io (in)
+    dir: col
+    cells:
+    - !TextBox {path: _operands_bits_A, template: text_decimal}
+    - !TextBox {path: _operands_bits_B, template: text_decimal}
+    - !TextBox {path: _operands_val, template: text_bool}
+    - !TextBox {path: _operands_rdy, template: text_bool}
+  gcd_io_out:
+    !LineGrid
+    label: io (out)
+    dir: col
+    cells:
+    - !TextBox {path: _result_bits_data, template: text_decimal}
+    - !TextBox {path: _result_val, template: text_bool}
+    - !TextBox {path: _result_rdy, template: text_bool}
+
+  gcd:
+    !LineGrid
+    dir: row
+    cells:
+    - !Ref {ref: gcd_io_in, path: .io}
+    - !Ref {ref: gcd_state}
+    - !Ref {ref: gcd_io_out, path: .io}
+
+display:
+- !Ref {ref: gcd, path: GCD}

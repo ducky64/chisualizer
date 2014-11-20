@@ -2,7 +2,6 @@ import argparse
 import logging
 import sys
 import time
-import xml.etree.ElementTree as etree
 
 try:
   import wx
@@ -122,7 +121,7 @@ class CairoPanel(wx.Panel):
     menu = wx.Menu()
     populated = False
     for element in elements:
-      assert isinstance(element[1], VisualizerBase.VisualizerBase)
+      assert isinstance(element[1], VisualizerBase.AbstractVisualizer)
       this_populated = element[1].wx_popupmenu_populate(menu)
       populated = populated or this_populated
     if populated:
@@ -137,7 +136,7 @@ class CairoPanel(wx.Panel):
     elements = self.get_mouseover_elements(x, y)
     elements = sorted(elements, key = lambda element: element[0], reverse=True)
 
-    assert isinstance(elements[0][1], VisualizerBase.VisualizerBase)
+    assert isinstance(elements[0][1], VisualizerBase.AbstractVisualizer)
     elements[0][1].wx_defaultaction()
         
     self.need_visualizer_refresh = True
@@ -216,6 +215,10 @@ class CairoPanel(wx.Panel):
     return self.visualizer_dc
 
   def draw_visualizer(self, cr):
+    timer_update = time.time()
+    self.desc.update()
+    timer_update = time.time() - timer_update
+    
     timer_lay = time.time()
     layout = self.desc.layout_cairo(cr)
     timer_lay = time.time() - timer_lay
@@ -235,6 +238,7 @@ class CairoPanel(wx.Panel):
     surface_test = cairo.SVGSurface(f, 1, 1)  # dummy surface to get layout size
     # TODO make cross platform, 
     cr_test = cairo.Context(surface_test)
+    self.desc.update()
     layout = self.desc.layout_cairo(cr_test)
     surface_test.finish()
     
@@ -293,7 +297,7 @@ def run():
       emulator_cmd_list.extend(args.emulator_args)
     api = ChiselEmulatorSubprocess(emulator_cmd_list, reset=args.emulator_reset)
   
-  desc = Base.VisualizerDescriptor(args.visualizer_desc, api)
+  desc = Base.VisualizerRoot(args.visualizer_desc, api)
     
   app = wx.App(False)
   ChisualizerFrame(None, 'Chisualizer', api, desc)

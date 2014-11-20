@@ -1,38 +1,36 @@
-import sys
-import logging
-
 import chisualizer.Base as Base
-from VisualizerBase import Rectangle
-from Data import Data
+from VisualizerBase import AbstractVisualizer, FramedVisualizer, Rectangle
 
-@Base.xml_register('MemoryArray')
-class MemoryArray(Data):
+@Base.tag_register('MemoryArray')
+class MemoryArray(FramedVisualizer):
   """A grid of cells, each pointing to a memory element."""
   def __init__(self, element, parent):
     super(MemoryArray, self).__init__(element, parent)
-    self.step = element.get_attr_string('step', valid_set=['row', 'col'])
-        
-    self.offset = element.get_attr_int('offset', valid_min=0)
-    self.offset_anchor = element.get_attr_float('offset_anchor',
-                                                valid_min=0, valid_max=1)
-    self.rows = element.get_attr_int('rows', valid_min=1)
-    self.cols = element.get_attr_int('cols', valid_min=1)
+    self.dir = self.attr(Base.StringAttr, 'dir', valid_set=['row', 'col']).get_static()
+    self.offset = self.attr(Base.IntAttr, 'offset', dynamic=True)
+    self.offset_anchor = self.attr(Base.IntAttr, 'offset_anchor', valid_min=0, valid_max=100).get_static()
+    self.rows = self.attr(Base.IntAttr, 'rows', valid_min=1).get_static()
+    self.cols = self.attr(Base.IntAttr, 'cols', valid_min=1).get_static()
     self.cells_count = self.rows * self.cols
     
-    if len(element.get_children()) != 1:
-      element.parse_error("Must have exactly one child")
-      
-    self.cell_elt = element.get_children()[0]
+    cell_attr = self.attr(Base.ObjectAttr, 'cell')
+    self.cell_elt = cell_attr.get_static()[0]
     
     self.cells_min = -1
     self.cells_max = -1
     self.cells = []
 
+  def update(self):
+    super(MemoryArray, self).update()
+    self.update_cells()
+    for cell in self.cells:
+      cell.update()
+
   def update_cells(self):
     def instantiate_cell(addr):
-      inst = self.cell_elt.instantiate(self)
-      inst.set_node(self.node.get_subscript_reference(addr))
-      # TODO: dehackify
+      inst = self.cell_elt.instantiate(self, valid_subclass=AbstractVisualizer)
+      # TODO: dehackify all this and replace with generalized infrastructure 
+      inst.set_node_ref(self.node.get_subscript_reference(addr))
       inst.path_component += "[%i]" % addr
       inst.path += "[%i]" % addr
       if inst.label is None: inst.label = str(addr)
@@ -46,15 +44,15 @@ class MemoryArray(Data):
       assert len(ary) == inst_max - inst_min + 1
       return ary
     
-    render_min = self.offset - int(self.offset_anchor * self.cells_count)
+    render_min = self.offset.get_dynamic() - int(self.offset_anchor/100.0 * self.cells_count)
     render_max = render_min + self.cells_count - 1
     
     if render_min < 0:
       render_max += 0 - render_min
       render_min = 0
     if render_max >= self.node.get_depth():
-      render_min += render_max - (self.node.get_depth()-1)
-      render_max = self.node.get_depth() - 1
+      render_min -= render_max - (self.node.get_depth()-1)
+      render_max = self.node.get_depth()-1
     if render_min < 0:
       render_min = 0
       
@@ -88,13 +86,11 @@ class MemoryArray(Data):
     
     self.cells_min = render_min
     self.cells_max = render_max
-    assert len(self.cells) == self.cells_count
+    
+    assert len(self.cells) <= self.cells_count
     assert len(self.cells) == self.cells_max - self.cells_min + 1
     
-    
   def layout_element_cairo(self, cr):
-    self.update_cells()
-    
     self.cell_x = 0
     self.cell_y = 0
     for cell in self.cells:
@@ -120,14 +116,14 @@ class MemoryArray(Data):
                             (pos_x + self.cell_x, pos_y + self.cell_y))
       cells.extend(element.draw_cairo(cr, cell_rect, depth + 1))
       
-      if self.step == "row":
+      if self.dir == "row":
         pos_x += self.cell_x
         minor_pos += 1
         if minor_pos == self.cols:
           pos_x = origin_x
           pos_y += self.cell_y
           minor_pos = 0
-      elif self.step == "col":
+      elif self.dir == "col":
         pos_y += self.cell_y
         minor_pos += 1
         if minor_pos == self.rows:

@@ -1,0 +1,234 @@
+lib:
+  text_fix_alu_op:
+    !DictTemplate
+    mapping:
+      0: {text_color: grey, text: NOP}
+      1: {text_color: red, text: RST}
+      2: {text_color: blue, text: LIT}
+      3: {text_color: blue, text: LITH}
+      4: {text_color: blue, text: RND}
+      5: {text_color: blue, text: EAT}
+      6: {text_color: blue, text: NOT}
+      7: {text_color: blue, text: AND}
+      8: {text_color: blue, text: OR}
+      9: {text_color: blue, text: XOR}
+      10: {text_color: blue, text: EQ}
+      11: {text_color: blue, text: NEQ}
+      12: {text_color: blue, text: MUX}
+      13: {text_color: blue, text: LSH}
+      14: {text_color: blue, text: RSH}
+      15: {text_color: blue, text: ARSH}
+      16: {text_color: blue, text: MSK}
+      17: {text_color: blue, text: CAT}
+      18: {text_color: blue, text: ADD}
+      19: {text_color: blue, text: SUB}
+      20: {text_color: blue, text: LT}
+      21: {text_color: blue, text: GTE}
+      22: {text_color: blue, text: MUL}
+      23: {text_color: blue, text: LOG2}
+      24: {text_color: blue, text: LD}
+      25: {text_color: blue, text: ST}
+      26: {text_color: blue, text: LDI}
+      27: {text_color: blue, text: STI}
+
+  fix_alu:
+    !MultiLineGrid
+    dir: col
+    cells:
+    - - !TextBox {path: .io_op, template: text_fix_alu_op}
+      - !TextBox {path: .io_lit, template: text_hexadecimal}
+    - - - !TextBox {path: .io_x, template: text_hexadecimal}
+        - !TextBox {path: .io_y, template: text_hexadecimal}
+        - !TextBox {path: .io_z, template: text_hexadecimal}
+      - - !TextBox {path: .io_result, template: text_hexadecimal}
+        - !TextBox {path: .io_cond, template: text_bool}
+  fix_pipeline_pif:
+    !LineGrid
+    label: PIF
+    dir: col
+    cells:
+    - !TextBox {path: .PC_PIF, template: text_decimal}
+    - !TextBox {path: .idle_PIF, template: text_bool}
+  fix_pipeline_if:
+    !LineGrid
+    label: IF
+    dir: col
+    cells:
+    - !TextBox {path: .PC_IF, template: text_decimal}
+    - !TextBox {path: .idle_IF, template: text_bool}
+    - !TextBox {path: .inst_bits_IF, template: text_hexadecimal}
+  fix_pipeline_x:
+    !LineGrid
+    label: X
+    dir: col
+    cells:
+    - !TextBox {path: .idle_X, template: text_bool}
+    - !TextBox {path: .inst_bits_X, template: text_hexadecimal}
+    - !Ref {ref: fix_alu, path: .alu}
+  fix_pipeline_wb:
+    !LineGrid
+    label: WB
+    dir: col
+    cells:
+    - !TextBox {path: .alu_result_WB, template: text_hexadecimal}
+    - !TextBox {path: .data_from_net_WB, template: text_hexadecimal}
+  fix_pipeline:
+    !LineGrid
+    label: pipeline
+    dir: row
+    cells:
+    - !Ref {ref: fix_pipeline_pif}
+    - !Ref {ref: fix_pipeline_if}
+    - !Ref {ref: fix_pipeline_x}
+    - !Ref {ref: fix_pipeline_wb}
+
+  fix_muxedmemoryport_enable:
+    !LineGrid
+    dir: row
+    cells:
+    - !TextBox {path: _is, template: text_bool_small}
+    - !TextBox {path: _adr, template: text_decimal}
+    - !TextBox {path: _dat, template: text_hexadecimal}
+  fix_muxedmemoryport_noenable:
+    !LineGrid
+    dir: row
+    cells:
+    - !TextBox {path: _adr, template: text_decimal}
+    - !TextBox {path: _dat, template: text_hexadecimal}
+
+  fix_largemem:
+    !MultiLineGrid
+    dir: col
+    cells:
+    - !MemoryArray
+      path: .mem
+      cols: 4
+      rows: 8
+      dir: row
+      cell: !TextBox {template: text_hexadecimal}
+    - - - !Ref {ref: fix_muxedmemoryport_noenable, path: .io_reads_0}
+        - !Ref {ref: fix_muxedmemoryport_noenable, path: .io_reads_1}
+      - - !Ref {ref: fix_muxedmemoryport_enable, path: .io_writes_0}
+
+  fix_regfile:
+    !MultiLineGrid
+    dir: col
+    cells:
+    - !MemoryArray
+      path: .mem
+      cols: 4
+      rows: 8
+      dir: row
+      cell: !TextBox {template: text_hexadecimal}
+    - - - !Ref {ref: fix_muxedmemoryport_noenable, path: .io_reads_0}
+        - !Ref {ref: fix_muxedmemoryport_noenable, path: .io_reads_1}
+        - !Ref {ref: fix_muxedmemoryport_noenable, path: .io_reads_2}
+        - !Ref {ref: fix_muxedmemoryport_enable, path: .io_reads_3}
+      - - !Ref {ref: fix_muxedmemoryport_enable, path: .io_writes_0}
+        - !Ref {ref: fix_muxedmemoryport_enable, path: .io_writes_1}
+
+  fix_tile_state:
+    !LineGrid
+    dir: row
+    cells:
+      - !Ref {ref: fix_pipeline}
+
+  text_fix_hostio_op:
+    !DictTemplate
+    mapping:
+      0: {text: NOP, text_color: grey}
+      1: {text: PEEK, text_color: green}
+      2: {text: POKE, text_color: cyan}
+  text_fix_hostio_target:
+    !DictTemplate
+    mapping:
+      0: {text: REG}
+      1: {text: CODE}
+      2: {text: DATA}
+      3: {text: RESET}
+      4: {text: NUM_INST}
+      5: {text: NUM_TC}
+      6: {text: NUM_HC}
+      7: {text: CLKHI_OFFS}
+  fix_hostio_data:
+    !MultiLineGrid
+    frame_style: none
+    dir: col
+    cells:
+    - - !TextBox {path: _bits_dst_x, template: text_decimal}
+      - !TextBox {path: _bits_dst_y, template: text_decimal}
+    - - !TextBox {path: _bits_op, template: text_fix_hostio_op}
+      - !TextBox {path: _bits_target, template: text_fix_hostio_target}
+    - - !TextBox {path: _bits_addr, template: text_hexadecimal}
+      - !TextBox {path: _bits_data, template: text_hexadecimal}
+  fix_hostio_in:
+    !LineGrid
+    dir: col
+    cells:
+    - !Ref {ref: readyvalid_in_left}
+    - !Ref {ref: fix_hostio_data}
+  fix_hostio_out:
+    !LineGrid
+    dir: col
+    cells:
+    - !Ref {ref: readyvalid_out_right}
+    - !Ref {ref: fix_hostio_data}
+
+  fix_portio_left:
+    !MultiLineGrid
+    dir: col
+    cells:
+    - !Ref {ref: readyvalid_in_left, path: _in}
+    - !TextBox {path: _in_bits, template: text_hexadecimal}
+    - !Ref {ref: readyvalid_out_left, path: _out}
+    - !TextBox {path: _out_bits, template: text_hexadecimal}
+  fix_portio_right:
+    !MultiLineGrid
+    dir: col
+    cells:
+    - !Ref {ref: readyvalid_in_right, path: _in}
+    - !TextBox {path: _in_bits, template: text_hexadecimal}
+    - !Ref {ref: readyvalid_out_right, path: _out}
+    - !TextBox {path: _out_bits, template: text_hexadecimal}
+  fix_portio_up:
+    !MultiLineGrid
+    dir: row
+    cells:
+    - - !Ref {ref: readyvalid_in_up, path: _in}
+      - !TextBox {path: _in_bits, template: text_hexadecimal}
+    - - !Ref {ref: readyvalid_out_up, path: _out}
+      - !TextBox {path: _out_bits, template: text_hexadecimal}
+  fix_portio_down:
+    !MultiLineGrid
+    dir: row
+    cells:
+    - - !Ref {ref: readyvalid_in_down, path: _in}
+      - !TextBox {path: _in_bits, template: text_hexadecimal}
+    - - !Ref {ref: readyvalid_out_down, path: _out}
+      - !TextBox {path: _out_bits, template: text_hexadecimal}
+
+  fix_router:
+    !MultiLineGrid
+    frame_style: none
+    dir: col
+    cells:
+    - !Ref {ref: fix_portio_up, path: .io_ports_1}
+    - - !Ref {ref: fix_portio_up, path: .io_ports_0}
+      - !Ref {ref: fix_portio_up, path: .io_ports_2}
+    - !Ref {ref: fix_portio_up, path: .io_ports_3}
+
+  fix_tile:
+    !MultiLineGrid
+    dir: row
+    cells: 
+    - - !Ref {ref: fix_router}
+      - - !Ref {ref: fix_hostio_in, path: .io_hostIn}
+        - !Ref {ref: fix_hostio_out, path: .io_hostOut}
+    - - - !Ref {ref: fix_largemem, path: .code_mem}
+        - !Ref {ref: fix_largemem, path: .data_mem}
+      - - !Ref {ref: fix_regfile, path: .regfile}
+        - !Ref {ref: fix_pipeline}
+
+display:
+- !Ref {ref: fix_tile, path: Fix3Stage}
+
