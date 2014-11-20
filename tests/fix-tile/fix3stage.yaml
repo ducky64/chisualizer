@@ -213,9 +213,9 @@ lib:
     dir: col
     cells:
     - !Ref {ref: fix_portio_up, path: .io_ports_1}
-    - - !Ref {ref: fix_portio_up, path: .io_ports_0}
-      - !Ref {ref: fix_portio_up, path: .io_ports_2}
-    - !Ref {ref: fix_portio_up, path: .io_ports_3}
+    - - !Ref {ref: fix_portio_left, path: .io_ports_0}
+      - !Ref {ref: fix_portio_right, path: .io_ports_2}
+    - !Ref {ref: fix_portio_down, path: .io_ports_3}
 
   fix_tile:
     !MultiLineGrid
