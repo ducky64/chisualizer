@@ -32,16 +32,16 @@ lib:
       27: {text_color: blue, text: STI}
 
   fix_alu:
-    !LineGrid
+    !MultiLineGrid
     dir: col
     cells:
-    - !TextBox {path: .io_op, template: text_fix_alu_op}
-    - !TextBox {path: .io_lit, template: text_hexadecimal}
-    - !TextBox {path: .io_x, template: text_hexadecimal}
-    - !TextBox {path: .io_y, template: text_hexadecimal}
-    - !TextBox {path: .io_z, template: text_hexadecimal}
-    - !TextBox {path: .io_result, template: text_hexadecimal}
-    - !TextBox {path: .io_cond, template: text_bool}
+    - - !TextBox {path: .io_op, template: text_fix_alu_op}
+      - !TextBox {path: .io_lit, template: text_hexadecimal}
+    - - !TextBox {path: .io_x, template: text_hexadecimal}
+      - !TextBox {path: .io_y, template: text_hexadecimal}
+      - !TextBox {path: .io_z, template: text_hexadecimal}
+    - - !TextBox {path: .io_result, template: text_hexadecimal}
+      - !TextBox {path: .io_cond, template: text_bool}
   fix_pipeline_pif:
     !LineGrid
     dir: col

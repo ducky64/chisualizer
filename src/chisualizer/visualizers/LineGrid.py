@@ -11,8 +11,8 @@ class LineGrid(FramedVisualizer):
     self.cells = []
     for cell in cell_attr.get_static():
       if not isinstance(cell, Base.ParsedElement):
-        cell_attr.parse_error("Expected list of Visualizers, got a %s"
-                              % cell.__class__.__name__)
+        cell_attr.parse_error("Expected list of Visualizers, got %s"
+                              % cell)
       self.cells.append(cell.instantiate(self, valid_subclass=AbstractVisualizer))
 
   def update(self):
@@ -69,3 +69,27 @@ class LineGrid(FramedVisualizer):
         step_pos += cell_size[1]
         
     return elements
+
+@Base.desugar_tag("MultiLineGrid")
+def desugar_multilinegrid(parsed_element, registry):
+  parsed_element.tag = "LineGrid"
+  if parsed_element.get_attr_list('dir')[0] == 'row':
+    new_dir = 'col'
+  else:
+    new_dir = 'row'
+  # A bit of a hack: other conditions not checked here because value will be
+  # validated during instantiation
+  
+  replacements = []
+  for idx, elt in enumerate(parsed_element.get_attr_list('cells')):
+    if isinstance(elt, list):
+      new_attr_map = {'cells': elt, 'dir': new_dir}
+      new_elt = Base.ParsedElement('LineGrid', new_attr_map,
+                                   parsed_element.filename,
+                                   parsed_element.lineno)
+      registry.apply_default_template(new_elt)
+      desugar_multilinegrid(new_elt, registry)
+      replacements.append((idx, new_elt))
+  for idx, new_elt in replacements:
+    parsed_element.attr_map['cells'][idx] = new_elt
+  
