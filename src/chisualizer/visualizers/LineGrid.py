@@ -83,7 +83,7 @@ def desugar_multilinegrid(parsed_element, registry):
   replacements = []
   for idx, elt in enumerate(parsed_element.get_attr_list('cells')):
     if isinstance(elt, list):
-      new_attr_map = {'cells': elt, 'dir': new_dir}
+      new_attr_map = {'cells': elt, 'dir': new_dir, 'frame_style': 'none'}
       new_elt = Base.ParsedElement('LineGrid', new_attr_map,
                                    parsed_element.filename,
                                    parsed_element.lineno)

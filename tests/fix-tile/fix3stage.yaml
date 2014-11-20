@@ -37,19 +37,21 @@ lib:
     cells:
     - - !TextBox {path: .io_op, template: text_fix_alu_op}
       - !TextBox {path: .io_lit, template: text_hexadecimal}
-    - - !TextBox {path: .io_x, template: text_hexadecimal}
-      - !TextBox {path: .io_y, template: text_hexadecimal}
-      - !TextBox {path: .io_z, template: text_hexadecimal}
-    - - !TextBox {path: .io_result, template: text_hexadecimal}
-      - !TextBox {path: .io_cond, template: text_bool}
+    - - - !TextBox {path: .io_x, template: text_hexadecimal}
+        - !TextBox {path: .io_y, template: text_hexadecimal}
+        - !TextBox {path: .io_z, template: text_hexadecimal}
+      - - !TextBox {path: .io_result, template: text_hexadecimal}
+        - !TextBox {path: .io_cond, template: text_bool}
   fix_pipeline_pif:
     !LineGrid
+    label: PIF
     dir: col
     cells:
     - !TextBox {path: .PC_PIF, template: text_decimal}
     - !TextBox {path: .idle_PIF, template: text_bool}
   fix_pipeline_if:
     !LineGrid
+    label: IF
     dir: col
     cells:
     - !TextBox {path: .PC_IF, template: text_decimal}
@@ -57,6 +59,7 @@ lib:
     - !TextBox {path: .inst_bits_IF, template: text_hexadecimal}
   fix_pipeline_x:
     !LineGrid
+    label: X
     dir: col
     cells:
     - !TextBox {path: .idle_X, template: text_bool}
@@ -64,12 +67,14 @@ lib:
     - !Ref {ref: fix_alu, path: .alu}
   fix_pipeline_wb:
     !LineGrid
+    label: WB
     dir: col
     cells:
     - !TextBox {path: .alu_result_WB, template: text_hexadecimal}
     - !TextBox {path: .data_from_net_WB, template: text_hexadecimal}
   fix_pipeline:
     !LineGrid
+    label: pipeline
     dir: row
     cells:
     - !Ref {ref: fix_pipeline_pif}
@@ -81,7 +86,7 @@ lib:
     !LineGrid
     dir: row
     cells:
-    - !TextBox {path: _is, template: text_bool}
+    - !TextBox {path: _is, template: text_bool_small}
     - !TextBox {path: _adr, template: text_decimal}
     - !TextBox {path: _dat, template: text_hexadecimal}
   fix_muxedmemoryport_noenable:
@@ -92,7 +97,7 @@ lib:
     - !TextBox {path: _dat, template: text_hexadecimal}
 
   fix_regfile:
-    !LineGrid
+    !MultiLineGrid
     dir: col
     cells:
     - !MemoryArray
@@ -101,12 +106,12 @@ lib:
       rows: 8
       dir: row
       cell: !TextBox {template: text_hexadecimal}
-    - !Ref {ref: fix_muxedmemoryport_noenable, path: .io_reads_0}
-    - !Ref {ref: fix_muxedmemoryport_noenable, path: .io_reads_1}
-    - !Ref {ref: fix_muxedmemoryport_noenable, path: .io_reads_2}
-    - !Ref {ref: fix_muxedmemoryport_enable, path: .io_reads_3}
-    - !Ref {ref: fix_muxedmemoryport_enable, path: .io_writes_0}
-    - !Ref {ref: fix_muxedmemoryport_enable, path: .io_writes_1}
+    - - - !Ref {ref: fix_muxedmemoryport_noenable, path: .io_reads_0}
+        - !Ref {ref: fix_muxedmemoryport_noenable, path: .io_reads_1}
+        - !Ref {ref: fix_muxedmemoryport_noenable, path: .io_reads_2}
+        - !Ref {ref: fix_muxedmemoryport_enable, path: .io_reads_3}
+      - - !Ref {ref: fix_muxedmemoryport_enable, path: .io_writes_0}
+        - !Ref {ref: fix_muxedmemoryport_enable, path: .io_writes_1}
 
   fix_tile_state:
     !LineGrid
@@ -132,15 +137,16 @@ lib:
       6: {text: NUM_HC}
       7: {text: CLKHI_OFFS}
   fix_hostio_data:
-    !LineGrid
-    dir: row
+    !MultiLineGrid
+    frame_style: none
+    dir: col
     cells:
-    - !TextBox {path: _bits_dst_x, template: text_decimal}
-    - !TextBox {path: _bits_dst_y, template: text_decimal}
-    - !TextBox {path: _bits_op, template: text_fix_hostio_op}
-    - !TextBox {path: _bits_target, template: text_fix_hostio_target}
-    - !TextBox {path: _bits_addr, template: text_hexadecimal}
-    - !TextBox {path: _bits_data, template: text_hexadecimal}
+    - - !TextBox {path: _bits_dst_x, template: text_decimal}
+      - !TextBox {path: _bits_dst_y, template: text_decimal}
+    - - !TextBox {path: _bits_op, template: text_fix_hostio_op}
+      - !TextBox {path: _bits_target, template: text_fix_hostio_target}
+    - - !TextBox {path: _bits_addr, template: text_hexadecimal}
+      - !TextBox {path: _bits_data, template: text_hexadecimal}
   fix_hostio_in:
     !LineGrid
     dir: col

@@ -6,22 +6,26 @@ defaults:
   FramedBase:
     !Template
     path: ""
+    frame_margin: 6
+    frame_color: border
     border_size: 1
-    border_margin: 6
     label: ""
     label_size: 8
     label_font: Mono
   LineGrid:
     !Template
+    frame_style: border
     dir: row
   TextBox:
     !Template
+    frame_style: label
     text: ""
     text_color: "white"
     text_size: 14
     text_font: Mono
   MemoryArray:
     !Template
+    frame_style: border
     dir: row
     offset: 0
     offset_anchor: 50
@@ -44,7 +48,12 @@ lib:
       0: {text: "false", text_color: red}
       1: {text: "true", text_color: green}
       default: {text: "true*", text_color: green}
-  
+  text_bool_small:
+    !DictTemplate
+    mapping:
+      0: {text: "F", text_color: red}
+      1: {text: "T", text_color: green}
+      default: {text: "T*", text_color: green}
   
   readyvalid_color:
     !DictString
@@ -55,6 +64,7 @@ lib:
 
   readyvalid_in_left:
     !LineGrid
+    frame_style: none
     dir: row
     cells:
     - !TextBox {path: _valid, text: [">V", !NumericalString {radix: 10}], text_color: !Ref {ref: readyvalid_color}}
@@ -62,6 +72,7 @@ lib:
 
   readyvalid_out_right:
     !LineGrid
+    frame_style: none
     dir: row
     cells:
     - !TextBox {path: _valid, text: [">V", !NumericalString {radix: 10}], text_color: !Ref {ref: readyvalid_color}}

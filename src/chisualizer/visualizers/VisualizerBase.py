@@ -83,10 +83,13 @@ class FramedVisualizer(AbstractVisualizer):
   """Base class for visualizers providing visual framing (borders)."""
   def __init__(self, elt, parent):
     super(FramedVisualizer, self).__init__(elt, parent)
+
+    self.frame_style = self.attr(Base.StringAttr, 'frame_style', valid_set=['none', 'label', 'border']).get_static()    
+    self.frame_margin = self.attr(Base.IntAttr, 'frame_margin', valid_min=1).get_static()
+    self.frame_color = self.attr(Base.StringAttr, 'frame_color', dynamic=True)
     
     self.border_size = self.attr(Base.IntAttr, 'border_size', valid_min=1).get_static() 
-    self.border_margin = self.attr(Base.IntAttr, 'border_margin', valid_min=1).get_static()
-    
+
     self.label = self.attr(Base.StringAttr, 'label').get_static()
     if not self.label:
       self.label = None
@@ -102,66 +105,74 @@ class FramedVisualizer(AbstractVisualizer):
     else:
       self.element_width, self.element_height = self.layout_element_cairo(cr)
     
-    cr.select_font_face(self.label_font,
-                        cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
-    cr.set_font_size(self.label_size)
-    if self.label is None:
-      _, _, _, _, self.label_width, _ = cr.text_extents(string.strip(self.path_component, "_. "))
+    if self.frame_style == 'label' or self.frame_style == 'border':
+      cr.select_font_face(self.label_font,
+                          cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
+      cr.set_font_size(self.label_size)
+      if self.label is None:
+        _, _, _, _, self.label_width, _ = cr.text_extents(string.strip(self.path_component, "_. "))
+      else:
+        _, _, _, _, self.label_width, _ = cr.text_extents(self.label)
+      _, _, _, self.label_height, _, _ = cr.text_extents('X')
+      
+      width = max(self.element_width, self.label_width)
+      self.top_height = self.label_height + self.frame_margin
+      return (2 * self.frame_margin + width,
+              self.top_height + self.frame_margin + self.element_height)
+    elif self.frame_style == 'none':
+      return (self.element_width, self.element_height)      
     else:
-      _, _, _, _, self.label_width, _ = cr.text_extents(self.label)
-    _, _, _, self.label_height, _, _ = cr.text_extents('X')
-    
-    width = max(self.element_width, self.label_width)
-    self.top_height = self.label_height + self.border_margin
-    return (2 * self.border_margin + width,
-            self.top_height + self.border_margin + self.element_height)
-  
+      assert False
+      
   def draw_cairo(self, cr, rect, depth):
     assert isinstance(cr, cairo.Context)
     assert isinstance(rect, Rectangle)
     
-    element_rect = rect.shrink(self.border_margin,
-                               self.top_height,
-                               self.border_margin,
-                               self.border_margin)
-    border_offset = self.border_margin / 2
-    top_offset = self.top_height / 2
+    elements = []
     
-    cr.set_source_rgba(*self.get_theme().color('border'))
+    if self.frame_style == 'label' or self.frame_style == 'border':
+      element_rect = rect.shrink(self.frame_margin,
+                                 self.top_height,
+                                 self.frame_margin,
+                                 self.frame_margin)
+      border_offset = self.frame_margin / 2
+      top_offset = self.top_height / 2
+      
+      cr.set_source_rgba(*self.get_theme().color(self.frame_color.get_dynamic()))
+      
+      # draw the border only if indicated
+      if self.frame_style == 'border':
+        cr.set_line_width(self.border_size)
+        cr.move_to(rect.left() + self.frame_margin,      # top left, where label begins
+                   element_rect.top() - top_offset)
+        cr.line_to(element_rect.left() - border_offset,   # top left
+                   element_rect.top() - top_offset)
+        cr.line_to(element_rect.left() - border_offset,   # bottom left
+                   element_rect.bottom() + border_offset)
+        cr.line_to(element_rect.right() + border_offset,  # bottom right
+                   element_rect.bottom() + border_offset)
+        cr.line_to(element_rect.right() + border_offset,  # top right
+                   element_rect.top() - top_offset)
+        cr.line_to(rect.left() + self.frame_margin + self.label_width,  # top right, where label ends
+                   element_rect.top() - top_offset)
     
-    # draw border rectangle
-    cr.set_line_width(self.border_size)
-    cr.move_to(rect.left() + self.border_margin,      # top left, where label begins
-               element_rect.top() - top_offset)
-    cr.line_to(element_rect.left() - border_offset,   # top left
-               element_rect.top() - top_offset)
-    cr.line_to(element_rect.left() - border_offset,   # bottom left
-               element_rect.bottom() + border_offset)
-    cr.line_to(element_rect.right() + border_offset,  # bottom right
-               element_rect.bottom() + border_offset)
-    cr.line_to(element_rect.right() + border_offset,  # top right
-               element_rect.top() - top_offset)
-    cr.line_to(rect.left() + self.border_margin + self.label_width,  # top right, where label ends
-               element_rect.top() - top_offset)
+        cr.stroke()
+      
+      # draw the label always
+      cr.select_font_face(self.label_font,
+                          cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
+      cr.set_font_size(self.label_size)
+      cr.move_to(rect.left() + self.frame_margin,
+                 rect.top() + self.top_height - border_offset)
+      if self.label is None:
+        cr.show_text(string.strip(self.path_component, "_. "))
+      else:
+        cr.show_text(self.label)
 
-    cr.stroke()
-    
-    # draw label text
-    cr.select_font_face(self.label_font,
-                        cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
-    cr.set_font_size(self.label_size)
-    cr.move_to(rect.left() + self.border_margin,
-               rect.top() + self.top_height - border_offset)
-    if self.label is None:
-      cr.show_text(string.strip(self.path_component, "_. "))
+      if not self.collapsed:
+        elements = self.draw_element_cairo(cr, element_rect, depth)
     else:
-      cr.show_text(self.label)
-    
-    # draw the actual element
-    if self.collapsed:
-      elements = []
-    else:
-      elements = self.draw_element_cairo(cr, element_rect, depth)
+      elements = self.draw_element_cairo(cr, rect, depth)      
     elements.append((depth, rect, self))
     return elements
   
@@ -193,16 +204,19 @@ class FramedVisualizer(AbstractVisualizer):
       self.wx_popupmenu_collapse(None)
           
   def wx_popupmenu_populate(self, menu):
-    super(FramedVisualizer, self).wx_popupmenu_populate(menu)
-    if self.collapsed:
-      item = wx.MenuItem(menu, wx.NewId(), "%s: Expand" % self.wx_prefix())
-      menu.AppendItem(item)
-      menu.Bind(wx.EVT_MENU, self.wx_popupmenu_expand, item)
+    super_populated = super(FramedVisualizer, self).wx_popupmenu_populate(menu)
+    if self.frame_style == 'border':
+      if self.collapsed:
+        item = wx.MenuItem(menu, wx.NewId(), "%s: Expand" % self.wx_prefix())
+        menu.AppendItem(item)
+        menu.Bind(wx.EVT_MENU, self.wx_popupmenu_expand, item)
+      else:
+        item = wx.MenuItem(menu, wx.NewId(), "%s: Collapse" % self.wx_prefix())
+        menu.AppendItem(item)
+        menu.Bind(wx.EVT_MENU, self.wx_popupmenu_collapse, item)
+      return True
     else:
-      item = wx.MenuItem(menu, wx.NewId(), "%s: Collapse" % self.wx_prefix())
-      menu.AppendItem(item)
-      menu.Bind(wx.EVT_MENU, self.wx_popupmenu_collapse, item)
-    return True
+      return super_populated
 
   def wx_popupmenu_expand(self, evt):
     self.collapsed = False
