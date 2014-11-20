@@ -38,7 +38,9 @@ class CairoPanel(wx.Panel):
     self.api = api
     self.desc = desc
     
+    self.size = (0, 0)
     self.scale = 1
+    self.center = (0, 0)
     self.mouse = (0, 0)
     
     self.need_visualizer_refresh = False
@@ -134,6 +136,8 @@ class CairoPanel(wx.Panel):
   def OnMouseLeftDClick(self, evt):
     x, y = self.device_to_visualizer_coordinates(evt.GetPosition())
     elements = self.get_mouseover_elements(x, y)
+    if not elements:
+      return
     elements = sorted(elements, key = lambda element: element[0], reverse=True)
 
     assert isinstance(elements[0][1], VisualizerBase.AbstractVisualizer)
@@ -166,6 +170,9 @@ class CairoPanel(wx.Panel):
 
   def device_to_visualizer_coordinates(self, pos):
     x, y = pos
+    width, height = self.GetClientSize()
+    x = x - width / 2
+    y = y - height / 2
     x = x / self.scale
     y = y / self.scale
     return (x, y) 
@@ -190,6 +197,7 @@ class CairoPanel(wx.Panel):
       cr.fill()
     
       cr.translate(0.5, 0.5)
+      cr.translate(width/2, height/2)
       cr.save()
       cr.scale(self.scale, self.scale)
 
@@ -220,7 +228,7 @@ class CairoPanel(wx.Panel):
     timer_update = time.time() - timer_update
     
     timer_lay = time.time()
-    layout = self.desc.layout_cairo(cr)
+    layout = self.desc.layout_cairo(cr).center_origin()
     timer_lay = time.time() - timer_lay
     
     timer_draw = time.time()

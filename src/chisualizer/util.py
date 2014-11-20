@@ -29,6 +29,12 @@ class Rectangle:
   def width(self):
     return abs(self.right() - self.left())
 
+  def center_origin(self):
+    return Rectangle((self.left() - self.center_horiz(),
+                      self.top() - self.center_vert()),
+                     (self.right() - self.center_horiz(),
+                     self.bottom() - self.center_vert()))
+
   def shrink(self, left, top, right, bottom):
     return Rectangle((self.left() + left,
                       self.top() + top),
