@@ -80,8 +80,8 @@ lib:
     frame_style: none
     dir: row
     cells:
-    - !TextBox {path: _valid, text: " ◂R ", template: text_readyvalid}
-    - !TextBox {path: _ready, text: " V◂ ", template: text_readyvalid}
+    - !TextBox {path: _ready, text: " ◂R ", template: text_readyvalid}
+    - !TextBox {path: _valid, text: " V◂ ", template: text_readyvalid}
   readyvalid_in_up:
     !LineGrid
     frame_style: none

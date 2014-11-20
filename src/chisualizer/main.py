@@ -114,9 +114,7 @@ class CairoPanel(wx.Panel):
     self.Refresh()
 
   def OnMouseMotion(self, evt):
-    width, height = self.GetClientSize()
-    mouse_device = (evt.GetX() - width/2.0, evt.GetY() - height/2.0)
-    self.mouse_vis = self.device_to_visualizer_coordinates(mouse_device)
+    self.mouse_vis = self.device_to_visualizer_coordinates((evt.GetX(), evt.GetY()))
     self.Refresh()
 
   def OnMouseRight(self, evt):
@@ -174,6 +172,9 @@ class CairoPanel(wx.Panel):
 
   def device_to_visualizer_coordinates(self, pos):
     x, y = pos
+    width, height = self.GetClientSize()
+    x = x - width / 2
+    y = y - height / 2
     x = x / self.scale
     y = y / self.scale
     x = x - self.center[0]
