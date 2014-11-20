@@ -40,7 +40,6 @@ class CairoPanel(wx.Panel):
     
     self.scale = 1
     self.center = (0, 0)  # center of visualization, in visualizer coords
-    self.mouse_device = (0, 0)  # mouse position, in centered device coords
     self.mouse_vis = (0, 0)   # mouse position, in visualizer coords
     
     self.need_visualizer_refresh = False
@@ -109,16 +108,15 @@ class CairoPanel(wx.Panel):
     delta = evt.GetWheelRotation() / evt.GetWheelDelta()
     scale_factor = 1.2 ** delta
     self.scale = self.scale * scale_factor
-    self.center = (-self.mouse_vis[0] + self.mouse_device[0] / self.scale,
-                   -self.mouse_vis[1] + self.mouse_device[1] / self.scale)
-    self.mouse_vis = self.device_to_visualizer_coordinates(self.mouse_device)
+    self.center = (-self.mouse_vis[0] + (self.mouse_vis[0] + self.center[0])/scale_factor,
+                   -self.mouse_vis[1] + (self.mouse_vis[1] + self.center[1])/scale_factor)
     self.need_visualizer_refresh = True
     self.Refresh()
 
   def OnMouseMotion(self, evt):
     width, height = self.GetClientSize()
-    self.mouse_device = (evt.GetX() - width/2, evt.GetY() - height/2)
-    self.mouse_vis = self.device_to_visualizer_coordinates(self.mouse_device)
+    mouse_device = (evt.GetX() - width/2.0, evt.GetY() - height/2.0)
+    self.mouse_vis = self.device_to_visualizer_coordinates(mouse_device)
     self.Refresh()
 
   def OnMouseRight(self, evt):
@@ -166,9 +164,9 @@ class CairoPanel(wx.Panel):
                         cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
     cr.set_font_size(10)
     cr.move_to(0, height - 50)
-    cr.show_text("Center %d, %d; Scale: %.2f" % (self.center[0], self.center[1], self.scale))
+    cr.show_text("Center %.1f, %.1f; Scale: %.2f" % (self.center[0], self.center[1], self.scale))
     cr.move_to(0, height - 40)
-    cr.show_text("Mouse: %d, %d" % self.mouse_vis)
+    cr.show_text("Mouse: %.1f, %.1f" % self.mouse_vis)
     cr.move_to(0, height - 30)
     elements = self.get_mouseover_elements(*self.mouse_vis)
     elements = map(lambda element: element[1].path, elements)
