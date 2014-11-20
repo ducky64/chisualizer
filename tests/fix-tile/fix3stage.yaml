@@ -123,8 +123,8 @@ lib:
     - - - !Ref {ref: fix_muxedmemoryport_noenable, path: .io_reads_0}
         - !Ref {ref: fix_muxedmemoryport_noenable, path: .io_reads_1}
         - !Ref {ref: fix_muxedmemoryport_noenable, path: .io_reads_2}
-        - !Ref {ref: fix_muxedmemoryport_enable, path: .io_reads_3}
-      - - !Ref {ref: fix_muxedmemoryport_enable, path: .io_writes_0}
+      - - !Ref {ref: fix_muxedmemoryport_enable, path: .io_reads_3}
+        - !Ref {ref: fix_muxedmemoryport_enable, path: .io_writes_0}
         - !Ref {ref: fix_muxedmemoryport_enable, path: .io_writes_1}
 
   fix_tile_state:
