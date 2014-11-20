@@ -201,8 +201,8 @@ class CairoPanel(wx.Panel):
       cr.fill()
     
       cr.translate(0.5, 0.5)
-      cr.translate(width/2, height/2)
       cr.save()
+      cr.translate(width/2, height/2)
       cr.scale(self.scale, self.scale)
       cr.translate(*self.center)
       
