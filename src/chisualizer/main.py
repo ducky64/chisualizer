@@ -38,10 +38,10 @@ class CairoPanel(wx.Panel):
     self.api = api
     self.desc = desc
     
-    self.size = (0, 0)
     self.scale = 1
-    self.center = (0, 0)
-    self.mouse = (0, 0)
+    self.center = (0, 0)  # center of visualization, in visualizer coords
+    self.mouse_device = (0, 0)  # mouse position, in centered device coords
+    self.mouse_vis = (0, 0)   # mouse position, in visualizer coords
     
     self.need_visualizer_refresh = False
     self.elements = []
@@ -107,12 +107,18 @@ class CairoPanel(wx.Panel):
 
   def OnMouseWheel(self, evt):
     delta = evt.GetWheelRotation() / evt.GetWheelDelta()
-    self.scale = self.scale * (1.2 ** delta)
+    scale_factor = 1.2 ** delta
+    self.scale = self.scale * scale_factor
+    self.center = (-self.mouse_vis[0] + self.mouse_device[0] / self.scale,
+                   -self.mouse_vis[1] + self.mouse_device[1] / self.scale)
+    self.mouse_vis = self.device_to_visualizer_coordinates(self.mouse_device)
     self.need_visualizer_refresh = True
     self.Refresh()
 
   def OnMouseMotion(self, evt):
-    self.mouse = self.device_to_visualizer_coordinates((evt.GetX(), evt.GetY()))
+    width, height = self.GetClientSize()
+    self.mouse_device = (evt.GetX() - width/2, evt.GetY() - height/2)
+    self.mouse_vis = self.device_to_visualizer_coordinates(self.mouse_device)
     self.Refresh()
 
   def OnMouseRight(self, evt):
@@ -160,21 +166,20 @@ class CairoPanel(wx.Panel):
                         cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
     cr.set_font_size(10)
     cr.move_to(0, height - 50)
-    cr.show_text("Scale: %.2f" % self.scale)
+    cr.show_text("Center %d, %d; Scale: %.2f" % (self.center[0], self.center[1], self.scale))
     cr.move_to(0, height - 40)
-    cr.show_text("Mouse: %d, %d" % self.mouse)
+    cr.show_text("Mouse: %d, %d" % self.mouse_vis)
     cr.move_to(0, height - 30)
-    elements = self.get_mouseover_elements(*self.mouse)
+    elements = self.get_mouseover_elements(*self.mouse_vis)
     elements = map(lambda element: element[1].path, elements)
     cr.show_text(str(elements))
 
   def device_to_visualizer_coordinates(self, pos):
     x, y = pos
-    width, height = self.GetClientSize()
-    x = x - width / 2
-    y = y - height / 2
     x = x / self.scale
     y = y / self.scale
+    x = x - self.center[0]
+    y = y - self.center[1]
     return (x, y) 
 
   def get_mouseover_elements(self, x, y):
@@ -200,7 +205,8 @@ class CairoPanel(wx.Panel):
       cr.translate(width/2, height/2)
       cr.save()
       cr.scale(self.scale, self.scale)
-
+      cr.translate(*self.center)
+      
       timer_draw = time.time()
       self.draw_visualizer(cr)
       timer_draw = time.time() - timer_draw
@@ -228,7 +234,7 @@ class CairoPanel(wx.Panel):
     timer_update = time.time() - timer_update
     
     timer_lay = time.time()
-    layout = self.desc.layout_cairo(cr).center_origin()
+    layout = self.desc.layout_cairo(cr).centerd_origin()
     timer_lay = time.time() - timer_lay
     
     timer_draw = time.time()
