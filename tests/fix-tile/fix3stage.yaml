@@ -96,6 +96,20 @@ lib:
     - !TextBox {path: _adr, template: text_decimal}
     - !TextBox {path: _dat, template: text_hexadecimal}
 
+  fix_largemem:
+    !MultiLineGrid
+    dir: col
+    cells:
+    - !MemoryArray
+      path: .mem
+      cols: 4
+      rows: 8
+      dir: row
+      cell: !TextBox {template: text_hexadecimal}
+    - - - !Ref {ref: fix_muxedmemoryport_noenable, path: .io_reads_0}
+        - !Ref {ref: fix_muxedmemoryport_noenable, path: .io_reads_1}
+      - - !Ref {ref: fix_muxedmemoryport_enable, path: .io_writes_0}
+
   fix_regfile:
     !MultiLineGrid
     dir: col
@@ -161,11 +175,13 @@ lib:
     - !Ref {ref: fix_hostio_data}
 
   fix_tile:
-    !LineGrid
+    !MultiLineGrid
     dir: row
     cells: 
     - !Ref {ref: fix_hostio_in, path: .io_hostIn}
-    - !Ref {ref: fix_regfile, path: .regfile}
+    - - !Ref {ref: fix_regfile, path: .regfile}
+      - !Ref {ref: fix_largemem, path: .code_mem}
+      - !Ref {ref: fix_largemem, path: .data_mem}
     - !Ref {ref: fix_pipeline}
     - !Ref {ref: fix_hostio_out, path: .io_hostOut}
 
