@@ -1,7 +1,7 @@
 defaults:
   NumericalString:
     !Template
-    charmap: 01234567890abcdefghijklmnopqrstuvwxyz
+    charmap: 0123456789abcdefghijklmnopqrstuvwxyz
     prefix: ""
   FramedBase:
     !Template
