@@ -229,7 +229,6 @@ lib:
       - - !Ref {ref: fix_regfile, path: .regfile}
         - !Ref {ref: fix_pipeline}
 
-
 display:
 - !Ref {ref: fix_tile, path: Fix3Stage}
 
