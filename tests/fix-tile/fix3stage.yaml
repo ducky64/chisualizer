@@ -174,16 +174,61 @@ lib:
     - !Ref {ref: readyvalid_out_right}
     - !Ref {ref: fix_hostio_data}
 
+  fix_portio_left:
+    !MultiLineGrid
+    dir: col
+    cells:
+    - !Ref {ref: readyvalid_in_left, path: _in}
+    - !TextBox {path: _in_bits, template: text_hexadecimal}
+    - !Ref {ref: readyvalid_out_left, path: _out}
+    - !TextBox {path: _out_bits, template: text_hexadecimal}
+  fix_portio_right:
+    !MultiLineGrid
+    dir: col
+    cells:
+    - !Ref {ref: readyvalid_in_right, path: _in}
+    - !TextBox {path: _in_bits, template: text_hexadecimal}
+    - !Ref {ref: readyvalid_out_right, path: _out}
+    - !TextBox {path: _out_bits, template: text_hexadecimal}
+  fix_portio_up:
+    !MultiLineGrid
+    dir: row
+    cells:
+    - - !Ref {ref: readyvalid_in_up, path: _in}
+      - !TextBox {path: _in_bits, template: text_hexadecimal}
+    - - !Ref {ref: readyvalid_out_up, path: _out}
+      - !TextBox {path: _out_bits, template: text_hexadecimal}
+  fix_portio_down:
+    !MultiLineGrid
+    dir: row
+    cells:
+    - - !Ref {ref: readyvalid_in_down, path: _in}
+      - !TextBox {path: _in_bits, template: text_hexadecimal}
+    - - !Ref {ref: readyvalid_out_down, path: _out}
+      - !TextBox {path: _out_bits, template: text_hexadecimal}
+
+  fix_router:
+    !MultiLineGrid
+    frame_style: none
+    dir: col
+    cells:
+    - !Ref {ref: fix_portio_up, path: .io_ports_1}
+    - - !Ref {ref: fix_portio_up, path: .io_ports_0}
+      - !Ref {ref: fix_portio_up, path: .io_ports_2}
+    - !Ref {ref: fix_portio_up, path: .io_ports_3}
+
   fix_tile:
     !MultiLineGrid
     dir: row
     cells: 
-    - !Ref {ref: fix_hostio_in, path: .io_hostIn}
-    - - !Ref {ref: fix_regfile, path: .regfile}
-      - !Ref {ref: fix_largemem, path: .code_mem}
-      - !Ref {ref: fix_largemem, path: .data_mem}
-    - !Ref {ref: fix_pipeline}
-    - !Ref {ref: fix_hostio_out, path: .io_hostOut}
+    - - !Ref {ref: fix_router}
+      - - !Ref {ref: fix_hostio_in, path: .io_hostIn}
+        - !Ref {ref: fix_hostio_out, path: .io_hostOut}
+    - - - !Ref {ref: fix_largemem, path: .code_mem}
+        - !Ref {ref: fix_largemem, path: .data_mem}
+      - - !Ref {ref: fix_regfile, path: .regfile}
+        - !Ref {ref: fix_pipeline}
+
 
 display:
 - !Ref {ref: fix_tile, path: Fix3Stage}

@@ -62,19 +62,67 @@ lib:
       1: green
       default: pink
 
+  text_readyvalid:
+    !Template
+    frame_style: none
+    text: !NumericalString {radix: 10} # provide a default base so the value can be set
+    text_color: !Ref {ref: readyvalid_color}
+
   readyvalid_in_left:
     !LineGrid
     frame_style: none
     dir: row
     cells:
-    - !TextBox {path: _valid, text: [">V", !NumericalString {radix: 10}], text_color: !Ref {ref: readyvalid_color}}
-    - !TextBox {path: _ready, text: ["R>", !NumericalString {radix: 10}], text_color: !Ref {ref: readyvalid_color}}
+    - !TextBox {path: _valid, text: " ▸V ", template: text_readyvalid}
+    - !TextBox {path: _ready, text: " R▸ ", template: text_readyvalid}
+  readyvalid_in_right:
+    !LineGrid
+    frame_style: none
+    dir: row
+    cells:
+    - !TextBox {path: _valid, text: " ◂R ", template: text_readyvalid}
+    - !TextBox {path: _ready, text: " V◂ ", template: text_readyvalid}
+  readyvalid_in_up:
+    !LineGrid
+    frame_style: none
+    dir: row
+    cells:
+    - !TextBox {path: _valid, text: " ▾V ", template: text_readyvalid}
+    - !TextBox {path: _ready, text: " ▾R ", template: text_readyvalid}
+  readyvalid_in_down:
+    !LineGrid
+    frame_style: none
+    dir: row
+    cells:
+    - !TextBox {path: _ready, text: " ▴R ", template: text_readyvalid}
+    - !TextBox {path: _valid, text: " ▴V ", template: text_readyvalid}
 
+  readyvalid_out_left:
+    !LineGrid
+    frame_style: none
+    dir: row
+    cells:
+    - !TextBox {path: _ready, text: " ◂R ", template: text_readyvalid}
+    - !TextBox {path: _valid, text: " V◂ ", template: text_readyvalid}
   readyvalid_out_right:
     !LineGrid
     frame_style: none
     dir: row
     cells:
-    - !TextBox {path: _valid, text: [">V", !NumericalString {radix: 10}], text_color: !Ref {ref: readyvalid_color}}
-    - !TextBox {path: _ready, text: ["R>", !NumericalString {radix: 10}], text_color: !Ref {ref: readyvalid_color}}
+    - !TextBox {path: _valid, text: " ▸V ", template: text_readyvalid}
+    - !TextBox {path: _ready, text: " R▸ ", template: text_readyvalid}
+  readyvalid_out_up:
+    !LineGrid
+    frame_style: none
+    dir: row
+    cells:
+    - !TextBox {path: _ready, text: " ▴R ", template: text_readyvalid}
+    - !TextBox {path: _valid, text: " ▴V ", template: text_readyvalid}
+  readyvalid_out_down:
+    !LineGrid
+    frame_style: none
+    dir: row
+    cells:
+    - !TextBox {path: _valid, text: " ▾V ", template: text_readyvalid}
+    - !TextBox {path: _ready, text: " ▾R ", template: text_readyvalid}
 
