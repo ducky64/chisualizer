@@ -155,9 +155,8 @@ class FramedVisualizer(AbstractVisualizer):
                    element_rect.top() - top_offset)
         cr.line_to(rect.left() + self.frame_margin + self.label_width,  # top right, where label ends
                    element_rect.top() - top_offset)
-    
         cr.stroke()
-      
+        
       # draw the label always
       cr.select_font_face(self.label_font,
                           cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
@@ -170,9 +169,10 @@ class FramedVisualizer(AbstractVisualizer):
         cr.show_text(self.label)
 
       if not self.collapsed:
-        elements = self.draw_element_cairo(cr, element_rect, depth)
+        elements.extend(self.draw_element_cairo(cr, element_rect, depth))
     else:
-      elements = self.draw_element_cairo(cr, rect, depth)      
+      elements.extend(self.draw_element_cairo(cr, rect, depth))
+      
     elements.append((depth, rect, self))
     return elements
   
