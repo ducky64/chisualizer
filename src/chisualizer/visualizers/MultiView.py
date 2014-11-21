@@ -49,9 +49,9 @@ class MultiView(FramedVisualizer):
   def wx_popupmenu_populate(self, menu): 
     for view_index, view_name in enumerate(self.view_names):
       if view_index == self.active_view_index:
-        selection = "\u25c9"
+        selection = unichr(0x25c9)
       else:
-        selection = "\u25cb"
+        selection = unichr(0x25cb)
       item = wx.MenuItem(menu, wx.NewId(), "%s: Select view %s %s" 
                          % (self.wx_prefix(), selection, view_name))
       menu.AppendItem(item)
@@ -63,4 +63,4 @@ class MultiView(FramedVisualizer):
     def wx_popupmenu_setindex(evt):
       self.active_view_index = view_index % len(self.view_names)
       self.active_view = self.views[self.view_names[self.active_view_index]]
-      
+    return wx_popupmenu_setindex

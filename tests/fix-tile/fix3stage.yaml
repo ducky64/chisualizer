@@ -239,22 +239,28 @@ lib:
       - !Ref {ref: fix_portio_right, path: .io_ports_2}
     - !Ref {ref: fix_portio_down, path: .io_ports_3}
 
+  fix_htif:
+    !MultiLineGrid
+    frame_style: none
+    dir: row
+    cells:
+    - !Ref {ref: fix_hostio_in, path: .io_hostIn}
+    - !Ref {ref: fix_hostio_out, path: .io_hostOut}
+
   fix_uarch:
     !MultiLineGrid
-    dir: row
+    dir: col
     cells: 
-    - - !Ref {ref: fix_router}
-      - - !Ref {ref: fix_hostio_in, path: .io_hostIn}
-        - !Ref {ref: fix_hostio_out, path: .io_hostOut}
-    - - - !Ref {ref: fix_largemem, path: .code_mem}
-        - !Ref {ref: fix_largemem, path: .data_mem}
-      - - !Ref {ref: fix_regfile, path: .regfile}
-        - !Ref {ref: fix_pipeline}
+    - - !Ref {ref: fix_largemem, path: .code_mem}
+      - !Ref {ref: fix_largemem, path: .data_mem}
+    - - !Ref {ref: fix_regfile, path: .regfile}
+      - !Ref {ref: fix_pipeline}
 
   fix_tile:
     !MultiView
     views:
       router: !Ref {ref: fix_router}
+      htif: !Ref {ref: fix_htif}
       uarch: !Ref {ref: fix_uarch}
 
 display:
