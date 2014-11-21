@@ -43,7 +43,7 @@ class MultiView(FramedVisualizer):
     return self.active_view.draw_cairo(cr, rect, depth)
 
   def wx_defaultaction(self):
-    self.active_view_index = self.active_view_index + 1 % len(self.view_names)
+    self.active_view_index = (self.active_view_index + 1) % len(self.view_names)
     self.active_view = self.views[self.view_names[self.active_view_index]]
   
   def wx_popupmenu_populate(self, menu): 
@@ -64,3 +64,4 @@ class MultiView(FramedVisualizer):
       self.active_view_index = view_index % len(self.view_names)
       self.active_view = self.views[self.view_names[self.active_view_index]]
     return wx_popupmenu_setindex
+  

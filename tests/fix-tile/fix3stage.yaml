@@ -249,6 +249,7 @@ lib:
 
   fix_uarch:
     !MultiLineGrid
+    frame_style: none
     dir: col
     cells: 
     - - !Ref {ref: fix_largemem, path: .code_mem}

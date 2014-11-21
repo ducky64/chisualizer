@@ -221,18 +221,18 @@ class FramedVisualizer(AbstractVisualizer):
     raise NotImplementedError()
 
   def wx_prefix(self):
-    return self.path
-    prefix = self.path
+    prefix = string.strip(self.path_component, "_. ")
     if self.label:
-      prefix = "%s (%s)" % (prefix, self.label)
+      prefix += "(%s)" % self.label
     return prefix
 
   def wx_defaultaction(self):
     #TODO: integrate this with menu so both choose options from common source
-    if self.collapsed:
-      self.wx_popupmenu_expand(None)
-    else:
-      self.wx_popupmenu_collapse(None)
+    if self.frame_style == 'frame':
+      if self.collapsed:
+        self.wx_popupmenu_expand(None)
+      else:
+        self.wx_popupmenu_collapse(None)
           
   def wx_popupmenu_populate(self, menu):
     super_populated = super(FramedVisualizer, self).wx_popupmenu_populate(menu)
