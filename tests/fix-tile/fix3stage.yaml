@@ -114,9 +114,9 @@ lib:
     - !MemoryArray
       path: .mem
       modifiers:
-      - !ArrayIndexModifier {index_path: __up__.io_reads_0, template: modifier_mem_read}
-      - !ArrayIndexModifier {index_path: __up__.io_reads_1, template: modifier_mem_read}
-      - !ArrayIndexModifier {index_path: __up__.io_writes_0, template: modifier_mem_write}
+      - !ArrayIndexModifier {index_path: .__up__.io_reads_0_adr, template: modifier_mem_read}
+      - !ArrayIndexModifier {index_path: .__up__.io_reads_1_adr, template: modifier_mem_read}
+      - !CondArrayIndexModifier {index_path: .__up__.io_writes_0_adr, cond_path: .__up__.io_writes_0_is, template: modifier_mem_write}
       cols: 4
       rows: 8
       dir: row
@@ -131,6 +131,13 @@ lib:
     cells:
     - !MemoryArray
       path: .mem
+      modifiers:
+      - !ArrayIndexModifier {index_path: .__up__.io_reads_0_adr, template: modifier_mem_read}
+      - !ArrayIndexModifier {index_path: .__up__.io_reads_1_adr, template: modifier_mem_read}
+      - !ArrayIndexModifier {index_path: .__up__.io_reads_2_adr, template: modifier_mem_read}
+      - !CondArrayIndexModifier {index_path: .__up__.io_reads_3_adr, cond_path: .__up__.io_reads_3_is, template: modifier_mem_read}
+      - !CondArrayIndexModifier {index_path: .__up__.io_writes_0_adr, cond_path: .__up__.io_writes_1_is, template: modifier_mem_write}
+      - !CondArrayIndexModifier {index_path: .__up__.io_writes_1_adr, cond_path: .__up__.io_writes_1_is, template: modifier_mem_write}
       cols: 4
       rows: 8
       dir: row
@@ -232,17 +239,29 @@ lib:
       - !Ref {ref: fix_portio_right, path: .io_ports_2}
     - !Ref {ref: fix_portio_down, path: .io_ports_3}
 
-  fix_tile:
+  fix_htif:
     !MultiLineGrid
+    frame_style: none
     dir: row
+    cells:
+    - !Ref {ref: fix_hostio_in, path: .io_hostIn}
+    - !Ref {ref: fix_hostio_out, path: .io_hostOut}
+
+  fix_uarch:
+    !MultiLineGrid
+    dir: col
     cells: 
-    - - !Ref {ref: fix_router}
-      - - !Ref {ref: fix_hostio_in, path: .io_hostIn}
-        - !Ref {ref: fix_hostio_out, path: .io_hostOut}
-    - - - !Ref {ref: fix_largemem, path: .code_mem}
-        - !Ref {ref: fix_largemem, path: .data_mem}
-      - - !Ref {ref: fix_regfile, path: .regfile}
-        - !Ref {ref: fix_pipeline}
+    - - !Ref {ref: fix_largemem, path: .code_mem}
+      - !Ref {ref: fix_largemem, path: .data_mem}
+    - - !Ref {ref: fix_regfile, path: .regfile}
+      - !Ref {ref: fix_pipeline}
+
+  fix_tile:
+    !MultiView
+    views:
+      router: !Ref {ref: fix_router}
+      htif: !Ref {ref: fix_htif}
+      uarch: !Ref {ref: fix_uarch}
 
 display:
 - !Ref {ref: fix_tile, path: Fix3Stage}
