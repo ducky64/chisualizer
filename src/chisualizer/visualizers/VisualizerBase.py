@@ -14,7 +14,7 @@ class AbstractVisualizer(Base.Base):
                node_override=None):
     super(AbstractVisualizer, self).__init__(elt, parent)
     
-    self.dynamic_attrs = []
+    self.dynamic_attrs = {}
 
     self.path_component = self.static_attr(Base.StringAttr, 'path').get()    
     if path_component_override is not None:
@@ -30,8 +30,17 @@ class AbstractVisualizer(Base.Base):
     """Registers my attributes, so update() will look for and appropriately
     type-convert attribute values."""
     attr_obj = datatype_cls(self, self.elt, attr_name, dynamic=True, **kwds)
-    self.dynamic_attrs.append(attr_obj)
+    assert attr_name not in self.dynamic_attrs
+    self.dynamic_attrs[attr_name] = attr_obj
     return attr_obj
+    
+  def apply_modifiers(self, modifier_obj, modifiers_dict):
+    for modify_attr, modify_val in modifiers_dict:
+      if modify_attr in self.static_attrs:
+        modifier_obj.elt.parse_error("Target attr '%s' is static" % modify_attr)
+      if modify_attr not in self.dynamic_attrs:
+        modifier_obj.elt.parse_error("Target does not have attr '%s'" % modify_attr)
+      self.dynamic_attrs[modify_attr].apply_overload(modify_val)
     
   def update(self):
     """Called once per visualizer update (before the layout phase), refreshing
@@ -40,8 +49,9 @@ class AbstractVisualizer(Base.Base):
     # TODO: Handle modifiers
     
     # Update attrs - common infrastructure
-    for dynamic_attr in self.dynamic_attrs:
+    for dynamic_attr in self.dynamic_attrs.itervalues():
       dynamic_attr.update()
+      dynamic_attr.clear_overloads()
     
   def set_node_ref(self, node):
     self.node = node

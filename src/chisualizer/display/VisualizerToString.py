@@ -1,5 +1,4 @@
 import math
-from numbers import Number
 
 from chisualizer.visualizers.VisualizerBase import AbstractVisualizer
 import chisualizer.Base as Base

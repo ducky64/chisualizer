@@ -268,13 +268,14 @@ class Base(object):
     self.root = parent.root
     self.elt = element
     self.ref = element.get_ref()
-    self.static_attrs = []
+    self.static_attrs = {}
     
   def static_attr(self, datatype_cls, attr_name, **kwds):
     """Registers my attributes, so update() will look for and appropriately
     type-convert attribute values."""
     new_attr = datatype_cls(self, self.elt, attr_name, dynamic=False, **kwds)
-    self.static_attrs.append(new_attr)
+    assert attr_name not in self.static_attrs
+    self.static_attrs[attr_name] = new_attr
     return new_attr
   
   def get_chisel_api(self):
@@ -329,10 +330,25 @@ class ElementAttr(object):
     self.attr_name = attr_name
     self.attr_values = self.create_value_list(element.get_attr_list(attr_name))
     self.dynamic = dynamic
+    self.overloads = []
     
   def update(self):
     """Call to update dynamic values."""
     raise NotImplementedError()
+
+  def apply_overload(self, overload):
+    assert self.dynamic
+    self.overloads.insert(0, overload)
+  
+  def clear_overloads(self):
+    assert self.dynamic
+    self.overloads = []
+    
+  def get_value_list(self):
+    if self.dynamic and self.overloads:
+      return copy.copy(self.overloads).extend(self.attr_values)
+    else:
+      return self.attr_values
 
   def create_value_list(self, attr_value_list):
     """Parses the attr's value list and returns it in a format suitable for
@@ -356,7 +372,7 @@ class ObjectAttr(ElementAttr):
     return attr_value_list
 
   def get(self):
-    return self.attr_values
+    return self.get_value_list()
 
 class SingleElementAttr(ElementAttr):
   """ElementAttribute subclass for attributes using the first valid element of 
@@ -382,7 +398,7 @@ class SingleElementAttr(ElementAttr):
     self.dynamic_value = self.get_value(True)
     
   def get_value(self, dynamic):
-    for value_elt in self.attr_values:
+    for value_elt in self.get_value_list():
       conv = self.value_elt_to_data(value_elt, static=not dynamic)
       if conv is not None:
         return conv
@@ -431,7 +447,7 @@ class StringAttr(SingleElementAttr):
   def get_longest_strings(self):
     from chisualizer.display.VisualizerToString import VisualizerToString # TODO HACKY
     longest_strings = []
-    for value_elt in self.attr_values:
+    for value_elt in self.get_value_list():
       if isinstance(value_elt, basestring):
         longest_strings.append(value_elt)
       elif isinstance(value_elt, VisualizerToString):
@@ -444,7 +460,7 @@ class StringAttr(SingleElementAttr):
     """Returns whether set_from_string can possibly succeed or will always 
     fail."""
     from chisualizer.display.VisualizerToString import VisualizerToString # TODO HACKY
-    for value_elt in self.attr_values:
+    for value_elt in self.get_value_list():
       if isinstance(value_elt, VisualizerToString):
         if value_elt.can_set_from_string():
           return True
@@ -454,7 +470,7 @@ class StringAttr(SingleElementAttr):
     """Attempt to set the node of the text being displayed using an arbitrary
     input string. Returns True if successful, False otherwise."""
     from chisualizer.display.VisualizerToString import VisualizerToString # TODO HACKY
-    for value_elt in self.attr_values:
+    for value_elt in self.get_value_list():
       if isinstance(value_elt, VisualizerToString):
         if value_elt.set_from_string(set_string):
           return True
