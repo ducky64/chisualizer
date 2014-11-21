@@ -13,10 +13,9 @@ class AbstractVisualizer(Base.Base):
   def __init__(self, elt, parent):
     super(AbstractVisualizer, self).__init__(elt, parent)
     
-    self.elt = elt
     self.dynamic_attrs = []
     
-    self.path_component = self.attr(Base.StringAttr, 'path').get_static()
+    self.path_component = self.static_attr(Base.StringAttr, 'path').get()
     self.path = parent.path + self.path_component
     self.node = parent.node.get_child_reference(self.path_component)
     
@@ -80,17 +79,17 @@ class FramedVisualizer(AbstractVisualizer):
   def __init__(self, elt, parent):
     super(FramedVisualizer, self).__init__(elt, parent)
 
-    self.frame_style = self.attr(Base.StringAttr, 'frame_style', valid_set=['none', 'label', 'border']).get_static()    
-    self.frame_margin = self.attr(Base.IntAttr, 'frame_margin', valid_min=1).get_static()
-    self.frame_color = self.attr(Base.StringAttr, 'frame_color', dynamic=True)
+    self.frame_style = self.static_attr(Base.StringAttr, 'frame_style', valid_set=['none', 'label', 'border']).get()
+    self.frame_margin = self.static_attr(Base.IntAttr, 'frame_margin', valid_min=1).get()
+    self.frame_color = self.dynamic_attr(Base.StringAttr, 'frame_color')
     
-    self.border_size = self.attr(Base.IntAttr, 'border_size', valid_min=1).get_static() 
+    self.border_size = self.static_attr(Base.IntAttr, 'border_size', valid_min=1).get()
 
-    self.label = self.attr(Base.StringAttr, 'label').get_static()
+    self.label = self.static_attr(Base.StringAttr, 'label').get()
     if not self.label:
       self.label = None
-    self.label_size = self.attr(Base.IntAttr,'label_size', valid_min=1).get_static()
-    self.label_font = self.attr(Base.StringAttr,'label_font').get_static()
+    self.label_size = self.static_attr(Base.IntAttr,'label_size', valid_min=1).get()
+    self.label_font = self.static_attr(Base.StringAttr,'label_font').get()
     
     self.collapsed = False
 
@@ -134,7 +133,7 @@ class FramedVisualizer(AbstractVisualizer):
       border_offset = self.frame_margin / 2
       top_offset = self.top_height / 2
       
-      cr.set_source_rgba(*self.get_theme().color(self.frame_color.get_dynamic()))
+      cr.set_source_rgba(*self.get_theme().color(self.frame_color.get()))
       
       # draw the border only if indicated
       if self.frame_style == 'border':

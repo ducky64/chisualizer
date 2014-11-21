@@ -31,7 +31,7 @@ def result_ok(res):
 
 class ChiselSubprocessEmulatorNode(ChiselApiNode):
   def __str__(self):
-    return "%s: %s" % (self.__class__.__name__, self.node_path)
+    return "%s: %s" % (self.__class__.__name__, self.path)
   
   def __init__(self, api, path):
     assert isinstance(api, ChiselEmulatorSubprocess)
@@ -44,7 +44,10 @@ class ChiselSubprocessEmulatorNode(ChiselApiNode):
   
   def get_node_by_path(self, path):
     if self.api.has_node(path):
-      return ChiselSubprocessEmulatorWire(self.api, path)
+      if path in self.api.mems: # TODO more generalized solution
+        return ChiselSubprocessEmulatorMem(self.api, path)
+      else:
+        return ChiselSubprocessEmulatorWire(self.api, path)
     else:
       return ChiselSubprocessEmulatorPlaceholder(self.api, path)
 
@@ -67,7 +70,7 @@ class ChiselSubprocessEmulatorWire(ChiselSubprocessEmulatorNode):
     raise NotImplementedError("Node types not yet implemented")
 
   def get_width(self):
-    return result_to_int(self.api.command('wire_width', self.node_path))
+    return result_to_int(self.api.command('wire_width', self.path))
   
   def get_depth(self):
     raise ValueError("Cannot get depth of wire")
@@ -79,10 +82,10 @@ class ChiselSubprocessEmulatorWire(ChiselSubprocessEmulatorNode):
     return True
 
   def get_value(self):
-    return result_to_int(self.api.command('wire_peek', self.node_path))
+    return result_to_int(self.api.command('wire_peek', self.path))
 
   def set_value(self, value):
-    return (result_ok(self.api.command('wire_poke', self.node_path, value))
+    return (result_ok(self.api.command('wire_poke', self.path, value))
         and result_ok(self.api.command('propagate')))
 
   def get_subscript_reference(self, subscript):
@@ -97,10 +100,10 @@ class ChiselSubprocessEmulatorMem(ChiselSubprocessEmulatorNode):
     raise NotImplementedError("Memory types not yet implemented")
 
   def get_width(self):
-    return result_to_int(self.api.command('mem_width', self.array_path))
+    return result_to_int(self.api.command('mem_width', self.path))
   
   def get_depth(self):
-    return result_to_int(self.api.command('mem_depth', self.array_path))
+    return result_to_int(self.api.command('mem_depth', self.path))
   
   def has_value(self):
     return False
@@ -144,11 +147,11 @@ class ChiselSubprocessEmulatorMemElement(ChiselSubprocessEmulatorNode):
 
   def get_value(self):
     return result_to_int(self.api.command('mem_peek',
-                                          self.array_path, self.element_num))
+                                          self.path, self.element_num))
 
   def set_value(self, value):
     return (result_ok(self.api.command('mem_poke',
-                                       self.array_path, self.element_num,
+                                       self.path, self.element_num,
                                        value))
         and result_ok(self.api.command('propagate')))
   

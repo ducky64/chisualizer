@@ -1,8 +1,12 @@
 defaults:
   NumericalString:
     !Template
+    path: ""
     charmap: 0123456789abcdefghijklmnopqrstuvwxyz
     prefix: ""
+  DictString:
+    !Template
+    path: ""
   FramedBase:
     !Template
     path: ""

@@ -6,15 +6,15 @@ class MemoryArray(FramedVisualizer):
   """A grid of cells, each pointing to a memory element."""
   def __init__(self, element, parent):
     super(MemoryArray, self).__init__(element, parent)
-    self.dir = self.attr(Base.StringAttr, 'dir', valid_set=['row', 'col']).get_static()
-    self.offset = self.attr(Base.IntAttr, 'offset', dynamic=True)
-    self.offset_anchor = self.attr(Base.IntAttr, 'offset_anchor', valid_min=0, valid_max=100).get_static()
-    self.rows = self.attr(Base.IntAttr, 'rows', valid_min=1).get_static()
-    self.cols = self.attr(Base.IntAttr, 'cols', valid_min=1).get_static()
+    self.dir = self.static_attr(Base.StringAttr, 'dir', valid_set=['row', 'col']).get()
+    self.offset = self.dynamic_attr(Base.IntAttr, 'offset')
+    self.offset_anchor = self.static_attr(Base.IntAttr, 'offset_anchor', valid_min=0, valid_max=100).get()
+    self.rows = self.static_attr(Base.IntAttr, 'rows', valid_min=1).get()
+    self.cols = self.static_attr(Base.IntAttr, 'cols', valid_min=1).get()
     self.cells_count = self.rows * self.cols
     
-    cell_attr = self.attr(Base.ObjectAttr, 'cell')
-    self.cell_elt = cell_attr.get_static()[0]
+    cell_attr = self.static_attr(Base.ObjectAttr, 'cell')
+    self.cell_elt = cell_attr.get()[0]
     
     self.cells_min = -1
     self.cells_max = -1
@@ -44,7 +44,7 @@ class MemoryArray(FramedVisualizer):
       assert len(ary) == inst_max - inst_min + 1
       return ary
     
-    render_min = self.offset.get_dynamic() - int(self.offset_anchor/100.0 * self.cells_count)
+    render_min = self.offset.get() - int(self.offset_anchor/100.0 * self.cells_count)
     render_max = render_min + self.cells_count - 1
     
     if render_min < 0:

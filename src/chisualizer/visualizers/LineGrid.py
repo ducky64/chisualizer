@@ -6,10 +6,10 @@ class LineGrid(FramedVisualizer):
   """A single line of elements, either in a row or column."""
   def __init__(self, element, parent):
     super(LineGrid, self).__init__(element, parent)
-    self.dir = self.attr(Base.StringAttr, 'dir', valid_set=['row', 'col']).get_static()
-    cell_attr = self.attr(Base.ObjectAttr, 'cells')
+    self.dir = self.static_attr(Base.StringAttr, 'dir', valid_set=['row', 'col']).get()
+    cell_attr = self.static_attr(Base.ObjectAttr, 'cells')
     self.cells = []
-    for cell in cell_attr.get_static():
+    for cell in cell_attr.get():
       if not isinstance(cell, Base.ParsedElement):
         cell_attr.parse_error("Expected list of Visualizers, got %s"
                               % cell)

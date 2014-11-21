@@ -11,7 +11,7 @@ class VisualizerToString(Base.Base):
   def __init__(self, element, parent):
     assert isinstance(parent, AbstractVisualizer)
     super(VisualizerToString, self).__init__(element, parent)
-    self.path_component = self.attr(Base.StringAttr, 'path').get_static()
+    self.path_component = self.static_attr(Base.StringAttr, 'path').get()
     self.visualizer = parent  # TODO: perhaps remove me if useless?
     self.node = parent.get_node_ref().get_child_reference(self.path_component)
   
@@ -65,9 +65,9 @@ class NumericalString(VisualizerToString):
   """Generalized numerical text representation of a number.""" 
   def __init__(self, element, parent):
     super(NumericalString, self).__init__(element, parent)
-    self.prefix = Base.StringAttr(self, element, 'prefix').get_static() 
-    self.radix = Base.IntAttr(self, element, 'radix', valid_min=1).get_static()
-    self.charmap = Base.StringAttr(self, element, 'charmap').get_static()
+    self.prefix = self.static_attr(Base.StringAttr, 'prefix').get() 
+    self.radix = self.static_attr(Base.IntAttr, 'radix', valid_min=1).get()
+    self.charmap = self.static_attr(Base.StringAttr, 'charmap').get()
     if len(self.charmap) < self.radix:
       element.parse_error("charmap must be longer than radix (%i), got %i" %
                           (self.radix, len(self.charmap)))    
@@ -99,10 +99,10 @@ class DictString(VisualizerToString):
   """Map specific numbers to specific strings."""
   def __init__(self, element, parent):
     super(DictString, self).__init__(element, parent)
-    mapping_attr = Base.ObjectAttr(self, element, 'mapping')
+    mapping_attr = self.static_attr(Base.ObjectAttr, 'mapping')
     # TODO: handle multiple levels of mapping dicts
-    assert len(mapping_attr.get_static()) == 1, "TODO Generalize this"
-    mapping = mapping_attr.get_static()[0]
+    assert len(mapping_attr.get()) == 1, "TODO Generalize this"
+    mapping = mapping_attr.get()[0]
     if not isinstance(mapping, dict):
       mapping_attr.parse_error("Expected type dict, got %s"
                                % mapping)
@@ -155,7 +155,7 @@ class DictString(VisualizerToString):
       self.node.set_value(self.mapping_to_int[in_text])
       return True
     else:
-      return super(DictString, self).set_from_string(visualizer, in_text)
+      return super(DictString, self).set_from_string(in_text)
     
 @Base.desugar_tag('DictTemplate')
 def desugar_dict_template(parsed_element, registry):
@@ -177,10 +177,11 @@ def desugar_dict_template(parsed_element, registry):
       intermediate_attr_map[attr_name][mapping_key] = attr_value
 
   for attr_name, attr_value_map in intermediate_attr_map.iteritems():
-    new_dict_string =  Base.ParsedElement('DictString', 
-                                          {'mapping': attr_value_map},
-                                          parsed_element.filename,
-                                          parsed_element.lineno)
+    new_dict_string = Base.ParsedElement('DictString', 
+                                         {'mapping': attr_value_map},
+                                         parsed_element.filename,
+                                         parsed_element.lineno)
+    registry.apply_default_template(new_dict_string)
     if attr_name not in parsed_element.attr_map:
       parsed_element.attr_map[attr_name] = []
     parsed_element.attr_map[attr_name].insert(0, new_dict_string) 

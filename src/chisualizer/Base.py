@@ -113,7 +113,7 @@ class YAMLVisualizerRegistry():
     if name not in tag_registry:
       elt.parse_error("Unrecognized tag '%s'" % name)
     cls = tag_registry[name]
-    
+
     # Ensure no children have already been parsed as defaults.
     for loaded_name in self.default_templates.iterkeys():
       loaded_cls = tag_registry[loaded_name]
@@ -158,6 +158,12 @@ class YAMLVisualizerRegistry():
     
     loader.compose_node = compose_node
     
+    # Ensure load ordering: https://stackoverflow.com/questions/5121931/in-python-how-can-you-load-yaml-mappings-as-ordereddicts
+    _mapping_tag = yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG
+    def dict_constructor(loader, node):
+      return OrderedDict(loader.construct_pairs(node))
+    loader.add_constructor(_mapping_tag, dict_constructor)
+    
     for tag_name in tag_registry:
       loader.add_constructor("!" + tag_name, create_obj_constructor(tag_name))
       
@@ -167,7 +173,7 @@ class YAMLVisualizerRegistry():
     yaml_dict = loader.get_data()
     if 'defaults' in yaml_dict:
       assert isinstance(yaml_dict['defaults'], dict)
-      for tag_name, elt in yaml_dict['defaults'].iteritems():
+      for tag_name, elt in yaml_dict['defaults'].items():
         self.process_default_template(tag_name, elt)
         logging.debug("Loaded default template tag='%s'", tag_name)
         self.default_templates[tag_name] = elt
@@ -175,7 +181,7 @@ class YAMLVisualizerRegistry():
     
     if 'lib' in yaml_dict:
       assert isinstance(yaml_dict['lib'], dict)
-      for ref_name, elt in yaml_dict['lib'].iteritems():
+      for ref_name, elt in yaml_dict['lib'].items():
         # Check is a parsedelement
         elt.set_ref(ref_name)
         if ref_name in self.lib_elements:
@@ -260,12 +266,16 @@ class Base(object):
   def __init__(self, element, parent):
     self.parent = parent
     self.root = parent.root
+    self.elt = element
     self.ref = element.get_ref()
-  
+    self.static_attrs = []
+    
   def static_attr(self, datatype_cls, attr_name, **kwds):
     """Registers my attributes, so update() will look for and appropriately
     type-convert attribute values."""
-    return datatype_cls(self, self.elt, attr_name, dynamic=False, **kwds)
+    new_attr = datatype_cls(self, self.elt, attr_name, dynamic=False, **kwds)
+    self.static_attrs.append(new_attr)
+    return new_attr
   
   def get_chisel_api(self):
     """Returns the ChiselApi object used to access node values.
@@ -313,12 +323,13 @@ class ElementAttr(object):
                              % (self.attr_name, message),
                              **kwds)
   
-  def __init__(self, parent, element, attr_name):
+  def __init__(self, parent, element, attr_name, dynamic):
     self.parent = parent
     self.element = element
     self.attr_name = attr_name
     self.attr_values = self.create_value_list(element.get_attr_list(attr_name))
-
+    self.dynamic = dynamic
+    
   def update(self):
     """Call to update dynamic values."""
     raise NotImplementedError()
@@ -328,21 +339,15 @@ class ElementAttr(object):
     internal use. Does type checking here; can raise parsing errors."""
     raise NotImplementedError()
 
-  def get_static(self):
-    """Returns the static value for this attribute. Raises an error if the
-    attribute contains a non-static value."""
-    raise NotImplementedError()
-  
-  def get_dynamic(self):
-    """Returns the dynamic value for this attribute. update() must have been
-    called before."""
+  def get(self):
+    """Returns the value for this attribute."""
     raise NotImplementedError()
 
 class ObjectAttr(ElementAttr):
   """Straight pass-through of the attribute value list, for uncommon attribute
   types where a general framework is not worth the trouble."""
-  def __init__(self, parent, element, attr_name):
-    super(ObjectAttr, self).__init__(parent, element, attr_name)
+  def __init__(self, parent, element, attr_name, dynamic):
+    super(ObjectAttr, self).__init__(parent, element, attr_name, dynamic)
 
   def update(self):
     pass
@@ -350,10 +355,7 @@ class ObjectAttr(ElementAttr):
   def create_value_list(self, attr_value_list):
     return attr_value_list
 
-  def get_static(self):
-    return self.attr_values
-  
-  def get_dynamic(self):
+  def get(self):
     return self.attr_values
 
 class SingleElementAttr(ElementAttr):
@@ -377,28 +379,25 @@ class SingleElementAttr(ElementAttr):
     raise NotImplementedError()
 
   def update(self):
+    self.dynamic_value = self.get_value(True)
+    
+  def get_value(self, dynamic):
     for value_elt in self.attr_values:
-      conv = self.value_elt_to_data(value_elt, static=False)
-      if conv is not None:
-        self.dynamic_value = conv
-        return
-    self.parse_error("No valid value in list",
-                     exc_cls=VisualizerParseValidationError)
-
-  def get_static(self):
-    for value_elt in self.attr_values:
-      conv = self.value_elt_to_data(value_elt, static=True)
+      conv = self.value_elt_to_data(value_elt, static=not dynamic)
       if conv is not None:
         return conv
     self.parse_error("No valid value in list",
                      exc_cls=VisualizerParseValidationError)
-  
-  def get_dynamic(self):
-    return self.dynamic_value
+
+  def get(self):
+    if self.dynamic:
+      return self.dynamic_value
+    else:
+      return self.get_value(False)
   
 class StringAttr(SingleElementAttr):
-  def __init__(self, parent, element, attr_name, valid_set=None):
-    super(StringAttr, self).__init__(parent, element, attr_name)
+  def __init__(self, parent, element, attr_name, dynamic, valid_set=None):
+    super(StringAttr, self).__init__(parent, element, attr_name, dynamic)
     self.valid_set = valid_set
   
   def create_value_elt(self, attr_value_elt):
@@ -462,9 +461,9 @@ class StringAttr(SingleElementAttr):
     return False
   
 class IntAttr(SingleElementAttr):
-  def __init__(self, parent, element, attr_name, 
+  def __init__(self, parent, element, attr_name, dynamic,
                valid_min=None, valid_max=None):
-    super(IntAttr, self).__init__(parent, element, attr_name)
+    super(IntAttr, self).__init__(parent, element, attr_name, dynamic)
     self.valid_min = valid_min
     self.valid_max = valid_max
   
