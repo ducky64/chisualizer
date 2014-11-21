@@ -12,6 +12,7 @@ class AbstractVisualizer(Base.Base):
   methods and provides common functionality, like paths."""
   def __init__(self, elt, parent, path_component_override=None,
                node_override=None):
+    from chisualizer.display.Modifier import Modifier # TODO dehackify
     super(AbstractVisualizer, self).__init__(elt, parent)
     
     self.dynamic_attrs = {}
@@ -25,6 +26,13 @@ class AbstractVisualizer(Base.Base):
       self.node = node_override
     else:
       self.node = parent.node.get_child_reference(self.path_component)
+      
+    self.modifiers = []
+    modifiers = self.static_attr(Base.ObjectAttr, 'modifiers').get()
+    for modifier in modifiers:
+      if not isinstance(modifier, Base.ParsedElement):
+        elt.parse_error("Modifier %s not a object")
+      self.modifiers.append(modifier.instantiate(self, valid_subclass=Modifier))
     
   def dynamic_attr(self, datatype_cls, attr_name, **kwds):
     """Registers my attributes, so update() will look for and appropriately
@@ -34,20 +42,27 @@ class AbstractVisualizer(Base.Base):
     self.dynamic_attrs[attr_name] = attr_obj
     return attr_obj
     
-  def apply_modifiers(self, modifier_obj, modifiers_dict):
-    for modify_attr, modify_val in modifiers_dict:
+  def apply_attr_overloads(self, modifier_obj, modifiers_dict):
+    """Apply dynamic attribute overloads."""
+    for modify_attr, modify_val in modifiers_dict.iteritems():
       if modify_attr in self.static_attrs:
         modifier_obj.elt.parse_error("Target attr '%s' is static" % modify_attr)
       if modify_attr not in self.dynamic_attrs:
         modifier_obj.elt.parse_error("Target does not have attr '%s'" % modify_attr)
       self.dynamic_attrs[modify_attr].apply_overload(modify_val)
     
+  def apply_modifier(self, modifier):
+    modifier.elt.parse_error("%s can't apply modifier %s",
+                             self.__class__.__name__,
+                             modifier.__class__.__name__)
+    
   def update(self):
     """Called once per visualizer update (before the layout phase), refreshing
     my attrs dict based on new circuit values / modifiers / whatever.
     Classes with elements should also have their children update."""
-    # TODO: Handle modifiers
-    
+    for modifier in self.modifiers:
+      self.apply_modifier(modifier)
+      
     # Update attrs - common infrastructure
     for dynamic_attr in self.dynamic_attrs.itervalues():
       dynamic_attr.update()
@@ -96,18 +111,21 @@ class FramedVisualizer(AbstractVisualizer):
   def __init__(self, elt, parent, **kwargs):
     super(FramedVisualizer, self).__init__(elt, parent, **kwargs)
 
-    self.frame_style = self.static_attr(Base.StringAttr, 'frame_style', valid_set=['none', 'label', 'border']).get()
+    self.frame_style = self.static_attr(Base.StringAttr, 'frame_style', valid_set=['none', 'frame']).get()
     self.frame_margin = self.static_attr(Base.IntAttr, 'frame_margin', valid_min=1).get()
-    self.frame_color = self.dynamic_attr(Base.StringAttr, 'frame_color')
-    
-    self.border_size = self.static_attr(Base.IntAttr, 'border_size', valid_min=1).get()
 
+    
+    self.border_style = self.dynamic_attr(Base.StringAttr, 'border_style', valid_set=['none', 'border'])
+    self.border_size = self.static_attr(Base.IntAttr, 'border_size', valid_min=1).get()
+    self.border_color = self.dynamic_attr(Base.StringAttr, 'border_color')
+    
     self.label = self.static_attr(Base.StringAttr, 'label').get()
     if not self.label:
       self.label = None
     self.label_size = self.static_attr(Base.IntAttr,'label_size', valid_min=1).get()
     self.label_font = self.static_attr(Base.StringAttr,'label_font').get()
-    
+    self.label_color = self.dynamic_attr(Base.StringAttr, 'label_color')
+        
     self.collapsed = False
 
   def layout_cairo(self, cr):
@@ -117,7 +135,7 @@ class FramedVisualizer(AbstractVisualizer):
     else:
       self.element_width, self.element_height = self.layout_element_cairo(cr)
     
-    if self.frame_style == 'label' or self.frame_style == 'border':
+    if self.frame_style == 'frame':
       cr.select_font_face(self.label_font,
                           cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
       cr.set_font_size(self.label_size)
@@ -142,7 +160,7 @@ class FramedVisualizer(AbstractVisualizer):
     
     elements = []
     
-    if self.frame_style == 'label' or self.frame_style == 'border':
+    if self.frame_style == 'frame':
       element_rect = rect.shrink(self.frame_margin,
                                  self.top_height,
                                  self.frame_margin,
@@ -150,10 +168,10 @@ class FramedVisualizer(AbstractVisualizer):
       border_offset = self.frame_margin / 2
       top_offset = self.top_height / 2
       
-      cr.set_source_rgba(*self.get_theme().color(self.frame_color.get()))
       
       # draw the border only if indicated
-      if self.frame_style == 'border':
+      if self.border_style.get() == 'border':
+        cr.set_source_rgba(*self.get_theme().color(self.border_color.get()))
         cr.set_line_width(self.border_size)
         cr.move_to(rect.left() + self.frame_margin,      # top left, where label begins
                    element_rect.top() - top_offset)
@@ -170,6 +188,7 @@ class FramedVisualizer(AbstractVisualizer):
         cr.stroke()
         
       # draw the label always
+      cr.set_source_rgba(*self.get_theme().color(self.label_color.get()))
       cr.select_font_face(self.label_font,
                           cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
       cr.set_font_size(self.label_size)
@@ -217,7 +236,7 @@ class FramedVisualizer(AbstractVisualizer):
           
   def wx_popupmenu_populate(self, menu):
     super_populated = super(FramedVisualizer, self).wx_popupmenu_populate(menu)
-    if self.frame_style == 'border':
+    if self.frame_style == 'frame':
       if self.collapsed:
         item = wx.MenuItem(menu, wx.NewId(), "%s: Expand" % self.wx_prefix())
         menu.AppendItem(item)

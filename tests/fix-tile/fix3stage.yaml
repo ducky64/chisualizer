@@ -96,12 +96,27 @@ lib:
     - !TextBox {path: _adr, template: text_decimal}
     - !TextBox {path: _dat, template: text_hexadecimal}
 
+  modifier_mem_read:
+    !Template
+    modify_attrs:
+      border_style: border
+      border_color: green
+  modifier_mem_write:
+    !Template
+    modify_attrs:
+      border_style: border
+      border_color: red
+
   fix_largemem:
     !MultiLineGrid
     dir: col
     cells:
     - !MemoryArray
       path: .mem
+      modifiers:
+      - !ArrayIndexModifier {index_path: __up__.io_reads_0, template: modifier_mem_read}
+      - !ArrayIndexModifier {index_path: __up__.io_reads_1, template: modifier_mem_read}
+      - !ArrayIndexModifier {index_path: __up__.io_writes_0, template: modifier_mem_write}
       cols: 4
       rows: 8
       dir: row

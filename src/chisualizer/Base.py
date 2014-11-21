@@ -346,7 +346,9 @@ class ElementAttr(object):
     
   def get_value_list(self):
     if self.dynamic and self.overloads:
-      return copy.copy(self.overloads).extend(self.attr_values)
+      overloads_copy = self.create_value_list(copy.copy(self.overloads))
+      overloads_copy.extend(self.attr_values)
+      return overloads_copy
     else:
       return self.attr_values
 

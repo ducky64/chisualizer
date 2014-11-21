@@ -1,4 +1,5 @@
 import chisualizer.Base as Base
+from chisualizer.display.Modifier import ArrayIndexModifier
 from VisualizerBase import AbstractVisualizer, FramedVisualizer, Rectangle
 
 @Base.tag_register('MemoryArray')
@@ -19,6 +20,15 @@ class MemoryArray(FramedVisualizer):
     self.cells_min = -1
     self.cells_max = -1
     self.cells = []
+
+  def apply_modifier(self, modifier):
+    if isinstance(modifier, ArrayIndexModifier):
+      index = modifier.get_array_index()
+      if index > self.cells_min and index < self.cells_max:
+        index = index - self.cells_min
+        modifier.apply_to(self.cells[index])
+    else:
+      super(MemoryArray, self).apply_modifier(modifier) 
 
   def update(self):
     super(MemoryArray, self).update()
