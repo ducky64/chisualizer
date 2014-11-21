@@ -9,14 +9,14 @@ from chisualizer.visualizers.VisualizerBase import FramedVisualizer
 @Base.tag_register('TextBox')
 class TextBox(FramedVisualizer):
   """Visualizer for data represented as text."""
-  def __init__(self, elt, parent):
-    super(TextBox, self).__init__(elt, parent)
+  def __init__(self, elt, parent, **kwargs):
+    super(TextBox, self).__init__(elt, parent, **kwargs)
     
-    self.text_size = self.attr(Base.IntAttr, 'text_size', valid_min=1).get_static()
-    self.text_font = self.attr(Base.StringAttr, 'text_font').get_static()
+    self.text_size = self.static_attr(Base.IntAttr, 'text_size', valid_min=1).get()
+    self.text_font = self.static_attr(Base.StringAttr, 'text_font').get()
 
-    self.text = self.attr(Base.StringAttr, 'text', dynamic=True)
-    self.text_color = self.attr(Base.StringAttr, 'text_color', dynamic=True)
+    self.text = self.dynamic_attr(Base.StringAttr, 'text')
+    self.text_color = self.dynamic_attr(Base.StringAttr, 'text_color')
 
   def draw_element_cairo(self, cr, rect, depth):
     cr.set_source_rgba(*self.get_theme().default_color())
@@ -25,8 +25,8 @@ class TextBox(FramedVisualizer):
                         cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
     cr.set_font_size(self.text_size)
     
-    text = self.text.get_dynamic()
-    cr.set_source_rgba(*self.get_theme().color(self.text_color.get_dynamic()))
+    text = self.text.get()
+    cr.set_source_rgba(*self.get_theme().color(self.text_color.get()))
 
     cr.move_to(rect.left(), rect.center_vert() + self.text_max_height / 2)
     cr.show_text(text)
@@ -48,20 +48,19 @@ class TextBox(FramedVisualizer):
     return (self.text_max_width, self.text_max_height)
   
   def wx_defaultaction(self):
-    if self.node is not None:
+    if self.node.can_set_value():
       self.wx_popupmenu_set(None)
   
-  def wx_popupmenu_populate(self, menu):
-    has_node = self.node is not None  
-    if has_node:
+  def wx_popupmenu_populate(self, menu):  
+    if self.node.can_set_value():
       item = wx.MenuItem(menu, wx.NewId(), "%s: Set" % self.wx_prefix())
       menu.AppendItem(item)
       menu.Bind(wx.EVT_MENU, self.wx_popupmenu_set, item)
-    
-    return super(TextBox, self).wx_popupmenu_populate(menu) or has_node
+    return (super(TextBox, self).wx_popupmenu_populate(menu) 
+            or self.node.can_set_value())
     
   def wx_popupmenu_set(self, evt):
-    curr_value = self.text.get_dynamic()
+    curr_value = self.text.get()
       
     dlg = wx.TextEntryDialog(None, self.path, 'New Value', curr_value)
     while True:

@@ -8,6 +8,12 @@ class ChiselDummyApiNode:
   def get_depth(self):
     return 16
 
+  def has_value(self):
+    return True
+  
+  def can_set_value(self):
+    return False
+
   def get_value(self):
     return 0
 
@@ -17,7 +23,7 @@ class ChiselDummyApiNode:
   def get_subscript_reference(self, subscript):
     return ChiselDummyApiNode()
   
-  def get_child_reference(self, child_name):
+  def get_child_reference(self, child_path):
     return ChiselDummyApiNode()
 
 class ChiselDummyApi:
@@ -36,7 +42,7 @@ class ChiselDummyApi:
   def clock(self, cycles):
     return 1
   
-  def get_node_reference(self, node):
+  def get_root_node(self):
     return ChiselDummyApiNode()
   
   def snapshot_save(self, name):

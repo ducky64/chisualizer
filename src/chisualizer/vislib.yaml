@@ -1,31 +1,38 @@
 defaults:
   NumericalString:
     !Template
+    path: ""
     charmap: 0123456789abcdefghijklmnopqrstuvwxyz
     prefix: ""
+  DictString:
+    !Template
+    path: ""
   FramedBase:
     !Template
     path: ""
+    modifiers: []
+    frame_style: frame
     frame_margin: 6
-    frame_color: border
     border_size: 1
+    border_color: border
     label: ""
     label_size: 8
     label_font: Mono
+    label_color: border
   LineGrid:
     !Template
-    frame_style: border
+    border_style: border
     dir: row
   TextBox:
     !Template
-    frame_style: label
+    border_style: none
     text: ""
     text_color: "white"
     text_size: 14
     text_font: Mono
   MemoryArray:
     !Template
-    frame_style: border
+    border_style: border
     dir: row
     offset: 0
     offset_anchor: 50
