@@ -17,11 +17,11 @@ class AbstractVisualizer(Base.Base):
     self.dynamic_attrs = []
 
     self.path_component = self.static_attr(Base.StringAttr, 'path').get()    
-    if path_component_override:
+    if path_component_override is not None:
       self.path_component = path_component_override
     self.path = parent.path + self.path_component
     
-    if node_override:
+    if node_override is not None:
       self.node = node_override
     else:
       self.node = parent.node.get_child_reference(self.path_component)

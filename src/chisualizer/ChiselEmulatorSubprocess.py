@@ -43,8 +43,6 @@ class ChiselSubprocessEmulatorNode(ChiselApiNode):
     return path_base + path_component
   
   def get_node_by_path(self, path):
-    if not path:
-      return self
     if self.api.has_node(path):
       if path in self.api.mems: # TODO more generalized solution
         return ChiselSubprocessEmulatorMem(self.api, path)
@@ -54,6 +52,8 @@ class ChiselSubprocessEmulatorNode(ChiselApiNode):
       return ChiselSubprocessEmulatorPlaceholder(self.api, path)
 
   def get_child_reference(self, child_path):
+    if not child_path:
+      return self
     return self.get_node_by_path(self.join_path(self.path, child_path))
 
 class ChiselSubprocessEmulatorPlaceholder(ChiselSubprocessEmulatorNode):
@@ -149,11 +149,11 @@ class ChiselSubprocessEmulatorMemElement(ChiselSubprocessEmulatorNode):
 
   def get_value(self):
     return result_to_int(self.api.command('mem_peek',
-                                          self.path, self.element_num))
+                                          self.parent.path, self.element_num))
 
   def set_value(self, value):
     return (result_ok(self.api.command('mem_poke',
-                                       self.path, self.element_num,
+                                       self.parent.path, self.element_num,
                                        value))
         and result_ok(self.api.command('propagate')))
 
