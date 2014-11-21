@@ -38,6 +38,9 @@ defaults:
     offset_anchor: 50
     rows: 1
     cols: 1
+  MultiView: 
+    !Template
+    border_style: border
     
 lib:
   text_binary:
