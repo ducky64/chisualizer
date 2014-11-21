@@ -37,7 +37,7 @@ class MultiView(FramedVisualizer):
       view.update()
 
   def layout_element_cairo(self, cr):
-    return self.active_view
+    return self.active_view.layout_cairo(cr)
         
   def draw_element_cairo(self, cr, rect, depth):
     return self.active_view.draw_cairo(cr, rect, depth)
@@ -64,4 +64,3 @@ class MultiView(FramedVisualizer):
       self.active_view_index = view_index % len(self.view_names)
       self.active_view = self.views[self.view_names[self.active_view_index]]
       
-    

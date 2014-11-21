@@ -24,7 +24,7 @@ class MemoryArray(FramedVisualizer):
   def apply_modifier(self, modifier):
     if isinstance(modifier, ArrayIndexModifier):
       index = modifier.get_array_index()
-      if index > self.cells_min and index < self.cells_max:
+      if index >= self.cells_min and index <= self.cells_max:
         index = index - self.cells_min
         modifier.apply_to(self.cells[index])
     else:

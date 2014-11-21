@@ -114,9 +114,9 @@ lib:
     - !MemoryArray
       path: .mem
       modifiers:
-      - !ArrayIndexModifier {index_path: .__up__.io_reads_0, template: modifier_mem_read}
-      - !ArrayIndexModifier {index_path: .__up__.io_reads_1, template: modifier_mem_read}
-      - !ArrayIndexModifier {index_path: .__up__.io_writes_0, template: modifier_mem_write}
+      - !ArrayIndexModifier {index_path: .__up__.io_reads_0_adr, template: modifier_mem_read}
+      - !ArrayIndexModifier {index_path: .__up__.io_reads_1_adr, template: modifier_mem_read}
+      - !CondArrayIndexModifier {index_path: .__up__.io_writes_0_adr, cond_path: .__up__.io_writes_0_is, template: modifier_mem_write}
       cols: 4
       rows: 8
       dir: row
@@ -131,6 +131,13 @@ lib:
     cells:
     - !MemoryArray
       path: .mem
+      modifiers:
+      - !ArrayIndexModifier {index_path: .__up__.io_reads_0_adr, template: modifier_mem_read}
+      - !ArrayIndexModifier {index_path: .__up__.io_reads_1_adr, template: modifier_mem_read}
+      - !ArrayIndexModifier {index_path: .__up__.io_reads_2_adr, template: modifier_mem_read}
+      - !CondArrayIndexModifier {index_path: .__up__.io_reads_3_adr, cond_path: .__up__.io_reads_3_is, template: modifier_mem_read}
+      - !CondArrayIndexModifier {index_path: .__up__.io_writes_0_adr, cond_path: .__up__.io_writes_1_is, template: modifier_mem_write}
+      - !CondArrayIndexModifier {index_path: .__up__.io_writes_1_adr, cond_path: .__up__.io_writes_1_is, template: modifier_mem_write}
       cols: 4
       rows: 8
       dir: row

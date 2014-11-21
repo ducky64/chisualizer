@@ -39,6 +39,7 @@ class ChiselSubprocessEmulatorNode(ChiselApiNode):
     self.path = path
 
   def join_path(self, path_base, path_component):
+    # TODO: this can be made more general
     while path_component.startswith(".__up__"):
       path_component = path_component[7:]
       path_base = path_base[:path_base.rindex(".")]
