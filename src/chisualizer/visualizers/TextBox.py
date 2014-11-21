@@ -48,17 +48,16 @@ class TextBox(FramedVisualizer):
     return (self.text_max_width, self.text_max_height)
   
   def wx_defaultaction(self):
-    if self.node is not None:
+    if self.node.can_set_value():
       self.wx_popupmenu_set(None)
   
-  def wx_popupmenu_populate(self, menu):
-    has_node = self.node is not None  
-    if has_node:
+  def wx_popupmenu_populate(self, menu):  
+    if self.node.can_set_value():
       item = wx.MenuItem(menu, wx.NewId(), "%s: Set" % self.wx_prefix())
       menu.AppendItem(item)
       menu.Bind(wx.EVT_MENU, self.wx_popupmenu_set, item)
-    
-    return super(TextBox, self).wx_popupmenu_populate(menu) or has_node
+    return (super(TextBox, self).wx_popupmenu_populate(menu) 
+            or self.node.can_set_value())
     
   def wx_popupmenu_set(self, evt):
     curr_value = self.text.get_dynamic()

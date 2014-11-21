@@ -1,4 +1,4 @@
-class ChiselApiNode:
+class ChiselApiNode(object):
   """Node reference abstract base class. This provides the methods in the Chisel
   API (below) for a particular node, and possibly at a higher speed because
   of referencing."""
@@ -18,6 +18,14 @@ class ChiselApiNode:
     """
     raise NotImplementedError
 
+  def has_value(self):
+    """Returns True if this node has a value."""
+    raise NotImplementedError
+  
+  def can_set_value(self):
+    """Returns True if this node can set its value."""
+    raise NotImplementedError
+
   def get_value(self):
     """Returns the current value of a node in the circuit as a integer type.
     This can be used to access an memory array by subscripting the address
@@ -35,12 +43,18 @@ class ChiselApiNode:
     raise NotImplementedError
 
   def get_subscript_reference(self, subscript):
+    """Returns a ChiselApiNode of this node's child at some subscript. Used
+    mainly for accessing memory elements.
+    TODO: merge with get_child_reference?
+    """
     raise NotImplementedError
   
-  def get_child_reference(self, child_name):
+  def get_child_reference(self, child_path):
+    """Returns a ChiselApiNode of some subpath under this node.
+    """
     raise NotImplementedError
 
-class ChiselApi:
+class ChiselApi(object):
   """
   API definition to interface with running Chisel RTL.
   Subclass this for particular implementations to interface with, like the
@@ -65,10 +79,10 @@ class ChiselApi:
     """Clocks circuit for some cycles."""
     raise NotImplementedError
   
-  def get_node_reference(self, node):
-    """Returns a ChiselApiNode reference for the given node. The reference
-    object allows all the operations in the API, but possibly at a higher
-    speed (and more convenient format) due to referencing."""
+  def get_root_node(self):
+    """Returns a ChiselApiNode reference to the root node. Likely, that node
+    will be a dummy path holder.
+    """
     raise NotImplementedError
   
   def snapshot_save(self, name):

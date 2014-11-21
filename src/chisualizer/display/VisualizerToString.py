@@ -1,13 +1,21 @@
 import math
 from numbers import Number
 
+from chisualizer.visualizers.VisualizerBase import AbstractVisualizer
 import chisualizer.Base as Base
 
 class VisualizerToString(Base.Base):
   """Abstract base class for "functions" converting Chisel node values to
   strings. Provides supporting functionality, like getting the longest possible
   strings (for auto-sizing) and setting the node from text."""
-  def get_string(self, visualizer):
+  def __init__(self, element, parent):
+    assert isinstance(parent, AbstractVisualizer)
+    super(VisualizerToString, self).__init__(element, parent)
+    self.path_component = self.attr(Base.StringAttr, 'path').get_static()
+    self.visualizer = parent  # TODO: perhaps remove me if useless?
+    self.node = parent.get_node_ref().get_child_reference(self.path_component)
+  
+  def get_string(self):
     """Returns the string representation of the Chisel node value, given the
     parent visualizer. May access the visualizer's Chisel node and make Chisel
     API calls, but should not alter the circuit state.
@@ -16,7 +24,7 @@ class VisualizerToString(Base.Base):
     """
     return None
   
-  def get_longest_strings(self, visualizer):
+  def get_longest_strings(self):
     """Returns a list of text strings which contains the longest (by rendered
     size, for an arbitrary font and sizes) possible string if this display
     modifies the text field. This is used to size visualizers displaying text
@@ -29,7 +37,7 @@ class VisualizerToString(Base.Base):
     """
     return []
 
-  def set_from_string(self, visualizer, in_text):
+  def set_from_string(self, in_text):
     """Sets the node's value from the input text. The specific translation from
     input text to integer value is dependent on the display, with the general
     idea being that you should be able to type in what text is shown. The
@@ -39,18 +47,18 @@ class VisualizerToString(Base.Base):
     Returns True if set correctly, and False if the input was not able to be
     parsed (and to punt to the next level).
     """
-    if visualizer.get_node_ref() is None:
+    if not self.node.can_set_value():
       return False
     
     try:
       val = int(in_text, 0)
-      visualizer.get_node_ref().set_value(val)
+      self.node.set_value(val)
       return True
     except ValueError:
       return False
     
   def can_set_from_string(self, visualizer):
-    return visualizer.get_node_ref is not None
+    return self.node.can_set_value()
     
 @Base.tag_register('NumericalString')
 class NumericalString(VisualizerToString):
@@ -64,11 +72,11 @@ class NumericalString(VisualizerToString):
       element.parse_error("charmap must be longer than radix (%i), got %i" %
                           (self.radix, len(self.charmap)))    
   
-  def get_string(self, visualizer):
-    if visualizer.get_node_ref() is None:
+  def get_string(self):
+    if not self.node.has_value():
       return None
     
-    value = visualizer.get_node_ref().get_value()
+    value = self.node.get_value()
     value_string = ''
     while value > 0:
       value_string = self.charmap[value % self.radix] + value_string
@@ -78,11 +86,11 @@ class NumericalString(VisualizerToString):
     value_string = self.prefix + value_string
     return value_string
   
-  def get_longest_strings(self, visualizer):
-    if visualizer.get_node_ref() is None:
+  def get_longest_strings(self):
+    if not self.node.has_value():
       return [] 
       
-    width = visualizer.get_node_ref().get_width()
+    width = self.node.get_width()
     digits = int(math.ceil(math.log(2 ** width - 1, self.radix)))
     return [self.prefix + self.charmap[0]*digits]
 
@@ -123,28 +131,28 @@ class DictString(VisualizerToString):
         if mapping_val not in mapping_to_int_blacklist:
           self.mapping_to_int[mapping_val] = mapping_key
   
-  def get_string(self, visualizer):
-    if visualizer.get_node_ref() is None:
+  def get_string(self):
+    if not self.node.has_value():
       return None
     
-    value = visualizer.get_node_ref().get_value()
+    value = self.node.get_value()
     if value in self.mapping_to_string:
       return self.mapping_to_string[value]
     else:
       return self.default
   
-  def get_longest_strings(self, visualizer):
+  def get_longest_strings(self):
     longest_strings = list(self.mapping_to_int.iterkeys())
     if self.default is not None:
       longest_strings.append(self.default)
     return longest_strings
     
-  def set_from_string(self, visualizer, in_text):
-    if visualizer.get_node_ref() is None:
+  def set_from_string(self, in_text):
+    if not self.node.can_set_value():
       return False
 
     if in_text in self.mapping_to_int:
-      visualizer.get_node_ref().set_value(self.mapping_to_int[in_text])
+      self.node.set_value(self.mapping_to_int[in_text])
       return True
     else:
       return super(DictString, self).set_from_string(visualizer, in_text)

@@ -18,17 +18,13 @@ class AbstractVisualizer(Base.Base):
     
     self.path_component = self.attr(Base.StringAttr, 'path').get_static()
     self.path = parent.path + self.path_component
+    self.node = parent.node.get_child_reference(self.path_component)
     
-    self.node = None
-    if self.root.get_api().has_node(self.path):
-      self.node = self.root.get_api().get_node_reference(self.path)
-    
-  def attr(self, datatype_cls, attr_name, dynamic=False, **kwds):
+  def dynamic_attr(self, datatype_cls, attr_name, **kwds):
     """Registers my attributes, so update() will look for and appropriately
     type-convert attribute values."""
-    attr_obj = datatype_cls(self, self.elt, attr_name, **kwds)
-    if dynamic:
-      self.dynamic_attrs.append(attr_obj)
+    attr_obj = datatype_cls(self, self.elt, attr_name, dynamic=True, **kwds)
+    self.dynamic_attrs.append(attr_obj)
     return attr_obj
     
   def update(self):

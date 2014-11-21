@@ -217,6 +217,7 @@ class VisualizerRoot(object):
     self.path = ""
     
     self.api = api
+    self.node = self.api.get_root_node()
     self.theme = DarkTheme()
     self.registry = YAMLVisualizerRegistry()
     self.visualizer = None  # TODO: support multiple visualizers in different windows
@@ -260,6 +261,11 @@ class Base(object):
     self.parent = parent
     self.root = parent.root
     self.ref = element.get_ref()
+  
+  def static_attr(self, datatype_cls, attr_name, **kwds):
+    """Registers my attributes, so update() will look for and appropriately
+    type-convert attribute values."""
+    return datatype_cls(self, self.elt, attr_name, dynamic=False, **kwds)
   
   def get_chisel_api(self):
     """Returns the ChiselApi object used to access node values.
@@ -412,7 +418,7 @@ class StringAttr(SingleElementAttr):
     if isinstance(value_elt, basestring):
       conv = value_elt
     elif isinstance(value_elt, VisualizerToString):
-      conv = value_elt.get_string(self.parent)
+      conv = value_elt.get_string()
     else:
       assert False, "Unknown type: %s" % value_elt.__class__.__name__
     
@@ -430,7 +436,7 @@ class StringAttr(SingleElementAttr):
       if isinstance(value_elt, basestring):
         longest_strings.append(value_elt)
       elif isinstance(value_elt, VisualizerToString):
-        longest_strings.extend(value_elt.get_longest_strings(self.parent))
+        longest_strings.extend(value_elt.get_longest_strings())
       else:
         assert False, "Unknown type: %s" % value_elt.__class__.__name__
     return longest_strings
@@ -441,7 +447,7 @@ class StringAttr(SingleElementAttr):
     from chisualizer.display.VisualizerToString import VisualizerToString # TODO HACKY
     for value_elt in self.attr_values:
       if isinstance(value_elt, VisualizerToString):
-        if value_elt.can_set_from_string(self.parent):
+        if value_elt.can_set_from_string():
           return True
     return False
   
@@ -451,7 +457,7 @@ class StringAttr(SingleElementAttr):
     from chisualizer.display.VisualizerToString import VisualizerToString # TODO HACKY
     for value_elt in self.attr_values:
       if isinstance(value_elt, VisualizerToString):
-        if value_elt.set_from_string(self.parent, set_string):
+        if value_elt.set_from_string(set_string):
           return True
     return False
   

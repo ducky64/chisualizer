@@ -2,7 +2,7 @@ import logging
 import subprocess
 import string
 
-from chisualizer.ChiselApi import ChiselApi
+from chisualizer.ChiselApi import ChiselApiNode, ChiselApi
 
 def result_to_list(res):
   if not res:
@@ -29,16 +29,40 @@ def result_ok(res):
   else:
     return False
 
-class ChiselSubprocessEmulatorWire:
-  def __init__(self, api, node_path):
-    assert isinstance(api, ChiselEmulatorSubprocess)
-    assert api.has_node(node_path)
-    self.api = api
-    self.node_path = node_path
-    
+class ChiselSubprocessEmulatorNode(ChiselApiNode):
   def __str__(self):
     return "%s: %s" % (self.__class__.__name__, self.node_path)
-    
+  
+  def __init__(self, api, path):
+    assert isinstance(api, ChiselEmulatorSubprocess)
+    self.api = api
+    self.path = path
+
+  def join_path(self, path_base, path_component):
+    # TODO: add __up__ here
+    return path_base + path_component
+  
+  def get_node_by_path(self, path):
+    if self.api.has_node(path):
+      return ChiselSubprocessEmulatorWire(self.api, path)
+    else:
+      return ChiselSubprocessEmulatorPlaceholder(self.api, path)
+
+  def get_child_reference(self, child_path):
+    return self.get_node_by_path(self.join_path(self.path, child_path))
+
+class ChiselSubprocessEmulatorPlaceholder(ChiselSubprocessEmulatorNode):
+  def has_value(self):
+    return False
+  
+  def can_set_value(self):
+    return False
+
+class ChiselSubprocessEmulatorWire(ChiselSubprocessEmulatorNode):
+  def __init__(self, api, path):
+    super(ChiselSubprocessEmulatorWire, self).__init__(api, path)
+    assert api.has_node(path)
+        
   def get_type(self):
     raise NotImplementedError("Node types not yet implemented")
 
@@ -48,6 +72,12 @@ class ChiselSubprocessEmulatorWire:
   def get_depth(self):
     raise ValueError("Cannot get depth of wire")
 
+  def has_value(self):
+    return True
+  
+  def can_set_value(self):
+    return True
+
   def get_value(self):
     return result_to_int(self.api.command('wire_peek', self.node_path))
 
@@ -56,21 +86,12 @@ class ChiselSubprocessEmulatorWire:
         and result_ok(self.api.command('propagate')))
 
   def get_subscript_reference(self, subscript):
-    raise NotImplementedError("Wire subscripting not yet implemented")
-  
-  def get_child_reference(self, child_name):
-    raise ValueError("Cannot get child of wire")
+    raise NotImplementedError("Cannot subscript wire.")
 
-class ChiselSubprocessEmulatorMem:
-  def __init__(self, api, array_path):
-    assert isinstance(api, ChiselEmulatorSubprocess)
-    assert api.has_node(array_path)
-    self.api = api
-    self.array_path = array_path
-    self.depth = self.get_depth()
-    
-  def __str__(self):
-    return "%s: %s" % (self.__class__.__name__, self.array_path)
+class ChiselSubprocessEmulatorMem(ChiselSubprocessEmulatorNode):
+  def __init__(self, api, path):
+    super(ChiselSubprocessEmulatorMem, self).__init__(api, path)
+    self.depth = self.get_depth() # optimization to prevent spamming the API
 
   def get_type(self):
     raise NotImplementedError("Memory types not yet implemented")
@@ -81,6 +102,12 @@ class ChiselSubprocessEmulatorMem:
   def get_depth(self):
     return result_to_int(self.api.command('mem_depth', self.array_path))
   
+  def has_value(self):
+    return False
+  
+  def can_set_value(self):
+    return False
+  
   def get_value(self):
     raise ValueError("Cannot peek entire memory array")
     
@@ -90,21 +117,15 @@ class ChiselSubprocessEmulatorMem:
   def get_subscript_reference(self, subscript):
     assert subscript < self.depth
     return ChiselSubprocessEmulatorMemElement(self, subscript)
-  
-  def get_child_reference(self, child_name):
-    raise ValueError("Cannot get child of wire")
 
-class ChiselSubprocessEmulatorMemElement:
+class ChiselSubprocessEmulatorMemElement(ChiselSubprocessEmulatorNode):
   def __init__(self, parent, subscript):
     assert isinstance(parent, ChiselSubprocessEmulatorMem)
     assert isinstance(subscript, int)
-    self.api = parent.api
+    super(ChiselSubprocessEmulatorMemElement, self).__init__(parent.api,
+                                                             "%s[%i]" % (parent.path, subscript))
     self.parent = parent
-    self.array_path = parent.array_path
     self.element_num = subscript
-    
-  def __str__(self):
-    return "%s: %s" % (self.__class__.__name__, self.node_path)
     
   def get_type(self):
     raise NotImplementedError("Node types not yet implemented")
@@ -115,6 +136,12 @@ class ChiselSubprocessEmulatorMemElement:
   def get_depth(self):
     raise ValueError("Memory element has no depth")
 
+  def has_value(self):
+    return True
+  
+  def can_set_value(self):
+    return True
+
   def get_value(self):
     return result_to_int(self.api.command('mem_peek',
                                           self.array_path, self.element_num))
@@ -124,6 +151,10 @@ class ChiselSubprocessEmulatorMemElement:
                                        self.array_path, self.element_num,
                                        value))
         and result_ok(self.api.command('propagate')))
+  
+  def get_child_reference(self, child_path):
+    # TODO: perhaps make this work somehow?
+    raise NotImplementedError("Cannot get child of memory element.")
         
 class ChiselEmulatorSubprocess(ChiselApi):
   def __init__(self, emulator_path, reset=True):
@@ -174,13 +205,8 @@ class ChiselEmulatorSubprocess(ChiselApi):
   def clock(self, cycles):
     return result_to_int(self.command("clock", cycles))
   
-  def get_node_reference(self, node):
-    if node in self.wires:
-      return ChiselSubprocessEmulatorWire(self, node)
-    elif node in self.mems:
-      return ChiselSubprocessEmulatorMem(self, node)
-    else:
-      raise NotImplementedError("Unknown node '%s'" % node)
+  def get_root_node(self):
+    return ChiselSubprocessEmulatorPlaceholder(self, "")
 
   def snapshot_save(self, name):
     self.command("referenced_snapshot_save", name)
