@@ -552,7 +552,7 @@ class ParsedElement(object):
         attr_map[attr] = [val] 
     return attr_map
   
-  def instantiate(self, parent, valid_subclass=None):
+  def instantiate(self, parent, valid_subclass=None, **kwargs):
     assert valid_subclass is not None
     if self.tag not in tag_registry:
       self.parse_error("Unknown tag '%s'" % self.tag,
@@ -568,7 +568,7 @@ class ParsedElement(object):
                   (rtn_cls.__name__, self.tag, self.ref))
     
     accessor = ElementAccessor(self)
-    rtn = rtn_cls(accessor, parent)
+    rtn = rtn_cls(accessor, parent, **kwargs)
     if accessor.attrs_not_accessed():
       self.parse_error("Unused attributes: %s" % accessor.attrs_not_accessed())
     

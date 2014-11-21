@@ -10,14 +10,21 @@ import wx
 class AbstractVisualizer(Base.Base):
   """Abstract base class for Chisel visualizer objects. Defines interface 
   methods and provides common functionality, like paths."""
-  def __init__(self, elt, parent):
+  def __init__(self, elt, parent, path_component_override=None,
+               node_override=None):
     super(AbstractVisualizer, self).__init__(elt, parent)
     
     self.dynamic_attrs = []
-    
-    self.path_component = self.static_attr(Base.StringAttr, 'path').get()
+
+    self.path_component = self.static_attr(Base.StringAttr, 'path').get()    
+    if path_component_override:
+      self.path_component = path_component_override
     self.path = parent.path + self.path_component
-    self.node = parent.node.get_child_reference(self.path_component)
+    
+    if node_override:
+      self.node = node_override
+    else:
+      self.node = parent.node.get_child_reference(self.path_component)
     
   def dynamic_attr(self, datatype_cls, attr_name, **kwds):
     """Registers my attributes, so update() will look for and appropriately
@@ -76,8 +83,8 @@ class AbstractVisualizer(Base.Base):
 @Base.tag_register("FramedBase")
 class FramedVisualizer(AbstractVisualizer):
   """Base class for visualizers providing visual framing (borders)."""
-  def __init__(self, elt, parent):
-    super(FramedVisualizer, self).__init__(elt, parent)
+  def __init__(self, elt, parent, **kwargs):
+    super(FramedVisualizer, self).__init__(elt, parent, **kwargs)
 
     self.frame_style = self.static_attr(Base.StringAttr, 'frame_style', valid_set=['none', 'label', 'border']).get()
     self.frame_margin = self.static_attr(Base.IntAttr, 'frame_margin', valid_min=1).get()

@@ -43,6 +43,8 @@ class ChiselSubprocessEmulatorNode(ChiselApiNode):
     return path_base + path_component
   
   def get_node_by_path(self, path):
+    if not path:
+      return self
     if self.api.has_node(path):
       if path in self.api.mems: # TODO more generalized solution
         return ChiselSubprocessEmulatorMem(self.api, path)
@@ -154,11 +156,7 @@ class ChiselSubprocessEmulatorMemElement(ChiselSubprocessEmulatorNode):
                                        self.path, self.element_num,
                                        value))
         and result_ok(self.api.command('propagate')))
-  
-  def get_child_reference(self, child_path):
-    # TODO: perhaps make this work somehow?
-    raise NotImplementedError("Cannot get child of memory element.")
-        
+
 class ChiselEmulatorSubprocess(ChiselApi):
   def __init__(self, emulator_path, reset=True):
     """Starts the emulator subprocess."""

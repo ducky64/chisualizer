@@ -9,8 +9,8 @@ from chisualizer.visualizers.VisualizerBase import FramedVisualizer
 @Base.tag_register('TextBox')
 class TextBox(FramedVisualizer):
   """Visualizer for data represented as text."""
-  def __init__(self, elt, parent):
-    super(TextBox, self).__init__(elt, parent)
+  def __init__(self, elt, parent, **kwargs):
+    super(TextBox, self).__init__(elt, parent, **kwargs)
     
     self.text_size = self.static_attr(Base.IntAttr, 'text_size', valid_min=1).get()
     self.text_font = self.static_attr(Base.StringAttr, 'text_font').get()

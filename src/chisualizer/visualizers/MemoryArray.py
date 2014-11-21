@@ -4,8 +4,8 @@ from VisualizerBase import AbstractVisualizer, FramedVisualizer, Rectangle
 @Base.tag_register('MemoryArray')
 class MemoryArray(FramedVisualizer):
   """A grid of cells, each pointing to a memory element."""
-  def __init__(self, element, parent):
-    super(MemoryArray, self).__init__(element, parent)
+  def __init__(self, element, parent, **kwargs):
+    super(MemoryArray, self).__init__(element, parent, **kwargs)
     self.dir = self.static_attr(Base.StringAttr, 'dir', valid_set=['row', 'col']).get()
     self.offset = self.dynamic_attr(Base.IntAttr, 'offset')
     self.offset_anchor = self.static_attr(Base.IntAttr, 'offset_anchor', valid_min=0, valid_max=100).get()
@@ -28,12 +28,10 @@ class MemoryArray(FramedVisualizer):
 
   def update_cells(self):
     def instantiate_cell(addr):
-      inst = self.cell_elt.instantiate(self, valid_subclass=AbstractVisualizer)
-      # TODO: dehackify all this and replace with generalized infrastructure 
-      inst.set_node_ref(self.node.get_subscript_reference(addr))
-      inst.path_component += "[%i]" % addr
-      inst.path += "[%i]" % addr
-      if inst.label is None: inst.label = str(addr)
+      inst_node_ref = self.node.get_subscript_reference(addr)
+      inst = self.cell_elt.instantiate(self, valid_subclass=AbstractVisualizer,
+                                       path_component_override="[%i]" % addr,
+                                       node_override=inst_node_ref)
       return inst
     
     def instantiate_cells(inst_min, inst_max):
