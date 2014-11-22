@@ -2,7 +2,7 @@ import logging
 import subprocess
 import string
 
-from chisualizer.ChiselApi import ChiselApiNode, ChiselApi
+from chisualizer.circuit.ChiselApi import ChiselApiNode, ChiselApi
 
 def result_to_list(res):
   if not res:
