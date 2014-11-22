@@ -27,7 +27,7 @@ defaults:
     !Template
     border_style: none
     text: ""
-    text_color: "white"
+    text_color: "foreground"
     text_size: 14
     text_font: Mono
   MemoryArray:

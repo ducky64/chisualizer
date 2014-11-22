@@ -52,7 +52,7 @@ class MemoryArray(FramedVisualizer):
       assert len(ary) == inst_max - inst_min + 1
       return ary
     
-    render_min = self.offset.get() - int(self.offset_anchor/100.0 * self.cells_count)
+    render_min = int(self.offset.get() - int(self.offset_anchor/100.0 * self.cells_count))
     render_max = render_min + self.cells_count - 1
     
     if render_min < 0:
@@ -63,11 +63,12 @@ class MemoryArray(FramedVisualizer):
       render_max = self.node.get_depth()-1
     if render_min < 0:
       render_min = 0
-      
+
     if render_max == self.cells_max and render_min == self.cells_min:
       # If rendering range exactly the same, nothing needs to be done.
       return
-    elif render_max >= self.cells_min or render_min <= self.cells_max:
+    elif ((self.cells_min <= render_max and render_max <= self.cells_max)  
+          or (self.cells_min <= render_min and render_min <= self.cells_max)):
       # If rendering range overlaps, fix the edges
       pre = []
       post = []
@@ -95,6 +96,7 @@ class MemoryArray(FramedVisualizer):
     self.cells_min = render_min
     self.cells_max = render_max
     
+    print len(self.cells)
     assert len(self.cells) <= self.cells_count
     assert len(self.cells) == self.cells_max - self.cells_min + 1
     

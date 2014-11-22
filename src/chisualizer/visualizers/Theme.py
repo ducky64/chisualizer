@@ -16,7 +16,7 @@ class Theme(object):
   """
   def color(self, desc):
     theme_dict = {'default': self.default_color(),
-                  'text': self.default_color(),
+                  'foreground': self.default_color(),
                   'border': self.default_color(),
                   
                   'black': (0, 0, 0, 1),

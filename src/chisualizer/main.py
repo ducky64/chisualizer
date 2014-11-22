@@ -265,7 +265,7 @@ class CairoPanel(wx.Panel):
     
     cr.translate(1, 1)
     cr.save()
-    self.draw_visualizer(cr)
+    self.desc.draw_cairo(cr, layout)
     
     surface.finish()
     f.close()

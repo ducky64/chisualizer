@@ -113,10 +113,12 @@ lib:
     cells:
     - !MemoryArray
       path: .mem
+      offset: 512
       modifiers:
       - !ArrayIndexModifier {index_path: .__up__.io_reads_0_adr, template: modifier_mem_read}
       - !ArrayIndexModifier {index_path: .__up__.io_reads_1_adr, template: modifier_mem_read}
       - !CondArrayIndexModifier {index_path: .__up__.io_writes_0_adr, cond_path: .__up__.io_writes_0_is, template: modifier_mem_write}
+      - !CondArrayIndexModifier {index_path: .__up__.io_writes_1_adr, cond_path: .__up__.io_writes_1_is, template: modifier_mem_write}
       cols: 4
       rows: 8
       dir: row
@@ -124,6 +126,7 @@ lib:
     - - - !Ref {ref: fix_muxedmemoryport_noenable, path: .io_reads_0}
         - !Ref {ref: fix_muxedmemoryport_noenable, path: .io_reads_1}
       - - !Ref {ref: fix_muxedmemoryport_enable, path: .io_writes_0}
+        - !Ref {ref: fix_muxedmemoryport_enable, path: .io_writes_1}
 
   fix_regfile:
     !MultiLineGrid
@@ -136,7 +139,7 @@ lib:
       - !ArrayIndexModifier {index_path: .__up__.io_reads_1_adr, template: modifier_mem_read}
       - !ArrayIndexModifier {index_path: .__up__.io_reads_2_adr, template: modifier_mem_read}
       - !CondArrayIndexModifier {index_path: .__up__.io_reads_3_adr, cond_path: .__up__.io_reads_3_is, template: modifier_mem_read}
-      - !CondArrayIndexModifier {index_path: .__up__.io_writes_0_adr, cond_path: .__up__.io_writes_1_is, template: modifier_mem_write}
+      - !CondArrayIndexModifier {index_path: .__up__.io_writes_0_adr, cond_path: .__up__.io_writes_0_is, template: modifier_mem_write}
       - !CondArrayIndexModifier {index_path: .__up__.io_writes_1_adr, cond_path: .__up__.io_writes_1_is, template: modifier_mem_write}
       cols: 4
       rows: 8
@@ -257,12 +260,22 @@ lib:
     - - !Ref {ref: fix_regfile, path: .regfile}
       - !Ref {ref: fix_pipeline}
 
+  fix_full:
+    !MultiLineGrid
+    frame_style: none
+    dir: row
+    cells: 
+    - - !Ref {ref: fix_router}
+      - !Ref {ref: fix_htif}
+    - !Ref {ref: fix_uarch}
+
   fix_tile:
     !MultiView
     views:
       router: !Ref {ref: fix_router}
       htif: !Ref {ref: fix_htif}
       uarch: !Ref {ref: fix_uarch}
+      full: !Ref {ref: fix_full}
 
 display:
 - !Ref {ref: fix_tile, path: Fix3Stage}
