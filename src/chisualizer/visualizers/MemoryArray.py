@@ -96,7 +96,6 @@ class MemoryArray(FramedVisualizer):
     self.cells_min = render_min
     self.cells_max = render_max
     
-    print len(self.cells)
     assert len(self.cells) <= self.cells_count
     assert len(self.cells) == self.cells_max - self.cells_min + 1
     
