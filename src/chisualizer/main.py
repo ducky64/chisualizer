@@ -15,7 +15,7 @@ import chisualizer.Base as Base
 from chisualizer.circuit.ChiselDummyApi import ChiselDummyApi
 from chisualizer.circuit.ChiselEmulatorSubprocess import ChiselEmulatorSubprocess
 
-from chisualizer.ui.ChisualizerFrame import ChisualizerFrame
+from chisualizer.ui.Manager import ChisualizerManager
 
 def run():
   if not haveWxCairo:
@@ -57,9 +57,7 @@ def run():
   
   desc = Base.VisualizerRoot(args.visualizer_desc, api)
     
-  app = wx.App(False)
-  ChisualizerFrame(None, 'Chisualizer', api, desc)
-  app.MainLoop()
+  ChisualizerManager(desc, api).run()
 
 if __name__ == "__main__":
   run()
