@@ -223,7 +223,7 @@ class ChisualizerPanel(wx.Panel):
     timer_update = time.time() - timer_update
     
     timer_lay = time.time()
-    layout = self.desc.layout_cairo(cr).centerd_origin()
+    layout = self.desc.layout_cairo(cr).centered_origin()
     timer_lay = time.time() - timer_lay
     
     timer_draw = time.time()

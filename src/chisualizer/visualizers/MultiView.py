@@ -2,15 +2,15 @@ from collections import OrderedDict
 
 import wx
 
-import chisualizer.Base as Base
+from chisualizer.descriptor import Common, DataTypes
 from VisualizerBase import AbstractVisualizer, FramedVisualizer
 
-@Base.tag_register('MultiView')
+@Common.tag_register('MultiView')
 class MultiView(FramedVisualizer):
   """Allows multiple, selectable visualizers."""
   def __init__(self, element, parent, **kwargs):
     super(MultiView, self).__init__(element, parent, **kwargs)
-    views_attr = self.static_attr(Base.ObjectAttr, 'views')
+    views_attr = self.static_attr(DataTypes.ObjectAttr, 'views')
     
     self.view_names = []
     self.views = {}
@@ -18,7 +18,7 @@ class MultiView(FramedVisualizer):
     
     assert len(views_attr.get()) == 1, "Multiple dicts not supported yet"
     for view_name, view in views_attr.get()[0].iteritems():
-      if not isinstance(view, Base.ParsedElement):
+      if not isinstance(view, DataTypes.ParsedElement):
         views_attr.parse_error("Expected value to be visualizer, got %s"
                                % view)
       if view_name in self.views:

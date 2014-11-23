@@ -2,6 +2,7 @@ import math
 
 from chisualizer.visualizers.VisualizerBase import AbstractVisualizer
 import chisualizer.Base as Base
+from chisualizer.descriptor import *
 
 class VisualizerToString(Base.Base):
   """Abstract base class for "functions" converting Chisel node values to
@@ -10,7 +11,7 @@ class VisualizerToString(Base.Base):
   def __init__(self, element, parent):
     assert isinstance(parent, AbstractVisualizer)
     super(VisualizerToString, self).__init__(element, parent)
-    self.path_component = self.static_attr(Base.StringAttr, 'path').get()
+    self.path_component = self.static_attr(DataTypes.StringAttr, 'path').get()
     self.visualizer = parent  # TODO: perhaps remove me if useless?
     self.node = parent.get_node_ref().get_child_reference(self.path_component)
   
@@ -59,14 +60,14 @@ class VisualizerToString(Base.Base):
   def can_set_from_string(self, visualizer):
     return self.node.can_set_value()
     
-@Base.tag_register('NumericalString')
+@Common.tag_register('NumericalString')
 class NumericalString(VisualizerToString):
   """Generalized numerical text representation of a number.""" 
   def __init__(self, element, parent):
     super(NumericalString, self).__init__(element, parent)
-    self.prefix = self.static_attr(Base.StringAttr, 'prefix').get() 
-    self.radix = self.static_attr(Base.IntAttr, 'radix', valid_min=1).get()
-    self.charmap = self.static_attr(Base.StringAttr, 'charmap').get()
+    self.prefix = self.static_attr(DataTypes.StringAttr, 'prefix').get() 
+    self.radix = self.static_attr(DataTypes.IntAttr, 'radix', valid_min=1).get()
+    self.charmap = self.static_attr(DataTypes.StringAttr, 'charmap').get()
     if len(self.charmap) < self.radix:
       element.parse_error("charmap must be longer than radix (%i), got %i" %
                           (self.radix, len(self.charmap)))    
@@ -93,12 +94,12 @@ class NumericalString(VisualizerToString):
     digits = int(math.ceil(math.log(2 ** width - 1, self.radix)))
     return [self.prefix + self.charmap[0]*digits]
 
-@Base.tag_register('DictString')
+@Common.tag_register('DictString')
 class DictString(VisualizerToString):
   """Map specific numbers to specific strings."""
   def __init__(self, element, parent):
     super(DictString, self).__init__(element, parent)
-    mapping_attr = self.static_attr(Base.ObjectAttr, 'mapping')
+    mapping_attr = self.static_attr(DataTypes.ObjectAttr, 'mapping')
     # TODO: handle multiple levels of mapping dicts
     assert len(mapping_attr.get()) == 1, "TODO Generalize this"
     mapping = mapping_attr.get()[0]
@@ -156,7 +157,7 @@ class DictString(VisualizerToString):
     else:
       return super(DictString, self).set_from_string(in_text)
     
-@Base.desugar_tag('DictTemplate')
+@Common.desugar_tag('DictTemplate')
 def desugar_dict_template(parsed_element, registry):
   """Template for mapping multiple string attributes to a single numerical key.
   """
@@ -176,10 +177,10 @@ def desugar_dict_template(parsed_element, registry):
       intermediate_attr_map[attr_name][mapping_key] = attr_value
 
   for attr_name, attr_value_map in intermediate_attr_map.iteritems():
-    new_dict_string = Base.ParsedElement('DictString', 
-                                         {'mapping': attr_value_map},
-                                         parsed_element.filename,
-                                         parsed_element.lineno)
+    new_dict_string = ParsedElement.ParsedElement('DictString', 
+                                                  {'mapping': attr_value_map},
+                                                  parsed_element.filename,
+                                                  parsed_element.lineno)
     registry.apply_default_template(new_dict_string)
     if attr_name not in parsed_element.attr_map:
       parsed_element.attr_map[attr_name] = []

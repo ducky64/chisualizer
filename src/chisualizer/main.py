@@ -1,21 +1,22 @@
 import argparse
 import logging
+import os
 import sys
-import time
 
-try:
+try:  
   import wx
   import wx.lib.wxcairo
   import cairo
   haveWxCairo = True
-except ImportError:
+except:
   haveWxCairo = False
 
-import chisualizer.Base as Base
 from chisualizer.circuit.ChiselDummyApi import ChiselDummyApi
 from chisualizer.circuit.ChiselEmulatorSubprocess import ChiselEmulatorSubprocess
 
-from chisualizer.ui.Manager import ChisualizerManager
+from chisualizer.descriptor.YamlDescriptor import YamlDescriptor
+
+from chisualizer.ui.Manager import ChisualizerManager, VisualizerRoot
 
 def run():
   if not haveWxCairo:
@@ -55,9 +56,11 @@ def run():
       emulator_cmd_list.extend(args.emulator_args)
     api = ChiselEmulatorSubprocess(emulator_cmd_list, reset=args.emulator_reset)
   
-  desc = Base.VisualizerRoot(args.visualizer_desc, api)
-    
-  ChisualizerManager(desc, api).run()
+  vis_descriptor = YamlDescriptor()
+  vis_descriptor.read_descriptor(os.path.dirname(__file__) + "/vislib.yaml")
+  vis_descriptor.read_descriptor(args.visualizer_desc)
+
+  ChisualizerManager(vis_descriptor, api).run()
 
 if __name__ == "__main__":
   run()

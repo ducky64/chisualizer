@@ -29,7 +29,7 @@ class Rectangle:
   def width(self):
     return abs(self.right() - self.left())
 
-  def centerd_origin(self):
+  def centered_origin(self):
     return Rectangle((self.left() - self.center_horiz(),
                       self.top() - self.center_vert()),
                      (self.right() - self.center_horiz(),

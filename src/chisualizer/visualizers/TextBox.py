@@ -3,20 +3,20 @@ import logging
 import cairo 
 import wx
 
-import chisualizer.Base as Base
+from chisualizer.descriptor import Common, DataTypes
 from chisualizer.visualizers.VisualizerBase import FramedVisualizer
 
-@Base.tag_register('TextBox')
+@Common.tag_register('TextBox')
 class TextBox(FramedVisualizer):
   """Visualizer for data represented as text."""
   def __init__(self, elt, parent, **kwargs):
     super(TextBox, self).__init__(elt, parent, **kwargs)
     
-    self.text_size = self.static_attr(Base.IntAttr, 'text_size', valid_min=1).get()
-    self.text_font = self.static_attr(Base.StringAttr, 'text_font').get()
+    self.text_size = self.static_attr(DataTypes.IntAttr, 'text_size', valid_min=1).get()
+    self.text_font = self.static_attr(DataTypes.StringAttr, 'text_font').get()
 
-    self.text = self.dynamic_attr(Base.StringAttr, 'text')
-    self.text_color = self.dynamic_attr(Base.StringAttr, 'text_color')
+    self.text = self.dynamic_attr(DataTypes.StringAttr, 'text')
+    self.text_color = self.dynamic_attr(DataTypes.StringAttr, 'text_color')
 
   def draw_element_cairo(self, cr, rect, depth):
     cr.set_source_rgba(*self.get_theme().default_color())
