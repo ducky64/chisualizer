@@ -39,6 +39,11 @@ class Circuit(object):
     """Clocks circuit for some cycles."""
     raise NotImplementedError
 
+  def current_to_value_dict(self):
+    """Returns the current circuit state as a value dict, which can be loaded
+    into a ValueDictView."""
+    raise NotImplementedError
+
   def snapshot_save(self, name):
     """Saves a snapshot of the current state under name"""
     raise NotImplementedError
