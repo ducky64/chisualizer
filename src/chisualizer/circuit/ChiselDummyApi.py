@@ -1,4 +1,6 @@
-class ChiselDummyApiNode:
+from chisualizer.circuit.ChiselApi import ChiselApiNode, ChiselApi
+
+class ChiselDummyApiNode(ChiselApiNode):
   def get_type(self):
     raise NotImplementedError
 
@@ -26,7 +28,7 @@ class ChiselDummyApiNode:
   def get_child_reference(self, child_path):
     return ChiselDummyApiNode()
 
-class ChiselDummyApi:
+class ChiselDummyApi(ChiselApi):
   """
   Dummy API, when you want to run without the emulator.
   """

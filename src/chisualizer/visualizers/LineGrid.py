@@ -1,16 +1,16 @@
-import chisualizer.Base as Base
+from chisualizer.descriptor import Common, DataTypes, ParsedElement
 from VisualizerBase import AbstractVisualizer, FramedVisualizer, Rectangle
 
-@Base.tag_register('LineGrid')
+@Common.tag_register('LineGrid')
 class LineGrid(FramedVisualizer):
   """A single line of elements, either in a row or column."""
   def __init__(self, element, parent, **kwargs):
     super(LineGrid, self).__init__(element, parent, **kwargs)
-    self.dir = self.static_attr(Base.StringAttr, 'dir', valid_set=['row', 'col']).get()
-    cell_attr = self.static_attr(Base.ObjectAttr, 'cells')
+    self.dir = self.static_attr(DataTypes.StringAttr, 'dir', valid_set=['row', 'col']).get()
+    cell_attr = self.static_attr(DataTypes.ObjectAttr, 'cells')
     self.cells = []
     for cell in cell_attr.get():
-      if not isinstance(cell, Base.ParsedElement):
+      if not isinstance(cell, DataTypes.ParsedElement):
         cell_attr.parse_error("Expected list of Visualizers, got %s"
                               % cell)
       self.cells.append(cell.instantiate(self, valid_subclass=AbstractVisualizer))
@@ -70,7 +70,7 @@ class LineGrid(FramedVisualizer):
         
     return elements
 
-@Base.desugar_tag("MultiLineGrid")
+@Common.desugar_tag("MultiLineGrid")
 def desugar_multilinegrid(parsed_element, registry):
   parsed_element.tag = "LineGrid"
   if parsed_element.get_attr_list('dir')[0] == 'row':
@@ -84,9 +84,9 @@ def desugar_multilinegrid(parsed_element, registry):
   for idx, elt in enumerate(parsed_element.get_attr_list('cells')):
     if isinstance(elt, list):
       new_attr_map = {'cells': elt, 'dir': new_dir, 'frame_style': 'none'}
-      new_elt = Base.ParsedElement('LineGrid', new_attr_map,
-                                   parsed_element.filename,
-                                   parsed_element.lineno)
+      new_elt = ParsedElement.ParsedElement('LineGrid', new_attr_map,
+                                            parsed_element.filename,
+                                            parsed_element.lineno)
       registry.apply_default_template(new_elt)
       desugar_multilinegrid(new_elt, registry)
       replacements.append((idx, new_elt))

@@ -60,6 +60,16 @@ class ChiselApi(object):
   Subclass this for particular implementations to interface with, like the
   emulator over stdin/stdout.
   """
+  def __init__(self):
+    self.modified_callback_fns = []
+  
+  def register_modified_callback(self, callback_fn):
+    self.modified_callback_fns.append(callback_fn)
+  
+  def do_modified_callback(self):
+    for callback_fn in self.modified_callback_fns:
+      callback_fn()
+  
   def has_node(self, node):
     """Returns whether node is API-accessible in the host."""
     raise NotImplementedError

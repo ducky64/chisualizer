@@ -1,12 +1,13 @@
 import string
 
 import chisualizer.Base as Base
+from chisualizer.descriptor import Common, DataTypes, ParsedElement
 from chisualizer.util import Rectangle
 
 import cairo
 import wx
 
-@Base.tag_register("Template")
+@Common.tag_register("Template")
 class AbstractVisualizer(Base.Base):
   """Abstract base class for Chisel visualizer objects. Defines interface 
   methods and provides common functionality, like paths."""
@@ -17,7 +18,7 @@ class AbstractVisualizer(Base.Base):
     
     self.dynamic_attrs = {}
 
-    self.path_component = self.static_attr(Base.StringAttr, 'path').get()    
+    self.path_component = self.static_attr(DataTypes.StringAttr, 'path').get()    
     if path_component_override is not None:
       self.path_component = path_component_override
     self.path = parent.path + self.path_component
@@ -28,9 +29,9 @@ class AbstractVisualizer(Base.Base):
       self.node = parent.node.get_child_reference(self.path_component)
       
     self.modifiers = []
-    modifiers = self.static_attr(Base.ObjectAttr, 'modifiers').get()
+    modifiers = self.static_attr(DataTypes.ObjectAttr, 'modifiers').get()
     for modifier in modifiers:
-      if not isinstance(modifier, Base.ParsedElement):
+      if not isinstance(modifier, ParsedElement.ParsedElement):
         elt.parse_error("Modifier %s not a object")
       self.modifiers.append(modifier.instantiate(self, valid_subclass=Modifier))
     
@@ -105,26 +106,26 @@ class AbstractVisualizer(Base.Base):
     Return True if items were added, False otherwise."""
     return False
 
-@Base.tag_register("FramedBase")
+@Common.tag_register("FramedBase")
 class FramedVisualizer(AbstractVisualizer):
   """Base class for visualizers providing visual framing (borders)."""
   def __init__(self, elt, parent, **kwargs):
     super(FramedVisualizer, self).__init__(elt, parent, **kwargs)
 
-    self.frame_style = self.static_attr(Base.StringAttr, 'frame_style', valid_set=['none', 'frame']).get()
-    self.frame_margin = self.static_attr(Base.IntAttr, 'frame_margin', valid_min=1).get()
+    self.frame_style = self.static_attr(DataTypes.StringAttr, 'frame_style', valid_set=['none', 'frame']).get()
+    self.frame_margin = self.static_attr(DataTypes.IntAttr, 'frame_margin', valid_min=1).get()
 
     
-    self.border_style = self.dynamic_attr(Base.StringAttr, 'border_style', valid_set=['none', 'border'])
-    self.border_size = self.static_attr(Base.IntAttr, 'border_size', valid_min=1).get()
-    self.border_color = self.dynamic_attr(Base.StringAttr, 'border_color')
+    self.border_style = self.dynamic_attr(DataTypes.StringAttr, 'border_style', valid_set=['none', 'border'])
+    self.border_size = self.static_attr(DataTypes.IntAttr, 'border_size', valid_min=1).get()
+    self.border_color = self.dynamic_attr(DataTypes.StringAttr, 'border_color')
     
-    self.label = self.static_attr(Base.StringAttr, 'label').get()
+    self.label = self.static_attr(DataTypes.StringAttr, 'label').get()
     if not self.label:
       self.label = None
-    self.label_size = self.static_attr(Base.IntAttr,'label_size', valid_min=1).get()
-    self.label_font = self.static_attr(Base.StringAttr,'label_font').get()
-    self.label_color = self.dynamic_attr(Base.StringAttr, 'label_color')
+    self.label_size = self.static_attr(DataTypes.IntAttr,'label_size', valid_min=1).get()
+    self.label_font = self.static_attr(DataTypes.StringAttr,'label_font').get()
+    self.label_color = self.dynamic_attr(DataTypes.StringAttr, 'label_color')
         
     self.collapsed = False
 

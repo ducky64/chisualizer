@@ -278,5 +278,7 @@ lib:
       full: !Ref {ref: fix_full}
 
 display:
-- !Ref {ref: fix_tile, path: Fix3Stage}
-
+  multi3stage:
+    !Ref {ref: fix_tile, path: Fix3Stage}
+  full3stage:
+    !Ref {ref: fix_full, path: Fix3Stage}

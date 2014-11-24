@@ -1,20 +1,20 @@
-import chisualizer.Base as Base
+from chisualizer.descriptor import Common, DataTypes
 from chisualizer.display.Modifier import ArrayIndexModifier
 from VisualizerBase import AbstractVisualizer, FramedVisualizer, Rectangle
 
-@Base.tag_register('MemoryArray')
+@Common.tag_register('MemoryArray')
 class MemoryArray(FramedVisualizer):
   """A grid of cells, each pointing to a memory element."""
   def __init__(self, element, parent, **kwargs):
     super(MemoryArray, self).__init__(element, parent, **kwargs)
-    self.dir = self.static_attr(Base.StringAttr, 'dir', valid_set=['row', 'col']).get()
-    self.offset = self.dynamic_attr(Base.IntAttr, 'offset')
-    self.offset_anchor = self.static_attr(Base.IntAttr, 'offset_anchor', valid_min=0, valid_max=100).get()
-    self.rows = self.static_attr(Base.IntAttr, 'rows', valid_min=1).get()
-    self.cols = self.static_attr(Base.IntAttr, 'cols', valid_min=1).get()
+    self.dir = self.static_attr(DataTypes.StringAttr, 'dir', valid_set=['row', 'col']).get()
+    self.offset = self.dynamic_attr(DataTypes.IntAttr, 'offset')
+    self.offset_anchor = self.static_attr(DataTypes.IntAttr, 'offset_anchor', valid_min=0, valid_max=100).get()
+    self.rows = self.static_attr(DataTypes.IntAttr, 'rows', valid_min=1).get()
+    self.cols = self.static_attr(DataTypes.IntAttr, 'cols', valid_min=1).get()
     self.cells_count = self.rows * self.cols
     
-    cell_attr = self.static_attr(Base.ObjectAttr, 'cell')
+    cell_attr = self.static_attr(DataTypes.ObjectAttr, 'cell')
     self.cell_elt = cell_attr.get()[0]
     
     self.cells_min = -1
@@ -96,7 +96,6 @@ class MemoryArray(FramedVisualizer):
     self.cells_min = render_min
     self.cells_max = render_max
     
-    print len(self.cells)
     assert len(self.cells) <= self.cells_count
     assert len(self.cells) == self.cells_max - self.cells_min + 1
     
