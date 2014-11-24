@@ -33,8 +33,7 @@ class MultiView(FramedVisualizer):
 
   def update(self):
     super(MultiView, self).update()
-    for view in self.views.itervalues():
-      view.update()
+    self.active_view.update()
 
   def layout_element_cairo(self, cr):
     return self.active_view.layout_cairo(cr)
