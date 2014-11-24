@@ -2,7 +2,7 @@ import logging
 import subprocess
 import string
 
-from chisualizer.circuit.ChiselApi import ChiselApiNode, ChiselApi
+from chisualizer.circuit.Common import Circuit, CircuitNode, CircuitView
 
 def result_to_list(res):
   if not res:
@@ -29,7 +29,7 @@ def result_ok(res):
   else:
     return False
 
-class ChiselSubprocessEmulatorNode(ChiselApiNode):
+class ChiselNode(CircuitNode):
   def __str__(self):
     return "%s: %s" % (self.__class__.__name__, self.path)
   
@@ -37,38 +37,31 @@ class ChiselSubprocessEmulatorNode(ChiselApiNode):
     assert isinstance(api, ChiselEmulatorSubprocess)
     self.api = api
     self.path = path
-
-  def join_path(self, path_base, path_component):
-    # TODO: this can be made more general
-    while path_component.startswith(".__up__"):
-      path_component = path_component[7:]
-      path_base = path_base[:path_base.rindex(".")]
-    return path_base + path_component
   
   def get_node_by_path(self, path):
     if self.api.has_node(path):
       if path in self.api.mems: # TODO more generalized solution
-        return ChiselSubprocessEmulatorMem(self.api, path)
+        return ChiselMem(self.api, path)
       else:
-        return ChiselSubprocessEmulatorWire(self.api, path)
+        return ChiselWire(self.api, path)
     else:
-      return ChiselSubprocessEmulatorPlaceholder(self.api, path)
+      return ChiselNodePlaceholder(self.api, path)
 
   def get_child_reference(self, child_path):
     if not child_path:
       return self
     return self.get_node_by_path(self.join_path(self.path, child_path))
 
-class ChiselSubprocessEmulatorPlaceholder(ChiselSubprocessEmulatorNode):
+class ChiselNodePlaceholder(ChiselNode):
   def has_value(self):
     return False
   
   def can_set_value(self):
     return False
 
-class ChiselSubprocessEmulatorWire(ChiselSubprocessEmulatorNode):
+class ChiselWire(ChiselNode):
   def __init__(self, api, path):
-    super(ChiselSubprocessEmulatorWire, self).__init__(api, path)
+    super(ChiselWire, self).__init__(api, path)
     assert api.has_node(path)
         
   def get_type(self):
@@ -98,9 +91,9 @@ class ChiselSubprocessEmulatorWire(ChiselSubprocessEmulatorNode):
   def get_subscript_reference(self, subscript):
     raise NotImplementedError("Cannot subscript wire.")
 
-class ChiselSubprocessEmulatorMem(ChiselSubprocessEmulatorNode):
+class ChiselMem(ChiselNode):
   def __init__(self, api, path):
-    super(ChiselSubprocessEmulatorMem, self).__init__(api, path)
+    super(ChiselMem, self).__init__(api, path)
     self.depth = self.get_depth() # optimization to prevent spamming the API
 
   def get_type(self):
@@ -126,13 +119,13 @@ class ChiselSubprocessEmulatorMem(ChiselSubprocessEmulatorNode):
 
   def get_subscript_reference(self, subscript):
     assert subscript < self.depth
-    return ChiselSubprocessEmulatorMemElement(self, subscript)
+    return ChiselMemElement(self, subscript)
 
-class ChiselSubprocessEmulatorMemElement(ChiselSubprocessEmulatorNode):
+class ChiselMemElement(ChiselNode):
   def __init__(self, parent, subscript):
-    assert isinstance(parent, ChiselSubprocessEmulatorMem)
+    assert isinstance(parent, ChiselMem)
     assert isinstance(subscript, int)
-    super(ChiselSubprocessEmulatorMemElement, self).__init__(parent.api,
+    super(ChiselMemElement, self).__init__(parent.api,
                                                              "%s[%i]" % (parent.path, subscript))
     self.parent = parent
     self.element_num = subscript
@@ -164,7 +157,7 @@ class ChiselSubprocessEmulatorMemElement(ChiselSubprocessEmulatorNode):
     self.api.do_modified_callback()
     return rtn
 
-class ChiselEmulatorSubprocess(ChiselApi):
+class ChiselEmulatorSubprocess(Circuit):
   def __init__(self, emulator_path, reset=True):
     """Starts the emulator subprocess."""
     super(ChiselEmulatorSubprocess, self).__init__()
@@ -216,7 +209,7 @@ class ChiselEmulatorSubprocess(ChiselApi):
     return result_to_int(self.command("clock", cycles))
   
   def get_root_node(self):
-    return ChiselSubprocessEmulatorPlaceholder(self, "")
+    return ChiselNodePlaceholder(self, "")
 
   def snapshot_save(self, name):
     self.command("referenced_snapshot_save", name)
