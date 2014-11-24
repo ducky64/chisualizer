@@ -90,9 +90,11 @@ class ChiselSubprocessEmulatorWire(ChiselSubprocessEmulatorNode):
     return result_to_int(self.api.command('wire_peek', self.path))
 
   def set_value(self, value):
-    return (result_ok(self.api.command('wire_poke', self.path, value))
-        and result_ok(self.api.command('propagate')))
-
+    rtn = (result_ok(self.api.command('wire_poke', self.path, value))
+           and result_ok(self.api.command('propagate')))
+    self.api.do_modified_callback()
+    return rtn
+  
   def get_subscript_reference(self, subscript):
     raise NotImplementedError("Cannot subscript wire.")
 
@@ -155,14 +157,18 @@ class ChiselSubprocessEmulatorMemElement(ChiselSubprocessEmulatorNode):
                                           self.parent.path, self.element_num))
 
   def set_value(self, value):
-    return (result_ok(self.api.command('mem_poke',
-                                       self.parent.path, self.element_num,
-                                       value))
-        and result_ok(self.api.command('propagate')))
+    rtn = (result_ok(self.api.command('mem_poke',
+                                      self.parent.path, self.element_num,
+                                      value))
+           and result_ok(self.api.command('propagate')))
+    self.api.do_modified_callback()
+    return rtn
 
 class ChiselEmulatorSubprocess(ChiselApi):
   def __init__(self, emulator_path, reset=True):
     """Starts the emulator subprocess."""
+    super(ChiselEmulatorSubprocess, self).__init__()
+    
     self.p = subprocess.Popen(emulator_path,
                               stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                               stderr=subprocess.STDOUT)
@@ -193,7 +199,7 @@ class ChiselEmulatorSubprocess(ChiselApi):
       raise ValueError("Command '%s' returned error: '%s'" % (cmd, out))
     logging.debug("API: '%s' -> '%s'", cmd, out)
     return out;
-
+  
   def has_node(self, node):
     return node in self.wires or node in self.mems
 

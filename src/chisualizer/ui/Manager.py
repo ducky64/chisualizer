@@ -1,3 +1,6 @@
+import logging
+import sys
+
 import wx
 
 from ChisualizerFrame import ChisualizerFrame
@@ -46,11 +49,53 @@ class ChisualizerManager(object):
   def __init__(self, vis_descriptor, circuit):
     self.vis_descriptor = vis_descriptor
     self.circuit = circuit
+    self.circuit.register_modified_callback(self.refresh_visualizers)
+    
+    self.cycle = 0
+    self.snapshots = [] # TODO: generalize with tree
+    
+    self.frames = []
     
   def run(self):
     app = wx.App(False)
     for elt_name, elt in self.vis_descriptor.get_display_elements().iteritems():
       vis_root = VisualizerRoot(self.circuit, elt)
-      ChisualizerFrame(None, elt_name, self.circuit, vis_root)
+      vis_frame = ChisualizerFrame(None, self, elt_name, self.circuit, vis_root)
+      self.frames.append(vis_frame)
     app.MainLoop()
+  
+  def exit(self):
+    sys.exit()
+  
+  def refresh_visualizers(self):
+    for frame in self.frames:
+      frame.vis_refresh()
+  
+  def get_circuit_cycle(self):
+    return self.cycle
+  
+  def circuit_reset(self, cycles=1):
+    logging.info("Reset circuit (%i cycles)", cycles)
+    self.circuit.reset(cycles)
+    self.cycle = 0
+    self.snapshots = []
+    self.refresh_visualizers()
     
+  def circuit_fwd(self, cycles=1):
+    logging.info("Clock circuit (%i cycles)", cycles)
+    self.circuit.snapshot_save(str(self.cycle))
+    self.snapshots.append(self.cycle)
+    self.cycle += self.circuit.clock(cycles)
+    self.refresh_visualizers()
+    
+  def circuit_back(self, cycles=1):
+    assert cycles == 1, "TODO generalize to multicycles"
+    if self.snapshots:
+      logging.info("Revert circuit (%i cycles)", cycles)
+      self.cycle = self.snapshots.pop()
+      self.circuit.snapshot_restore(str(self.cycle))
+      self.refresh_visualizers()
+    else:
+      logging.warn("No more snapshots to revert")
+      
+      

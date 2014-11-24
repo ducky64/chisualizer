@@ -9,13 +9,16 @@ from chisualizer.visualizers.VisualizerBase import AbstractVisualizer
 from chisualizer.visualizers.Theme import LightTheme, DarkTheme
 
 class ChisualizerFrame(wx.Frame):
-  def __init__(self, parent, title, api, desc):
+  def __init__(self, parent, manager, title, circuit_view, vis_root):
     wx.Frame.__init__(self, parent, title=title, size=(1280,800))
-    self.canvas = ChisualizerPanel(self, api, desc)
+    self.canvas = ChisualizerPanel(self, manager, title, circuit_view, vis_root)
     self.Show()
 
+  def vis_refresh(self):
+    self.canvas.vis_refresh()
+
 class ChisualizerPanel(wx.Panel):
-  def __init__(self, parent, api, desc):
+  def __init__(self, parent, manager, title, circuit_view, vis_root):
     wx.Panel.__init__(self, parent, style=wx.BORDER_SIMPLE)
     self.Bind(wx.EVT_PAINT, self.OnPaint)
     self.Bind(wx.EVT_SIZE, self.OnSize)
@@ -25,42 +28,30 @@ class ChisualizerPanel(wx.Panel):
     self.Bind(wx.EVT_RIGHT_UP, self.OnMouseRight)
     self.Bind(wx.EVT_LEFT_DCLICK, self.OnMouseLeftDClick)
     
-    self.api = api
-    self.desc = desc
+    self.manager = manager
+    self.title = title
+    self.circuit_view = circuit_view
+    self.vis_root = vis_root
     
     self.scale = 1
     self.center = (0, 0)  # center of visualization, in visualizer coords
     self.mouse_vis = (0, 0)   # mouse position, in visualizer coords
     
-    self.need_visualizer_refresh = False
+    self.need_visualizer_refresh = True
     self.elements = []
-    
-    self.cycle = 0
-    self.snapshots = []
+
+  def vis_refresh(self):
+    self.need_visualizer_refresh = True
+    self.Refresh()
 
   def OnChar(self, evt):
     char = evt.GetKeyCode()
     if char == ord('r'):
-      logging.info("Reset circuit")
-      self.api.reset(1)
-      self.cycle = 0
-      self.snapshots = []
-      self.need_visualizer_refresh = True
-      
+      self.manager.circuit_reset()
     elif char == wx.WXK_RIGHT:
-      logging.info("Clock circuit")
-      self.api.snapshot_save(str(self.cycle))
-      self.snapshots.append(self.cycle)
-      self.cycle += self.api.clock(1)
-      self.need_visualizer_refresh = True
-      
+      self.manager.circuit_fwd()
     elif char == wx.WXK_LEFT:
-      logging.info("Revert circuit")
-      if self.snapshots:
-        self.cycle = self.snapshots.pop()
-        self.api.snapshot_restore(str(self.cycle))
-        self.need_visualizer_refresh = True
-    
+      self.manager.circuit_back()
     elif char == ord('s'):
       cur_val = -1
       dlg = wx.TextEntryDialog(None, 'Step', 'Cycles to step', "1")
@@ -73,26 +64,14 @@ class ChisualizerPanel(wx.Panel):
           cur_val = int(dlg_val)
         except:
           pass
-        
-      logging.info("Clock circuit (%i cycles)" % cur_val)
-        
-      self.api.snapshot_save(str(self.cycle))
-      self.snapshots.append(self.cycle)
-      self.cycle += self.api.clock(cur_val)
-      self.need_visualizer_refresh = True
-      
+      self.manager.circuit_fwd(cur_val)
     elif char == ord('p'):
-      self.save_svg("%s_%i.svg" % ("chisualizer", self.cycle))
-    
+      self.save_svg("%s_%i.svg" % (self.title, self.manager.get_circuit_cycle()))
     elif char == ord('q'):
-      logging.info("Exit")
-      sys.exit()
-      
-    self.Refresh()
+      self.manager.exit()
 
   def OnSize(self, evt):
-    self.need_visualizer_refresh = True
-    self.Refresh()
+    self.vis_refresh()
 
   def OnMouseWheel(self, evt):
     delta = evt.GetWheelRotation() / evt.GetWheelDelta()
@@ -100,8 +79,7 @@ class ChisualizerPanel(wx.Panel):
     self.scale = self.scale * scale_factor
     self.center = (-self.mouse_vis[0] + (self.mouse_vis[0] + self.center[0])/scale_factor,
                    -self.mouse_vis[1] + (self.mouse_vis[1] + self.center[1])/scale_factor)
-    self.need_visualizer_refresh = True
-    self.Refresh()
+    self.vis_refresh()
 
   def OnMouseMotion(self, evt):
     self.mouse_vis = self.device_to_visualizer_coordinates((evt.GetX(), evt.GetY()))
@@ -122,8 +100,8 @@ class ChisualizerPanel(wx.Panel):
       self.PopupMenu(menu, evt.GetPosition())
     menu.Destroy()
     
-    self.need_visualizer_refresh = True
-    self.Refresh()
+    # TODO: make this event-driven from AbstractVisualizer
+    self.vis_refresh()
     
   def OnMouseLeftDClick(self, evt):
     x, y = self.device_to_visualizer_coordinates(evt.GetPosition())
@@ -134,9 +112,9 @@ class ChisualizerPanel(wx.Panel):
 
     assert isinstance(elements[0][1], AbstractVisualizer)
     elements[0][1].wx_defaultaction()
-        
-    self.need_visualizer_refresh = True
-    self.Refresh()
+    
+    # TODO: make this event-driven from AbstractVisualizer
+    self.vis_refresh()
     
   def OnPaint(self, evt):
     dc = wx.PaintDC(self)
@@ -147,7 +125,7 @@ class ChisualizerPanel(wx.Panel):
 
     # Per-frame elements
     cr = wx.lib.wxcairo.ContextFromDC(dc)
-    cr.set_source_rgba(*self.desc.get_theme().default_color())
+    cr.set_source_rgba(*self.vis_root.get_theme().default_color())
     cr.select_font_face('Mono',
                         cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
     cr.set_font_size(10)
@@ -180,13 +158,13 @@ class ChisualizerPanel(wx.Panel):
 
   def get_visualizer_dc(self, size):
     if self.need_visualizer_refresh:
-      self.desc.set_theme(DarkTheme())
+      self.vis_root.set_theme(DarkTheme())
       
       width, height = size
       dc = wx.MemoryDC(wx.EmptyBitmap(width, height))
       cr = wx.lib.wxcairo.ContextFromDC(dc)
     
-      cr.set_source_rgba(*self.desc.get_theme().background_color())
+      cr.set_source_rgba(*self.vis_root.get_theme().background_color())
       cr.rectangle(0, 0, width, height)
       cr.fill()
     
@@ -202,32 +180,32 @@ class ChisualizerPanel(wx.Panel):
 
       cr.restore()
       
-      cr.set_source_rgba(*self.desc.get_theme().default_color())
+      cr.set_source_rgba(*self.vis_root.get_theme().default_color())
       cr.select_font_face('Mono',
                           cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
       cr.set_font_size(10)
       cr.move_to(0, height - 15)
       cr.show_text("Cycle %i, render: %.2f ms" %
-                   (self.cycle, timer_draw*1000))
+                   (self.manager.get_circuit_cycle(), timer_draw*1000))
       cr.move_to(0, height - 5)
       cr.show_text("(<-) back one cycle, (->) forward one cycle, (s) variable cycle step, (r) cycle in reset, (mousewheel) zoom, (p) save to SVG")
       
       self.visualizer_dc = dc
+      self.need_visualizer_refresh = False
       
-    self.need_visualizer_refresh = False
     return self.visualizer_dc
 
   def draw_visualizer(self, cr):
     timer_update = time.time()
-    self.desc.update()
+    self.vis_root.update()
     timer_update = time.time() - timer_update
     
     timer_lay = time.time()
-    layout = self.desc.layout_cairo(cr).centered_origin()
+    layout = self.vis_root.layout_cairo(cr).centered_origin()
     timer_lay = time.time() - timer_lay
     
     timer_draw = time.time()
-    self.elements = self.desc.draw_cairo(cr, layout)
+    self.elements = self.vis_root.draw_cairo(cr, layout)
     timer_draw = time.time() - timer_draw
     
     logging.debug("draw_visualizer: layout time: %.2f ms, draw time: %.2f ms" %
@@ -235,27 +213,27 @@ class ChisualizerPanel(wx.Panel):
     
   def save_svg(self, filename):
     # TODO: refactor to avoid calling desc.layout here
-    self.desc.set_theme(LightTheme())
+    self.vis_root.set_theme(LightTheme())
       
     f = file(filename, 'w')
     surface_test = cairo.SVGSurface(f, 1, 1)  # dummy surface to get layout size
     # TODO make cross platform, 
     cr_test = cairo.Context(surface_test)
-    self.desc.update()
-    layout = self.desc.layout_cairo(cr_test)
+    self.vis_root.update()
+    layout = self.vis_root.layout_cairo(cr_test)
     surface_test.finish()
     
     f = file(filename, 'w')
     surface = cairo.SVGSurface(f, layout.width()+2, layout.height()+2)
     cr = cairo.Context(surface)
     
-    cr.set_source_rgba(*self.desc.get_theme().background_color())
+    cr.set_source_rgba(*self.vis_root.get_theme().background_color())
     cr.rectangle(0, 0, layout.width()+2, layout.height()+2)
     cr.fill()
     
     cr.translate(1, 1)
     cr.save()
-    self.desc.draw_cairo(cr, layout)
+    self.vis_root.draw_cairo(cr, layout)
     
     surface.finish()
     f.close()

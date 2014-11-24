@@ -41,4 +41,5 @@ lib:
     - !Ref {ref: gcd_io_out, path: .io}
 
 display:
-- !Ref {ref: gcd, path: GCD}
+  gcd:
+    !Ref {ref: gcd, path: GCD}
