@@ -19,14 +19,14 @@ class TextBox(FramedVisualizer):
     self.text_color = self.dynamic_attr(DataTypes.StringAttr, 'text_color')
 
   def draw_element_cairo(self, cr, rect, depth):
-    cr.set_source_rgba(*self.get_theme().default_color())
+    cr.set_source_rgba(*self.get_vis_root().get_theme().default_color())
     cr.set_line_width (1)
     cr.select_font_face(self.text_font,
                         cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
     cr.set_font_size(self.text_size)
     
     text = self.text.get()
-    cr.set_source_rgba(*self.get_theme().color(self.text_color.get()))
+    cr.set_source_rgba(*self.get_vis_root().get_theme().color(self.text_color.get()))
 
     cr.move_to(rect.left(), rect.center_vert() + self.text_max_height / 2)
     cr.show_text(text)

@@ -42,8 +42,8 @@ class VisualizerRoot(object):
     # TODO: is persistent theme state really the best idea?
     self.theme = theme
 
-  def get_api(self):
-    return self.circuit
+  def get_circuit_node(self):
+    return self.node
 
 class ChisualizerManager(object):
   def __init__(self, vis_descriptor, circuit):

@@ -13,7 +13,7 @@ class VisualizerToString(Base.Base):
     super(VisualizerToString, self).__init__(element, parent)
     self.path_component = self.static_attr(DataTypes.StringAttr, 'path').get()
     self.visualizer = parent  # TODO: perhaps remove me if useless?
-    self.node = parent.get_node_ref().get_child_reference(self.path_component)
+    self.node = parent.get_circuit_node().get_child_reference(self.path_component)
   
   def get_string(self):
     """Returns the string representation of the Chisel node value, given the

@@ -15,6 +15,7 @@ class AbstractVisualizer(Base.Base):
                node_override=None):
     from chisualizer.display.Modifier import Modifier # TODO dehackify
     super(AbstractVisualizer, self).__init__(elt, parent)
+    self.root = parent.root
     
     self.dynamic_attrs = {}
 
@@ -26,7 +27,7 @@ class AbstractVisualizer(Base.Base):
     if node_override is not None:
       self.node = node_override
     else:
-      self.node = parent.node.get_child_reference(self.path_component)
+      self.node = parent.get_circuit_node().get_child_reference(self.path_component)
       
     self.modifiers = []
     modifiers = self.static_attr(DataTypes.ObjectAttr, 'modifiers').get()
@@ -57,6 +58,14 @@ class AbstractVisualizer(Base.Base):
                              self.__class__.__name__,
                              modifier.__class__.__name__)
     
+  def get_vis_root(self):
+    """Returns the visualizer root."""
+    return self.root
+
+  def get_circuit_node(self):
+    """Returns my associated circuit node or None."""
+    return self.node
+    
   def update(self):
     """Called once per visualizer update (before the layout phase), refreshing
     my attrs dict based on new circuit values / modifiers / whatever.
@@ -68,13 +77,6 @@ class AbstractVisualizer(Base.Base):
     for dynamic_attr in self.dynamic_attrs.itervalues():
       dynamic_attr.update()
       dynamic_attr.clear_overloads()
-    
-  def set_node_ref(self, node):
-    self.node = node
-    
-  def get_node_ref(self):
-    """Returns my associated Chisel API node, or None."""
-    return self.node
     
   def layout_cairo(self, cr):
     """Computes (and stores) the layout for this object when drawing with Cairo.
@@ -172,7 +174,7 @@ class FramedVisualizer(AbstractVisualizer):
       
       # draw the border only if indicated
       if self.border_style.get() == 'border':
-        cr.set_source_rgba(*self.get_theme().color(self.border_color.get()))
+        cr.set_source_rgba(*self.get_vis_root().get_theme().color(self.border_color.get()))
         cr.set_line_width(self.border_size)
         cr.move_to(rect.left() + self.frame_margin,      # top left, where label begins
                    element_rect.top() - top_offset)
@@ -189,7 +191,7 @@ class FramedVisualizer(AbstractVisualizer):
         cr.stroke()
         
       # draw the label always
-      cr.set_source_rgba(*self.get_theme().color(self.label_color.get()))
+      cr.set_source_rgba(*self.get_vis_root().get_theme().color(self.label_color.get()))
       cr.select_font_face(self.label_font,
                           cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
       cr.set_font_size(self.label_size)
