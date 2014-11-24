@@ -66,7 +66,9 @@ class ChisualizerPanel(wx.Panel):
           pass
       self.manager.circuit_fwd(cur_val)
     elif char == ord('p'):
-      self.save_svg("%s_%i.svg" % (self.title, self.manager.get_circuit_cycle()))
+      self.save_svg("%s_%i_%s.svg" % (self.title,
+                                      self.manager.get_circuit_cycle(),
+                                      time.strftime("%y%m%d_%H%M%S")))
     elif char == ord('q'):
       self.manager.exit()
 
