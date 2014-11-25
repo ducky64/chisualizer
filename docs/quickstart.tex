@@ -1,20 +1,20 @@
 \documentclass[11pt]{article}
 \usepackage{graphicx}
+\usepackage{hyperref}
 
 \title{\textbf{Chisualizer Quick Start \& Reference}}
 \author{\includegraphics[scale=0.025]{bigduck} Ducky}
-\date{24 Nov 2014}
+\date{25 Nov 2014}
 \begin{document}
 
 \maketitle
 
-
 \section{Prerequisites}
 The following software needs to be installed:
 \begin{itemize}
-  \item Python 2.7 (https://www.python.org/download/releases/2.7/)
-  \item wxPython (http://wxpython.org/download.php)
-  \item pyCairo (http://cairographics.org/pycairo/)
+  \item \href{https://www.python.org/download/releases/2.7/}{Python 2.7}
+  \item \href{http://wxpython.org/download.php}{wxPython}
+  \item \href{http://cairographics.org/pycairo/}{pyCairo}
 \end{itemize}
 
 On a Debian or Ubuntu Linux machine, this command should install all the prereqs:
@@ -22,7 +22,10 @@ On a Debian or Ubuntu Linux machine, this command should install all the prereqs
 sudo apt-get python-wxgtk2.8 python-cairo
 \end{verbatim}
 
-On a Windows machine, you should be able to download the prereqs from the relevant sites. Note that the examples are reliant on Make and g++, which are not available standard on Windows machines.
+On a Windows machine, you should be able to download the prereqs from the relevant sites. Note that the examples are reliant on Make and g++, which are not available standard on Windows machines. \\
+\\
+If, for whatever reason, you don't know where the Chisualizer repository is, it's here: \\
+\url{https://github.com/ducky64/chisualizer}
 
 \section{Known Issues}
 \begin{itemize}
