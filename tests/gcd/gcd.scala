@@ -1,4 +1,4 @@
-package Main {
+package Main
 
 import Chisel._
 import Node._
@@ -53,5 +53,9 @@ class GCD extends Module {
   io.result_val := (state === s_done)
 }
 
-
+object Main {
+  def main(args: Array[String]) = {
+    val res = chiselMain( args, () => Module ( new GCD() ) )
+  } 
 }
+

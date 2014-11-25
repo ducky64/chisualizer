@@ -17,3 +17,6 @@
 *.lai
 *.la
 *.a
+
+# Temporary LaTeX
+*.swp
