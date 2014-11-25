@@ -22,12 +22,15 @@ PROGFILE := $(CSRC_DIR)/emulator
 
 default: emulator
 
-$(RTL_TIMESTAMP): $(RTL_FILES)
-	sbt "project main" "run --backend c --targetDir $(GSRC_DIR)"
-	date > $(RTL_TIMESTAMP)
+#$(RTL_TIMESTAMP): $(RTL_FILES)
+#	sbt "project main" "run --backend c --targetDir $(GSRC_DIR)"
+#	date > $(RTL_TIMESTAMP)
 
-csrc: $(RTL_TIMESTAMP)
-$(GSRC_DIR)/%.cpp: $(RTL_TIMESTAMP)
+#csrc: $(RTL_TIMESTAMP)
+#$(GSRC_DIR)/%.cpp: $(RTL_TIMESTAMP)
+
+$(GSRC_DIR)/%.cpp: $(RTL_FILES)
+	sbt "project main" "run --backend c --targetDir $(GSRC_DIR)"
 
 $(CSRC_DIR)/%.o: $(CSRC_DIR)/%.cpp $(INCLUDES)
 	$(CPP) $(CPPFLAGS) -c -o $@ $<
@@ -38,7 +41,7 @@ $(GSRC_DIR)/%.o: $(GSRC_DIR)/%.cpp $(INCLUDES)
 $(PROGFILE): $(OBJ_FILES)
 	$(CPP) $(LDFLAGS) -o $@ $^
 
-emulator: $(PROGFILE)
+emulator: $(PROGFILE) 
 
 clean:
 	rm -rf emulator/generated-src/* main target
