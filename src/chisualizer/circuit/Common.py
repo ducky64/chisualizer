@@ -58,24 +58,6 @@ class Circuit(object):
     """Hold circuit in reset for some cycles."""
     raise NotImplementedError
   
-  def clock(self, cycles):
-    """Clocks circuit for some cycles."""
-    raise NotImplementedError
-
-  def current_to_value_dict(self):
-    """Returns the current circuit state as a value dict, which can be loaded
-    into a ValueDictView."""
-    raise NotImplementedError
-
-  def snapshot_save(self, name):
-    """Saves a snapshot of the current state under name"""
-    raise NotImplementedError
-  
-  def snapshot_restore(self, name):
-    """Restores a previously saved snapshot under name to the current state.
-    Raises an exception if not successful."""
-    raise NotImplementedError
-  
   def close(self):
     """Closes the connection to the API host. If this is the only user of the
     host, the host should terminate."""

@@ -13,9 +13,6 @@ class DummyCircuit(Circuit):
   def reset(self, cycles):
     return 1
   
-  def clock(self, cycles):
-    return 1
-  
   def get_current_temporal_node(self):
     return DummyTemporalNode()
   
@@ -35,12 +32,6 @@ class DummyCircuit(Circuit):
     pass
   
   def navigate_fwd(self, cycles=None):
-    pass
-  
-  def snapshot_save(self, name):
-    pass
-  
-  def snapshot_restore(self, name):
     pass
   
   def close(self):
