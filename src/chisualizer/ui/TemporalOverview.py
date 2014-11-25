@@ -12,7 +12,7 @@ from chisualizer.visualizers.Theme import LightTheme, DarkTheme
 
 class TemporalOverview(wx.Frame):
   def __init__(self, parent, manager, title, circuit_view, vis_root):
-    wx.Frame.__init__(self, parent, title=title, size=(400,800))
+    wx.Frame.__init__(self, parent, title="Chisualizer: " + title + " (Temporal Overview)", size=(400,800))
     self.canvas = TemporalOverviewPanel(self, manager, title, circuit_view, vis_root)
     self.Show()
 

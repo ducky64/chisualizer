@@ -10,7 +10,7 @@ from chisualizer.visualizers.Theme import LightTheme, DarkTheme
 
 class ChisualizerFrame(wx.Frame):
   def __init__(self, parent, manager, title, circuit_view, vis_root):
-    wx.Frame.__init__(self, parent, title=title, size=(1280,800))
+    wx.Frame.__init__(self, parent, title="Chisualizer: " + title, size=(1280,800))
     self.canvas = ChisualizerPanel(self, manager, title, circuit_view, vis_root)
     self.Show()
 
