@@ -74,7 +74,8 @@ class CircuitView(object):
   
 class HistoricalCircuitView(CircuitView):
   def set_view(self, state):
-    """Sets this view to some (historical) circuit state. 
+    """Sets this view to some (historical) circuit state. State currently
+    can be anything.
     """
     raise NotImplementedError
   

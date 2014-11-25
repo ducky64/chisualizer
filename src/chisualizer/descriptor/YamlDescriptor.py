@@ -11,9 +11,13 @@ class YamlDescriptor():
     self.default_templates = OrderedDict()
     self.lib_elements = {}
     self.display_elements = {}
+    self.temporal_elements = {}
 
   def get_display_elements(self):
     return self.display_elements
+
+  def get_temporal_elements(self):
+    return self.temporal_elements
 
   def get_ref(self, ref_name):
     """Returns the referenced ParsedElement or None"""
@@ -110,6 +114,13 @@ class YamlDescriptor():
         elt.set_ref("(display '%s')" % elt_name)
       self.display_elements = yaml_dict['display']
     logging.debug("Finished loading display elements")
+      
+    if 'temporal' in yaml_dict:
+      assert isinstance(yaml_dict['temporal'], dict)
+      for elt_name, elt in yaml_dict['temporal'].iteritems():
+        elt.set_ref("(temporal '%s')" % elt_name)
+      self.temporal_elements = yaml_dict['temporal']
+    logging.debug("Finished loading temporal elements")
       
     # Run desugaring pass
     for elt in desugar_queue:

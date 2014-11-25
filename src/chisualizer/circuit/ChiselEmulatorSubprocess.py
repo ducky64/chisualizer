@@ -2,7 +2,8 @@ import logging
 import subprocess
 import string
 
-from chisualizer.circuit.Common import Circuit, CircuitNode, CircuitView
+from Common import Circuit, CircuitNode, CircuitView
+from ValueDictView import ValueDictView
 
 def result_to_list(res):
   if not res:
@@ -80,6 +81,12 @@ class ChiselEmulatorSubprocess(Circuit):
   def clock(self, cycles):
     return result_to_int(self.command("clock", cycles))
 
+  def current_to_value_dict(self):
+    rtn = {}
+    for node_name in self.wires:
+      rtn[node_name] = result_to_int(self.command('wire_peek', node_name))
+    return rtn
+
   def snapshot_save(self, name):
     self.command("referenced_snapshot_save", name)
   
@@ -87,7 +94,10 @@ class ChiselEmulatorSubprocess(Circuit):
     self.command("referenced_snapshot_restore", name)
     
   def get_historical_view(self):
-    raise NotImplementedError
+    width_dict = {}
+    for node_name in self.wires:
+      width_dict[node_name] = result_to_int(self.command('wire_width', node_name))
+    return ValueDictView(width_dict)
   
   def get_current_view(self):
     return ChiselCircuitView(self)

@@ -40,6 +40,30 @@ lib:
     - !Ref {ref: gcd_state}
     - !Ref {ref: gcd_io_out, path: .io}
 
+  gcd_readyvalid:
+    !LineGrid
+    frame_style: none
+    dir: row
+    cells:
+    - !TextBox {path: _val, text: " ▸V ", template: text_readyvalid}
+    - !TextBox {path: _rdy, text: " R▸ ", template: text_readyvalid}
+  gcd_overview:
+    !LineGrid
+    dir: row
+    cells:
+    - !Ref {ref: gcd_readyvalid, path: .io_operands}
+    - !TextBox {path: .state, template: gcd_state_map}
+    - !TextBox {path: .latch_A, template: text_decimal}
+    - !TextBox {path: .latch_B, template: text_decimal}
+    - !Ref {ref: gcd_readyvalid, path: .io_result}
+
 display:
   gcd:
     !Ref {ref: gcd, path: GCD}
+  gcd_overview:
+    !Ref {ref: gcd_overview, path: GCD}
+
+temporal:
+  gcd:
+    !Ref {ref: gcd_overview, path: GCD}
+
