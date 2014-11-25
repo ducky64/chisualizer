@@ -35,7 +35,7 @@ $(PROGFILE): $(OBJ_FILES)
 emulator: $(PROGFILE) 
 
 run: emulator
-	python ../../src/main.py  --emulator emulator/emulator --visualizer_desc gcd.yaml; pkill emulator
+	python ../../src/main.py  --emulator emulator/emulator --visualizer_desc gcd.yaml
 
 clean:
 	rm -rf emulator project target
