@@ -37,6 +37,22 @@ class Circuit(object):
     """Returns a HistoricalCircuitView object with the ability to view
     circuit state in the past."""
     raise NotImplementedError
+  
+  def navigate_next_mod(self):
+    """Navigates to the next modification."""
+    raise NotImplementedError
+  
+  def navigate_prev_mod(self):
+    """Navigates to the previous modification."""
+    raise NotImplementedError
+
+  def navigate_back(self):
+    """Navigates to the previous saved state."""
+    raise NotImplementedError
+  
+  def navigate_fwd(self, cycles=None):
+    """Navigates to the next saved state (or advances by one clock cycle)."""
+    raise NotImplementedError
 
   def reset(self, cycles):
     """Hold circuit in reset for some cycles."""

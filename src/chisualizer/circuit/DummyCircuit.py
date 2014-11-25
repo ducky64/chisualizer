@@ -25,6 +25,18 @@ class DummyCircuit(Circuit):
   def get_historical_view(self):
     return DummyCircuitView()
   
+  def navigate_next_mod(self):
+    pass
+  
+  def navigate_prev_mod(self):
+    pass
+
+  def navigate_back(self):
+    pass
+  
+  def navigate_fwd(self, cycles=None):
+    pass
+  
   def snapshot_save(self, name):
     pass
   
