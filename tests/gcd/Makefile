@@ -8,7 +8,7 @@ CSRC_DIR = emulator
 
 RTL_FILES := Makefile *.scala
 
-CPP_FILES = $(CSRC_DIR)/GCD.cpp main.cpp
+CPP_FILES = $(CSRC_DIR)/GCD.cpp $(CSRC_DIR)/main.cpp
 OBJ_FILES = $(CPP_FILES:.cpp=.o)
 INCLUDES = $(wildcard $(CSRC_DIR)/*.h)
 
@@ -27,7 +27,7 @@ $(CSRC_DIR)/%.o: $(CSRC_DIR)/%.cpp $(INCLUDES)
 	$(CPP) $(CPPFLAGS) -c -o $@ $<
 
 $(CSRC_DIR)/main.o: main.cpp $(INCLUDES)
-	$(CPP) $(CPPFLAGS) -c -o $(CSRC_DIR)/$@ $<
+	$(CPP) $(CPPFLAGS) -c -o $@ $<
 
 $(PROGFILE): $(OBJ_FILES)
 	$(CPP) $(LDFLAGS) -o $@ $^
@@ -38,5 +38,4 @@ run: emulator
 	python ../../src/main.py  --emulator "emulator/emulator" --visualizer_desc "gcd.yaml"; pkill emulator
 
 clean:
-	rm -rf emulator/generated-src project/target chisel target
-
+	rm -rf emulator project target
