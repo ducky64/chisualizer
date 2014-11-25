@@ -48,9 +48,8 @@ class ChiselEmulatorSubprocess(Circuit):
       self.reset(1)
       logging.debug("Reset circuit")
       
-    self.cycle = 0
     self.temporal_nodes_count = 0
-    self.temporal_node = self.create_temporal_node()
+    self.temporal_node = self.create_temporal_node(0)
 
   def command(self, op, *args):
     """Sends a command to the emulator, and returns the output string."""
@@ -79,11 +78,11 @@ class ChiselEmulatorSubprocess(Circuit):
     out.extend(self.mems)
     return out
 
-  def create_temporal_node(self):
+  def create_temporal_node(self, cycle):
     self.temporal_nodes_count += 1
     return ChiselTemporalNode(self.current_to_value_dict(),
                               self.temporal_nodes_count, 
-                              self.cycle)
+                              cycle)
 
   def update_temporal_node(self):
     self.snapshot_save(self.temporal_node.get_snapshot_state())
@@ -97,10 +96,11 @@ class ChiselEmulatorSubprocess(Circuit):
     self.update_temporal_node()
     if self.temporal_node.get_next_time() is not None:
       prev_temporal_node = self.temporal_node
-      self.temporal_node = self.create_temporal_node()
+      self.temporal_node = self.create_temporal_node(self.temporal_node.cycle)
       self.temporal_node.prev_mod = prev_temporal_node
       if prev_temporal_node.get_next_mod() is not None:
         self.temporal_node.next_mod = prev_temporal_node.next_mod
+        prev_temporal_node.next_mod.prev_mod = self.temporal_node 
       prev_temporal_node.next_mod = self.temporal_node 
     super(ChiselEmulatorSubprocess, self).do_modified_callback()
     
@@ -128,28 +128,50 @@ class ChiselEmulatorSubprocess(Circuit):
     else:
       logging.warn("No snapshots to revert")
 
-  def navigate_fwd(self, cycles):
-    # TODO: arbitrary cycles
+  def navigate_fwd(self, cycles=None):
+    if cycles is None:
+      self.navigate_step()
+    else:
+      self.navigate_to_cycle(self.temporal_node.cycle + cycles)
+
+  def navigate_step(self):
     self.update_temporal_node()
-    assert cycles == 1
     if self.temporal_node.get_next_time() is None:
-      self.clock(1)
+      self.navigate_to_cycle(self.temporal_node.cycle + 1)
     else:
       self.temporal_node = self.temporal_node.get_next_time()
       self.snapshot_restore(self.temporal_node.get_snapshot_state())
-  
+
+  def navigate_to_cycle(self, target_cycle):
+    self.update_temporal_node()
+    curr_temporal_node = self.temporal_node
+    while True:
+      next_temporal_node = curr_temporal_node.get_next_time()
+      if next_temporal_node is None or next_temporal_node.cycle > target_cycle:
+        self.temporal_node = curr_temporal_node
+        self.snapshot_restore(self.temporal_node.get_snapshot_state())
+        self.clock(target_cycle - curr_temporal_node.cycle)
+        return
+      elif next_temporal_node.cycle == target_cycle:
+        self.temporal_node = next_temporal_node
+        self.snapshot_restore(self.temporal_node.get_snapshot_state())
+        return        
+      curr_temporal_node = next_temporal_node
+      
   def reset(self, cycles):
-    self.cycle = 0
     self.temporal_nodes_count = 0
-    self.temporal_node = self.create_temporal_node()
+    self.temporal_node = self.create_temporal_node(0)
     return result_to_int(self.command("reset", cycles))
   
   def clock(self, cycles):
     cycles = result_to_int(self.command("clock", cycles)) 
-    self.cycle += cycles
     prev_temporal_node = self.temporal_node
-    self.temporal_node = self.create_temporal_node()
+    self.temporal_node = self.create_temporal_node(self.temporal_node.cycle + cycles)
     self.temporal_node.prev_time = prev_temporal_node
+    if prev_temporal_node.get_next_time() is not None:
+      assert prev_temporal_node.get_next_time().cycle > self.temporal_node.cycle
+      self.temporal_node.next_time = prev_temporal_node.next_time
+      prev_temporal_node.next_time.prev_time = self.temporal_node
     prev_temporal_node.next_time = self.temporal_node
     return cycles
 

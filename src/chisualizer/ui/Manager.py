@@ -93,7 +93,7 @@ class ChisualizerManager(object):
     self.circuit.navigate_next_mod()
     self.refresh_visualizers()
   
-  def circuit_fwd(self, cycles=1):
+  def circuit_fwd(self, cycles=None):
     self.circuit.navigate_fwd(cycles)
     self.refresh_visualizers()
     
