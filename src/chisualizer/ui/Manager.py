@@ -4,6 +4,7 @@ import sys
 import wx
 
 from ChisualizerFrame import ChisualizerFrame
+from TemporalOverview import TemporalOverview
 from chisualizer.visualizers.VisualizerBase import AbstractVisualizer
 from chisualizer.visualizers.Theme import DarkTheme
 
@@ -11,15 +12,15 @@ from chisualizer.util import Rectangle
 
 class VisualizerRoot(object):
   """Root of the visualizer descriptor tree."""
-  def __init__(self, circuit, vis_descriptor):
+  def __init__(self, circuit_view, vis_descriptor):
     """Initialize this descriptor from a file and given a ChiselApi object."""
     # Hacks to get this to behave as a AbstractVisualizer
     # TODO: FIX, perhaps with guard node
     self.root = self
     self.path = ""
     
-    self.api = circuit
-    self.node = self.api.get_root_node()
+    self.circuit_view = circuit_view
+    self.node = self.circuit_view.get_root_node()
     self.theme = DarkTheme()
 
     self.visualizer = vis_descriptor.instantiate(self, valid_subclass=AbstractVisualizer)
@@ -42,8 +43,8 @@ class VisualizerRoot(object):
     # TODO: is persistent theme state really the best idea?
     self.theme = theme
 
-  def get_api(self):
-    return self.circuit
+  def get_circuit_node(self):
+    return self.node
 
 class ChisualizerManager(object):
   def __init__(self, vis_descriptor, circuit):
@@ -51,17 +52,23 @@ class ChisualizerManager(object):
     self.circuit = circuit
     self.circuit.register_modified_callback(self.refresh_visualizers)
     
-    self.cycle = 0
-    self.snapshots = [] # TODO: generalize with tree
-    
     self.frames = []
     
   def run(self):
     app = wx.App(False)
+    current_view = self.circuit.get_current_view()
     for elt_name, elt in self.vis_descriptor.get_display_elements().iteritems():
-      vis_root = VisualizerRoot(self.circuit, elt)
-      vis_frame = ChisualizerFrame(None, self, elt_name, self.circuit, vis_root)
+      vis_root = VisualizerRoot(current_view, elt)
+      vis_frame = ChisualizerFrame(None, self, elt_name, current_view, vis_root)
       self.frames.append(vis_frame)
+      
+    # TODO DEHACKIFY
+    self.historical_view = self.circuit.get_historical_view()
+    for elt_name, elt in self.vis_descriptor.get_temporal_elements().iteritems():
+      vis_root = VisualizerRoot(self.historical_view, elt)
+      vis_frame = TemporalOverview(None, self, elt_name, self.historical_view, vis_root)
+      self.frames.append(vis_frame)
+      
     app.MainLoop()
   
   def exit(self):
@@ -72,30 +79,24 @@ class ChisualizerManager(object):
       frame.vis_refresh()
   
   def get_circuit_cycle(self):
-    return self.cycle
+    return self.circuit.get_current_temporal_node().get_label()
   
   def circuit_reset(self, cycles=1):
-    logging.info("Reset circuit (%i cycles)", cycles)
     self.circuit.reset(cycles)
-    self.cycle = 0
-    self.snapshots = []
+    self.refresh_visualizers()
+  
+  def circuit_prev_mod(self):
+    self.circuit.navigate_prev_mod()
     self.refresh_visualizers()
     
-  def circuit_fwd(self, cycles=1):
-    logging.info("Clock circuit (%i cycles)", cycles)
-    self.circuit.snapshot_save(str(self.cycle))
-    self.snapshots.append(self.cycle)
-    self.cycle += self.circuit.clock(cycles)
+  def circuit_next_mod(self):
+    self.circuit.navigate_next_mod()
+    self.refresh_visualizers()
+  
+  def circuit_fwd(self, cycles=None):
+    self.circuit.navigate_fwd(cycles)
     self.refresh_visualizers()
     
-  def circuit_back(self, cycles=1):
-    assert cycles == 1, "TODO generalize to multicycles"
-    if self.snapshots:
-      logging.info("Revert circuit (%i cycles)", cycles)
-      self.cycle = self.snapshots.pop()
-      self.circuit.snapshot_restore(str(self.cycle))
-      self.refresh_visualizers()
-    else:
-      logging.warn("No more snapshots to revert")
-      
-      
+  def circuit_back(self):
+    self.circuit.navigate_back()
+    self.refresh_visualizers()

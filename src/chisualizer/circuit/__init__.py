@@ -1,3 +1,3 @@
-import ChiselApi
-import ChiselDummyApi
+import Common
+import DummyCircuit
 import ChiselEmulatorSubprocess

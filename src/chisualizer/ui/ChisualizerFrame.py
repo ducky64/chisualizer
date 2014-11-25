@@ -48,10 +48,14 @@ class ChisualizerPanel(wx.Panel):
     char = evt.GetKeyCode()
     if char == ord('r'):
       self.manager.circuit_reset()
-    elif char == wx.WXK_RIGHT:
-      self.manager.circuit_fwd()
     elif char == wx.WXK_LEFT:
+      self.manager.circuit_prev_mod()
+    elif char == wx.WXK_RIGHT:
+      self.manager.circuit_next_mod()
+    elif char == wx.WXK_UP:
       self.manager.circuit_back()
+    elif char == wx.WXK_DOWN:
+      self.manager.circuit_fwd()
     elif char == ord('s'):
       cur_val = -1
       dlg = wx.TextEntryDialog(None, 'Step', 'Cycles to step', "1")
@@ -187,10 +191,10 @@ class ChisualizerPanel(wx.Panel):
                           cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
       cr.set_font_size(10)
       cr.move_to(0, height - 15)
-      cr.show_text("Cycle %i, render: %.2f ms" %
+      cr.show_text("Cycle %s, render: %.2f ms" %
                    (self.manager.get_circuit_cycle(), timer_draw*1000))
       cr.move_to(0, height - 5)
-      cr.show_text("(<-) back one cycle, (->) forward one cycle, (s) variable cycle step, (r) cycle in reset, (mousewheel) zoom, (p) save to SVG")
+      cr.show_text("(up) back one cycle, (down) forward one cycle, (s) variable cycle step, (r) cycle in reset, (mousewheel) zoom, (p) save to SVG")
       
       self.visualizer_dc = dc
       self.need_visualizer_refresh = False

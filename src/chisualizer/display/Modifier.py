@@ -21,7 +21,7 @@ class ArrayIndexModifier(Modifier):
   def __init__(self, elt, parent):
     super(ArrayIndexModifier, self).__init__(elt, parent)
     self.path_component = self.static_attr(DataTypes.StringAttr, 'index_path').get()    
-    self.node = parent.get_node_ref().get_child_reference(self.path_component)
+    self.node = parent.get_circuit_node().get_child_reference(self.path_component)
     if not self.node.has_value():
       elt.parse_error("index_path node '%s' has no value" % self.node)
     
@@ -35,7 +35,7 @@ class CondArrayIndexModifier(ArrayIndexModifier):
   def __init__(self, elt, parent):
     super(CondArrayIndexModifier, self).__init__(elt, parent)
     self.cond_path_component = self.static_attr(DataTypes.StringAttr, 'cond_path').get()    
-    self.cond_node = parent.get_node_ref().get_child_reference(self.cond_path_component)
+    self.cond_node = parent.get_circuit_node().get_child_reference(self.cond_path_component)
     if not self.cond_node.has_value():
       elt.parse_error("cond_path node '%s' has no value" % self.node)
     
