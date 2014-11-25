@@ -165,31 +165,40 @@ A complete listing of Visualizers follows:
 
 \subsection {Data Types}
 The Chisualizer-specific data types referenced above (\texttt{String} and \texttt{Int}) are described in more detail here. Note the capitalization, to distinguish them from generic or YAML data types (like \texttt{string}s and \texttt{list}s).
+\subsubsection {String}
+This data type resolves to a \texttt{string}. In addition to regular YAML \texttt{string}s, the following objects are available for dynamic, data-dependent strings:
 \begin{itemize}
-  \item \texttt{String} \\
-  This data type resolves to a \texttt{string}. In addition to regular YAML \texttt{string}s, the following objects are available for dynamic, data-dependent strings:
+  \item Common Attributes
   \begin{itemize}
-    \item Common Attributes \\
-    \begin{itemize}
-      \item \texttt{path} (\texttt{String}, static): Path from the parent Visualizer, same semantics as \texttt{path} in \texttt{Visualizer}. Highly recommended to be left blank (to be consistent with the parent \texttt{Visualizer}).
-    \end{itemize}    
-    \item \texttt{NumericalString} \\
-    The string representation of a number. Highly customizable.
-    \begin{itemize}
-      \item \texttt{prefix} (\texttt{String}, static): String prefix.
-      \item \texttt{radix} (\texttt{Int}, static): Radix of the conversion.
-      \item \texttt{charmap} (\texttt{String}, static): Character map for the conversion, typically \texttt{0123456789abcdef}.
-    \end{itemize}
-    \item \texttt{DictString} \\
-    Mappings of specific numbers to strings.
-    \begin{itemize}
-      \item \texttt{mapping} (\texttt{mapping[Int$\rightarrow$String]}, static): \texttt{String} to return for the input (key) data value. \texttt{default} is also a valid key.
-    \end{itemize}
+    \item \texttt{path} (\texttt{String}, static): Path from the parent Visualizer, same semantics as \texttt{path} in \texttt{Visualizer}. Highly recommended to be left blank (to be consistent with the parent \texttt{Visualizer}).
+  \end{itemize}    
+  \item \texttt{NumericalString} \\
+  The string representation of a number. Highly customizable.
+  \begin{itemize}
+    \item \texttt{prefix} (\texttt{String}, static): String prefix.
+    \item \texttt{radix} (\texttt{Int}, static): Radix of the conversion.
+    \item \texttt{charmap} (\texttt{String}, static): Character map for the conversion, typically \texttt{0123456789abcdef}.
   \end{itemize}
-  \item \texttt{Int} \\
-  This data type resolves to an integer. Currently, only YAML integers (static) are available. \\
-  TODO: add dynamic integer objects.
+  \item \texttt{DictString} \\
+  Mappings of specific numbers to strings.
+  \begin{itemize}
+    \item \texttt{mapping} (\texttt{mapping[Int$\rightarrow$String]}, static): \texttt{String} to return for the input (key) data value. \texttt{default} is also a valid key.
+  \end{itemize}
 \end{itemize}
+  
+These special semantic meanings are available (denoted in the references above as \texttt{String}/color, for example):
+\begin{itemize}
+  \item \texttt{String}/ref \\
+  A reference (by name) to a \texttt{lib}-level \texttt{Visualizer}.
+  \item \texttt{String}/font \\
+  A font name. If this is invalid, the system will generally select some default font to use.
+  \item \texttt{String}/color \\
+  A color. Currently, valid values are: \texttt{black, red, yellow, green, cyan, blue, pink, white, grey}. Use of \texttt{black} and \texttt{white} are discouraged, as they are background colors for the default \texttt{Light} and \texttt{Dark} themes. The exact RGB values of the color may differ by selected theme.
+\end{itemize}
+  
+\subsubsection {Int}
+This data type resolves to an integer. Currently, only YAML integers (static) are available. \\
+TODO: add dynamic integer objects.
 
 \subsection {Templates}
 \texttt{Templates} are a \texttt{mapping} of attributes to values which are inherited by any object inheriting it. These \texttt{template} objects are available:
