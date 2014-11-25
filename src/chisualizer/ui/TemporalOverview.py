@@ -190,7 +190,7 @@ class TemporalOverviewPanel(wx.Panel):
       cr.show_text("Cycle %s, render: %.2f ms" %
                    (self.manager.get_circuit_cycle(), timer_draw*1000))
       cr.move_to(0, height - 5)
-      cr.show_text("(up) back one cycle, (down) forward one cycle, (s) variable cycle step, (r) cycle in reset, (mousewheel) zoom, (p) save to SVG")
+      cr.show_text(u"(\u25B2) back one cycle, (\u25BC) forward one cycle, (s) variable cycle step, (r) cycle in reset, (mousewheel) zoom, (p) save to SVG")
       
       self.visualizer_dc = dc
       self.need_visualizer_refresh = False
@@ -201,7 +201,8 @@ class TemporalOverviewPanel(wx.Panel):
     timers = [0, 0, 0]
     left_x = right_x = bot_y = top_y = 0
     current_temporal_node = self.circuit_view.get_current_temporal_node()
-      
+    self.elements = []
+    
     def draw_visualizer_at(temporal_node, layout_process_fn):
       self.circuit_view.set_view(temporal_node.get_historical_state())
       
@@ -215,7 +216,7 @@ class TemporalOverviewPanel(wx.Panel):
       timers[1] += time.time() - timer
         
       timer = time.time()
-      self.elements = self.vis_root.draw_cairo(cr, layout)
+      self.elements.extend(self.vis_root.draw_cairo(cr, layout))
       timers[2] += time.time() - timer
       
       return layout

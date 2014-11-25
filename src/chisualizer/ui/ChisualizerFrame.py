@@ -194,7 +194,7 @@ class ChisualizerPanel(wx.Panel):
       cr.show_text("Cycle %s, render: %.2f ms" %
                    (self.manager.get_circuit_cycle(), timer_draw*1000))
       cr.move_to(0, height - 5)
-      cr.show_text("(up) back one cycle, (down) forward one cycle, (s) variable cycle step, (r) cycle in reset, (mousewheel) zoom, (p) save to SVG")
+      cr.show_text(u"(\u25B2) back one cycle, (\u25BC) forward one cycle, (s) variable cycle step, (r) cycle in reset, (mousewheel) zoom, (p) save to SVG")
       
       self.visualizer_dc = dc
       self.need_visualizer_refresh = False
