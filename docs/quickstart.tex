@@ -77,125 +77,129 @@ This shows a more realistic design with some notable features:
 \end{itemize}
 
 \section{Visualizer Descriptor Language Reference}
-Visualizer descriptors are how you tell Chisualizer how to render your circuit. They're written in a domain-specific language on top of YAML (of which JSON is a subset). You can see the examples (gcd.yaml and fix3stage.yaml) as some examples.
+Visualizer descriptors are how you tell Chisualizer how to render your circuit. They're written in a domain-specific language on top of YAML (of which JSON is a subset). You can see the examples ( \texttt{gcd.yaml} and \texttt{fix3stage.yaml}) as some examples.
 
 The main concept is that visualizers (the visual representation of a node, module, or general circuit thing) are composable and semi-automatically placed and sized. Composable means you can put visualizers inside (some) visualizers, and semi-automatically placed and sized means that you only specify relative placement and the system will automatically determine the actual raw coordinates and required sizing. This is because working with raw coordinates, while powerful, is time-consuming and not amenable to change.
 
 At the top level is a mapping (or dict, if you prefer) of:
 \begin{itemize}
-  \item lib: mapping(reference name -> Visualizer) \\
-  lib specifies a library of visualizers that may be referenced later.
+  \item \texttt{lib}: \texttt{mapping}(reference name$\rightarrow$\texttt{Visualizer}) \\
+  \texttt{lib} specifies a library of visualizers that may be referenced later.
 
-  \item display: mapping(reference name -> Visualizer) \\
-  display specifies the visualizers to render, one per window. The typical pattern for this is to specify references to the visualizers described in lib.
+  \item \texttt{display}: \texttt{mapping}(title$\rightarrow$\texttt{Visualizer}) \\
+  \texttt{display} specifies the \texttt{Visualizers} to render, one per window. The typical pattern for this is to specify references to the \texttt{Visualizers} described in \texttt{lib}.
+  
+  \item \texttt{temporal}: \texttt{mapping}(title$\rightarrow$\texttt{Visualizer}) \\
+  \texttt{temporal} specifies the \texttt{Visualizers} to render as a temporal overview, one per window. Temporal overview is where the \texttt{Visualizer} is stacked in vertically in time. The typical use case is to describe a \texttt{Visualizer} that gives a good at-a-glance overview at a particular point in time.
 \end{itemize}
 
 \subsection{Basic Visualizers}
-You're probably now wondering, "what's a Visualizer"? Visualizers are tagged mappings like such:
+You're probably now wondering, "what's a \texttt{Visualizer}"? \texttt{Visualizers} are tagged mappings like such:
 \begin{verbatim}
 !TextBox {path: .state, template: gcd_state_map}
 \end{verbatim}
-The !TextBox is the tag (it's a TextBox object), and the mapping describes its attributes. Each attribute can either be dynamic (can change based on data value) or static (can't change), and has an associated data type. More on data types later.
+The \texttt{!TextBox} is the tag (it's a \texttt{TextBox} object), and the mapping describes its attributes. Each attribute can either be dynamic (can change based on data value) or static (can't change), and has an associated data type. More on data types later.
 
 A complete listing of Visualizers follows:
 \begin{itemize}
   \item Common attributes to all Visualizers \\
   Only path, modifiers, and template are important, the rest control visual properties and have sensible defaults.
   \begin{itemize}
-    \item path (String, static): The path component for this visualizer, joined to its parent's path. Use .\_\_up\_\_ to go one level up from the parent (to the previous dot).
-    \item modifiers (list[Modifiers], static): A list of modifiers, or objects that can modify either this Visualizer's or a child's attributes based on circuit data. Current only applicable to MemArrays.
-    \item template (String/ref, static): Inherit attributes from a template object.
+    \item \texttt{path} (\texttt{String}, static): The path component for this visualizer, joined to its parent's \texttt{path}. Use \texttt{.\_\_up\_\_} to go one level up from the parent (to the previous dot).
+    \item \texttt{modifiers} (\texttt{list[Modifiers]}, static): A list of \texttt{Modifiers} (objects that can modify either this \texttt{Visualizer}'s or a child's attributes based on circuit data). Current only applicable to \texttt{MemoryArrays}.
+    \item \texttt{template} (\texttt{String}/ref, static): Inherit attributes from a \texttt{Template} object.
     
-    \item frame\_style (String [none, frame], static): Whether this Visualizer should be rendered with a graphical frame (margin) around it.
-    \item frame\_margin (Int, static): Size of the frame.
-    \item border\_style (String [none, border], dynamic): Whether this visualizer should be rendered with a graphical box around it in the center of the frame margin. Obviously, frame\_style must be frame.
-    \item border\_size (Int, static): Size of the border.
-    \item border\_color (String/color, static): Color of the border.
-    \item label (String, static): Label text to put in the border. If left empty, this will display a cleaned version of the path.
-    \item label\_size (Int, static): Font size for the label.
-    \item label\_font (String/font, static): Font for the label.
-    \item label\_color (String/color, static): Color for the label.
+    \item \texttt{frame\_style} (\texttt{String} [\texttt{none}, \texttt{frame}], static): Whether this Visualizer should be rendered with a graphical frame (margin) around it.
+    \item \texttt{frame\_margin} (\texttt{Int}, static): Size of the frame.
+    \item \texttt{border\_style} (\texttt{String} [\texttt{none}, \texttt{border}], dynamic): Whether this \texttt{Visualizer} should be rendered with a graphical box around it in the center of the frame margin. Obviously, \texttt{frame\_style} must be \texttt{frame}.
+    \item \texttt{border\_size} (\texttt{Int}, static): Size of the border.
+    \item \texttt{border\_color} (\texttt{String/color}, static): Color of the border.
+    \item \texttt{label} (\texttt{String}, static): Label text to put in the border. If left empty, this will display a cleaned version of \texttt{path}.
+    \item \texttt{label\_size} (\texttt{Int}, static): Font size for the label.
+    \item \texttt{label\_font} (\texttt{String}/font, static): Font for the label.
+    \item \texttt{label\_color} (\texttt{String}/color, static): Color for the label.
   \end{itemize}
-  \item TextBox \\
-  TextBox is exactly what it says on the tin, a box with text. \\
-  Only text is important, the rest control visual properties and have sensible defaults.
+  \item \texttt{TextBox} \\
+  \texttt{TextBox} is exactly what it says on the tin, a box with text. \\
+  Only \texttt{text} is important, the rest control visual properties and have sensible defaults.
   \begin{itemize}
-    \item text (String, dynamic): Text to display.
-    \item text\_size (Int, static): Font size for the text.
-    \item text\_font (String/font, static): Font for the text.
-    \item text\_color (String/color, static): Color for the textl.
+    \item \texttt{text} (\texttt{String}, dynamic): Text to display.
+    \item \texttt{text\_size} (\texttt{Int}, static): Font size for the text.
+    \item \texttt{text\_font} (\texttt{String/font}, static): Font for the text.
+    \item \texttt{text\_color} (\texttt{String/color}, static): Color for the text.
   \end{itemize}
-  \item LineGrid \\
-  LineGrid is a container of Visualizers, putting them next to either other in a line that goes either horizontally (in a row) or vertically (in a column). \\
+  \item \texttt{LineGrid} \\
+  \texttt{LineGrid} is a container of \texttt{Visualizers}, putting them next to either other in a line that goes either horizontally (\texttt{dir=row}) or vertically (\texttt{dir=col}). \\
   TODO: There will be a picture here to help describe this concept sometime.
   \begin{itemize}
-    \item dir (String [row, col], static): Whether cells are arranged left to right (row) or top to bottom (col).
-    \item cells (list[Visualizer], static): Visualizers to arrange in a line.
+    \item \texttt{dir} (\texttt{String} [\texttt{row}, \texttt{col}], static): Whether cells are arranged left to right (\texttt{row}) or top to bottom (\texttt{col}).
+    \item \texttt{cells} (\texttt{list[Visualizer]}, static): Children \texttt{Visualizers} to arrange in a line.
   \end{itemize}  
-  \item MultiView \\
-  MultiView allows the user to interactively switch between different versions visualizations. Useful for being able to change on demand between overview and detail views.
+  \item \texttt{MultiView} \\
+  \texttt{MultiView} allows the user to interactively switch between different \texttt{Visualizer}s. Useful for being able to change on demand between overview and detail views.
   \begin{itemize}
-    \item views (mapping[String -> Visualizer], static): Name and Visualizer associated with each different view.
+    \item \texttt{views} (\texttt{mapping[String$\rightarrow$Visualizer]}, static): Name and \texttt{Visualizer} associated with each different view.
   \end{itemize}
-  \item MemoryArray \\
-  MemoryArray is an grid of child Visualizers, where each one is associated with a cell in a Chisel Mem. The grid will be automatically sized based on the memory depth and the specified number of rows and columns.
+  \item \texttt{MemoryArray} \\
+  \texttt{MemoryArray} is an grid of child \texttt{Visualizer}s, where each one is associated with a cell in a Chisel \texttt{Mem}. The grid will be automatically sized based on the memory depth and the specified number of rows and columns.
   \begin{itemize}
-    \item dir (String [row, col], static): Direction of element index increment.
-    \item rows (Int, static): Number of rows to display.
-    \item cols (Int, static): Number of rows to display.
-    \item offset (Int, dynamic): Offset (in element index) of the array. TODO: Well, it's supposed to be dynamic, anyways.
-    \item offset\_anchor (Int, static): Percentage anchor of the offset. 0 would mean the offset is anchored at the beginning of the visible array, while 50 would mean the center.
-    \item cell (Visualizer, static): Visualizer to instantiate for each memory element visible.
+    \item \texttt{dir} (\texttt{String} [\texttt{row}, \texttt{col}], static): Direction of element index increment.
+    \item \texttt{rows} (\texttt{Int}, static): Number of rows to display.
+    \item \texttt{cols} (\texttt{Int}, static): Number of rows to display.
+    \item \texttt{offset} (\texttt{Int}, dynamic): Offset (in element index) of the array. TODO: Well, it's supposed to be dynamic, anyways.
+    \item \texttt{offset\_anchor} (\texttt{Int}, static): Percentage anchor of the offset. 0 would mean the offset is anchored at the beginning of the visible array, while 50 would mean the center. \\ TODO: This may be changed to a float between 0 and 1.
+    \item \texttt{cell} (\texttt{Visualizer}, static): Visualizer to instantiate for each memory element visible.
   \end{itemize}
 \end{itemize}
 
 \subsection {"Syntactic Sugar" Visualizers}
 \begin{itemize}
-  \item MultiLineGrid \\
-  MultiLineGrid is a convenient way to specify LineGrids with LineGrids. This extends the LineGrid syntax by allowing nested lists inside cells, which means to instantiate an LineGrid with a direction opposite its parent.
-  \item Ref \\
-  Ref is a way to reference another lib-level Visualizer by name.
+  \item \texttt{MultiLineGrid} \\
+  \texttt{MultiLineGrid} is a convenient way to specify \texttt{LineGrid}s within \texttt{LineGrid}s. This extends the \texttt{LineGrid} syntax by allowing nested \texttt{list}s inside \texttt{cells}, which means to instantiate an \texttt{LineGrid} with \texttt{dir} opposite its parent.
+  \item \texttt{Ref} \\
+  \texttt{Ref} is a way to reference another \texttt{lib}-level \texttt{Visualizer} by reference name.
   \begin{itemize}
-    \item ref (String, static): lib-level name of the Visualizer to reference.
+    \item \texttt{ref} (\texttt{String}, static): \texttt{lib}-level reference name of the \texttt{Visualizer} to reference.
   \end{itemize}
 \end{itemize}
 
 \subsection {Data Types}
-The Chisualizer-specific data types referenced above (String, and Int) are described in more detail here. Note the capitalization, to distinguish them from generic or YAML data types (like strings and lists).
+The Chisualizer-specific data types referenced above (\texttt{String} and \texttt{Int}) are described in more detail here. Note the capitalization, to distinguish them from generic or YAML data types (like \texttt{string}s and \texttt{list}s).
 \begin{itemize}
-  \item String \\
-  This data type resolves to a string. In addition to regular YAML strings, the following objects are available for dynamic, data-dependent strings:
+  \item \texttt{String} \\
+  This data type resolves to a \texttt{string}. In addition to regular YAML \texttt{string}s, the following objects are available for dynamic, data-dependent strings:
   \begin{itemize}
     \item Common Attributes \\
     \begin{itemize}
-      \item path (String, static): Path from the parent Visualizer, same semantics as Visualizer. Highly recommended to leave blank (to be consistent with the parent Visualizer).
+      \item \texttt{path} (\texttt{String}, static): Path from the parent Visualizer, same semantics as \texttt{path} in \texttt{Visualizer}. Highly recommended to be left blank (to be consistent with the parent \texttt{Visualizer}).
     \end{itemize}    
-    \item NumericalString \\
+    \item \texttt{NumericalString} \\
     The string representation of a number. Highly customizable.
     \begin{itemize}
-      \item prefix (String, static): String prefix.
-      \item radix (Int, static): Radix of the conversion.
-      \item charmap (String, static): Character map for the conversion, typically 0123456789abcdef.
+      \item \texttt{prefix} (\texttt{String}, static): String prefix.
+      \item \texttt{radix} (\texttt{Int}, static): Radix of the conversion.
+      \item \texttt{charmap} (\texttt{String}, static): Character map for the conversion, typically \texttt{0123456789abcdef}.
     \end{itemize}
-    \item DictString \\
+    \item \texttt{DictString} \\
     Mappings of specific numbers to strings.
     \begin{itemize}
-      \item mapping (mapping[Int -> String], static): String to return for the input data value. default is also a valid key.
+      \item \texttt{mapping} (\texttt{mapping[Int$\rightarrow$String]}, static): \texttt{String} to return for the input (key) data value. \texttt{default} is also a valid key.
     \end{itemize}
   \end{itemize}
-  \item Int \\
-  This data type resolves to an integer. Currently, only YAML integers (static) are available. TODO: add dynamic integer objects.
+  \item \texttt{Int} \\
+  This data type resolves to an integer. Currently, only YAML integers (static) are available. \\
+  TODO: add dynamic integer objects.
 \end{itemize}
 
 \subsection {Templates}
-Templates are a mapping of attributes to values which are inherited by any object inheriting it. These template objects are available:
+\texttt{Templates} are a \texttt{mapping} of attributes to values which are inherited by any object inheriting it. These \texttt{template} objects are available:
 \begin{itemize}
-  \item Template \\
-  A template, nothing special to see here.
-  \item DictTemplate \\
-  This is a simple way to construct a template with attributes of DictString objects grouped by a common data key.
+  \item \texttt{Template} \\
+  A \texttt{Template}, nothing special to see here.
+  \item \texttt{DictTemplate} \\
+  This is a simple way to construct a \texttt{Template} with attributes of \texttt{DictString} objects grouped by a common data key.
   \begin{itemize}
-    \item mapping (mapping[Int -> mapping[attribute name, String]]): the mapping from the data value to the attribute to the String value. Seriously, do yourself a favor and try to learn by example instead of figuring out the theoretics. See gcd\_state\_map inside gcd.yaml.
+    \item \texttt{mapping} (\texttt{mapping[Int$\rightarrow$mapping[attribute name, String]]}, static): the mapping from the data value to the attribute to the String value. Seriously, do yourself a favor and try to learn by example instead of figuring out the theoretics. See gcd\_state\_map inside gcd.yaml.
   \end{itemize}
 \end{itemize}
 
