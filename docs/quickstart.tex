@@ -21,24 +21,31 @@ sudo apt-get python-wxgtk2.8 python-cairo
 
 On a Windows machine, you should be able to download the prereqs from the relevant sites. Note that the examples are reliant on Make and g++, which are not available standard on Windows machines.
 
+\section{Known Issues}
+\begin{itemize}
+  \item Bundle subelements, normally accessed in Chisel through a dot (.), require an underscore (\_) in Chisualizer. So gcd.io.in.ready becomes gcd.io\_in\_ready - this is because of an issue with Chisel's name resolution system and requires an upstream fix.
+\end{itemize}
+
 \section{Quick Start Example: GCD}
-Clone the Chisualizer repository to your location of choice:
+\subsection{Building}
+Clone the Chisualizer repository to your location of choice.
 \begin{verbatim}
 git clone https://github.com/ducky64/chisualizer.git
 \end{verbatim}
 
-Go into the GCD example directory, and build the GCD emulator:
+Go into the GCD example directory, and build the GCD emulator. SBT will automatically pull Chisel from the latest version released. Or something like that.
 \begin{verbatim}
 cd chisualizer/tests/gcd
 make
 \end{verbatim}
 
-Then run the GCD example:
+\subsection{Running}
+Once it's built, run the GCD example.
 \begin{verbatim}
 make run
 \end{verbatim}
 
-which is actually shorthand for:
+Note that the above is actually shorthand for the actual command to run the Chisualizer:
 \begin{verbatim}
 python ../../src/main.py  --emulator emulator/emulator --visualizer_desc gcd.yaml
 pkill emulator
@@ -46,6 +53,151 @@ pkill emulator
 
 (the pkill is necessary because of a bug where the spawned emulator subprocess does not stop when Chisualizer is terminated, and instead proceeds to eat up all your CPU)
 
-\section{Visualizer Descriptor Language Reference}
+You can navigate around the visualization using the mousewheel to zoom in and out. The circuit can be stepped forward and backwards in time using the arrow keys. Additional commands are listed at the bottom of the window.
 
+You can right-click elements to bring up a context menu to perform actions, like changing circuit state. Double-clicking usually is shorthand for running the topmost element in the menu.
+
+Try running the GCD of two numbers (say, 1337 and 42) by changing the state of the input operands and valid signal, then stepping until the calculation completes. Note that you can only change saved state (register values) - the circuit automatically updates (propagates values from registers) after each modification.
+
+\section{A More Complex Example: DREAMER 3-stage}
+Unlike GCD, DREAMER (a NoC manycore processor) code isn't publicly available. I'm not sure if the emulator builds easily either, so this will also be a tutorial of how to run Chisualizer with a dummy emulator. Dummy mode is where there is no actual backing circuit - every request for a node returns a width of 32 bits, a depth of 16 elements, and a value of zero. Try running the DREAMER visualizer:
+From the Chisualizer repository base directory, run:
+\begin{verbatim}
+cd chisualizer/tests/fix-tile
+./chisualizer-run-dummy.sh
+\end{verbatim}
+
+This shows a more realistic design with some notable features:
+\begin{itemize}
+  \item "Symbols" can be created using Unicode characters - like the directional arrows on the ready/valid
+  \item You can have multiple windows showing different visualizations. All these are linked - so modifying state or stepping cycles on one will update all the others.
+  \item In "multi3stage", if you right click anywhere, you can choose different views. The default is the "router" overview view, but you can also switch to the "full" detailed view.
+  \item In "full3stage", you can see memory element highlighting in the regfile. The element being referred to by io\_reads\_*.adr is being highlighted with a green box.
+  \item The mechanisms for these will be described in the Visualizer Descriptor Language Reference below.
+\end{itemize}
+
+\section{Visualizer Descriptor Language Reference}
+Visualizer descriptors are how you tell Chisualizer how to render your circuit. They're written in a domain-specific language on top of YAML (of which JSON is a subset). You can see the examples (gcd.yaml and fix3stage.yaml) as some examples.
+
+The main concept is that visualizers (the visual representation of a node, module, or general circuit thing) are composable and semi-automatically placed and sized. Composable means you can put visualizers inside (some) visualizers, and semi-automatically placed and sized means that you only specify relative placement and the system will automatically determine the actual raw coordinates and required sizing. This is because working with raw coordinates, while powerful, is time-consuming and not amenable to change.
+
+At the top level is a mapping (or dict, if you prefer) of:
+\begin{itemize}
+  \item lib: mapping(reference name -> Visualizer) \\
+  lib specifies a library of visualizers that may be referenced later.
+
+  \item display: mapping(reference name -> Visualizer) \\
+  display specifies the visualizers to render, one per window. The typical pattern for this is to specify references to the visualizers described in lib.
+\end{itemize}
+
+\subsection{Basic Visualizers}
+You're probably now wondering, "what's a Visualizer"? Visualizers are tagged mappings like such:
+\begin{verbatim}
+!TextBox {path: .state, template: gcd_state_map}
+\end{verbatim}
+The !TextBox is the tag (it's a TextBox object), and the mapping describes its attributes. Each attribute can either be dynamic (can change based on data value) or static (can't change), and has an associated data type. More on data types later.
+
+A complete listing of Visualizers follows:
+\begin{itemize}
+  \item Common attributes to all Visualizers \\
+  Only path, modifiers, and template are important, the rest control visual properties and have sensible defaults.
+  \begin{itemize}
+    \item path (String, static): The path component for this visualizer, joined to its parent's path. Use .\_\_up\_\_ to go one level up from the parent (to the previous dot).
+    \item modifiers (list[Modifiers], static): A list of modifiers, or objects that can modify either this Visualizer's or a child's attributes based on circuit data. Current only applicable to MemArrays.
+    \item template (String/ref, static): Inherit attributes from a template object.
+    
+    \item frame\_style (String [none, frame], static): Whether this Visualizer should be rendered with a graphical frame (margin) around it.
+    \item frame\_margin (Int, static): Size of the frame.
+    \item border\_style (String [none, border], dynamic): Whether this visualizer should be rendered with a graphical box around it in the center of the frame margin. Obviously, frame\_style must be frame.
+    \item border\_size (Int, static): Size of the border.
+    \item border\_color (String/color, static): Color of the border.
+    \item label (String, static): Label text to put in the border. If left empty, this will display a cleaned version of the path.
+    \item label\_size (Int, static): Font size for the label.
+    \item label\_font (String/font, static): Font for the label.
+    \item label\_color (String/color, static): Color for the label.
+  \end{itemize}
+  \item TextBox \\
+  TextBox is exactly what it says on the tin, a box with text. \\
+  Only text is important, the rest control visual properties and have sensible defaults.
+  \begin{itemize}
+    \item text (String, dynamic): Text to display.
+    \item text\_size (Int, static): Font size for the text.
+    \item text\_font (String/font, static): Font for the text.
+    \item text\_color (String/color, static): Color for the textl.
+  \end{itemize}
+  \item LineGrid \\
+  LineGrid is a container of Visualizers, putting them next to either other in a line that goes either horizontally (in a row) or vertically (in a column). \\
+  TODO: There will be a picture here to help describe this concept sometime.
+  \begin{itemize}
+    \item dir (String [row, col], static): Whether cells are arranged left to right (row) or top to bottom (col).
+    \item cells (list[Visualizer], static): Visualizers to arrange in a line.
+  \end{itemize}  
+  \item MultiView \\
+  MultiView allows the user to interactively switch between different versions visualizations. Useful for being able to change on demand between overview and detail views.
+  \begin{itemize}
+    \item views (mapping[String -> Visualizer], static): Name and Visualizer associated with each different view.
+  \end{itemize}
+  \item MemoryArray \\
+  MemoryArray is an grid of child Visualizers, where each one is associated with a cell in a Chisel Mem. The grid will be automatically sized based on the memory depth and the specified number of rows and columns.
+  \begin{itemize}
+    \item dir (String [row, col], static): Direction of element index increment.
+    \item rows (Int, static): Number of rows to display.
+    \item cols (Int, static): Number of rows to display.
+    \item offset (Int, dynamic): Offset (in element index) of the array. TODO: Well, it's supposed to be dynamic, anyways.
+    \item offset\_anchor (Int, static): Percentage anchor of the offset. 0 would mean the offset is anchored at the beginning of the visible array, while 50 would mean the center.
+    \item cell (Visualizer, static): Visualizer to instantiate for each memory element visible.
+  \end{itemize}
+\end{itemize}
+
+\subsection {"Syntactic Sugar" Visualizers}
+\begin{itemize}
+  \item MultiLineGrid \\
+  MultiLineGrid is a convenient way to specify LineGrids with LineGrids. This extends the LineGrid syntax by allowing nested lists inside cells, which means to instantiate an LineGrid with a direction opposite its parent.
+  \item Ref \\
+  Ref is a way to reference another lib-level Visualizer by name.
+  \begin{itemize}
+    \item ref (String, static): lib-level name of the Visualizer to reference.
+  \end{itemize}
+\end{itemize}
+
+\subsection {Data Types}
+The Chisualizer-specific data types referenced above (String, and Int) are described in more detail here. Note the capitalization, to distinguish them from generic or YAML data types (like strings and lists).
+\begin{itemize}
+  \item String \\
+  This data type resolves to a string. In addition to regular YAML strings, the following objects are available for dynamic, data-dependent strings:
+  \begin{itemize}
+    \item Common Attributes \\
+    \begin{itemize}
+      \item path (String, static): Path from the parent Visualizer, same semantics as Visualizer. Highly recommended to leave blank (to be consistent with the parent Visualizer).
+    \end{itemize}    
+    \item NumericalString \\
+    The string representation of a number. Highly customizable.
+    \begin{itemize}
+      \item prefix (String, static): String prefix.
+      \item radix (Int, static): Radix of the conversion.
+      \item charmap (String, static): Character map for the conversion, typically 0123456789abcdef.
+    \end{itemize}
+    \item DictString \\
+    Mappings of specific numbers to strings.
+    \begin{itemize}
+      \item mapping (mapping[Int -> String], static): String to return for the input data value. default is also a valid key.
+    \end{itemize}
+  \end{itemize}
+  \item Int \\
+  This data type resolves to an integer. Currently, only YAML integers (static) are available. TODO: add dynamic integer objects.
+\end{itemize}
+
+\subsection {Templates}
+Templates are a mapping of attributes to values which are inherited by any object inheriting it. These template objects are available:
+\begin{itemize}
+  \item Template \\
+  A template, nothing special to see here.
+  \item DictTemplate \\
+  This is a simple way to construct a template with attributes of DictString objects grouped by a common data key.
+  \begin{itemize}
+    \item mapping (mapping[Int -> mapping[attribute name, String]]): the mapping from the data value to the attribute to the String value. Seriously, do yourself a favor and try to learn by example instead of figuring out the theoretics. See gcd\_state\_map inside gcd.yaml.
+  \end{itemize}
+\end{itemize}
+
+That's it.
 \end{document}
