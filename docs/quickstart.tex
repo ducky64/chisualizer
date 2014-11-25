@@ -1,0 +1,51 @@
+\documentclass[11pt]{article}
+\title{\textbf{Chisualizer Quick Start \& Reference}}
+\author{Ducky}
+\date{24 Nov 2014}
+\begin{document}
+
+\maketitle
+
+\section{Prerequisites}
+The following software needs to be installed:
+\begin{itemize}
+  \item Python 2.7 (https://www.python.org/download/releases/2.7/)
+  \item wxPython (http://wxpython.org/download.php)
+  \item pyCairo (http://cairographics.org/pycairo/)
+\end{itemize}
+
+On a Debian or Ubuntu Linux machine, this command should install all the prereqs:
+\begin{verbatim}
+sudo apt-get python-wxgtk2.8 python-cairo
+\end{verbatim}
+
+On a Windows machine, you should be able to download the prereqs from the relevant sites. Note that the examples are reliant on Make and g++, which are not available standard on Windows machines.
+
+\section{Quick Start Example: GCD}
+Clone the Chisualizer repository to your location of choice:
+\begin{verbatim}
+git clone https://github.com/ducky64/chisualizer.git
+\end{verbatim}
+
+Go into the GCD example directory, and build the GCD emulator:
+\begin{verbatim}
+cd chisualizer/tests/gcd
+make
+\end{verbatim}
+
+Then run the GCD example:
+\begin{verbatim}
+make run
+\end{verbatim}
+
+which is actually shorthand for:
+\begin{verbatim}
+python ../../src/main.py  --emulator emulator/emulator --visualizer_desc gcd.yaml
+pkill emulator
+\end{verbatim}
+
+(the pkill is necessary because of a bug where the spawned emulator subprocess does not stop when Chisualizer is terminated, and instead proceeds to eat up all your CPU)
+
+\section{Visualizer Descriptor Language Reference}
+
+\end{document}
