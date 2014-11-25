@@ -24,6 +24,10 @@ class Circuit(object):
     for callback_fn in self.modified_callback_fns:
       callback_fn()
       
+  def get_current_temporal_node(self):
+    # TODO: refactor this out?
+    raise NotImplementedError
+      
   def get_current_view(self):
     """Returns a CircuitView object viewing the circuit state at the current
     timestep."""

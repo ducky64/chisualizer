@@ -16,6 +16,9 @@ class DummyCircuit(Circuit):
   def clock(self, cycles):
     return 1
   
+  def get_current_temporal_node(self):
+    return DummyTemporalNode()
+  
   def get_current_view(self):
     return DummyCircuitView()
 
@@ -32,6 +35,9 @@ class DummyCircuit(Circuit):
     pass
 
 class DummyCircuitView(HistoricalCircuitView):
+  def get_current_temporal_node(self):
+    return DummyTemporalNode()
+  
   def set_view(self, state):
     pass
   
@@ -65,3 +71,25 @@ class DummyCircuitNode(CircuitNode):
   
   def get_child_reference(self, child_path):
     return DummyCircuitNode()
+
+class DummyTemporalNode(TemporalNode):
+  def get_historical_state(self):
+    return None
+  
+  def get_snapshot_state(self):
+    return None
+  
+  def get_label(self):
+    return "dummy"
+  
+  def get_prev_time(self):
+    return None
+
+  def get_next_time(self):
+    return None
+
+  def get_prev_mod(self):
+    return None
+  
+  def get_next_mod(self):
+    return None
