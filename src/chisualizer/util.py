@@ -35,6 +35,13 @@ class Rectangle:
                      (self.right() - self.center_horiz(),
                      self.bottom() - self.center_vert()))
 
+  def zeroed_topleft(self):
+    return self.translated(-self.left(), -self.top())
+
+  def translated(self, dx, dy):
+    return Rectangle((self.left() + dx, self.top() + dy),
+                     (self.right() + dx, self.bottom() + dy))
+
   def shrink(self, left, top, right, bottom):
     return Rectangle((self.left() + left,
                       self.top() + top),

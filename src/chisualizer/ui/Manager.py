@@ -4,6 +4,7 @@ import sys
 import wx
 
 from ChisualizerFrame import ChisualizerFrame
+from TemporalOverview import TemporalOverview
 from chisualizer.visualizers.VisualizerBase import AbstractVisualizer
 from chisualizer.visualizers.Theme import DarkTheme
 
@@ -61,12 +62,16 @@ class ChisualizerManager(object):
     current_view = self.circuit.get_current_view()
     for elt_name, elt in self.vis_descriptor.get_display_elements().iteritems():
       vis_root = VisualizerRoot(current_view, elt)
-      vis_frame = ChisualizerFrame(None, self, elt_name, self.circuit, vis_root)
+      vis_frame = ChisualizerFrame(None, self, elt_name, current_view, vis_root)
       self.frames.append(vis_frame)
       
-    historical_view = self.circuit.get_historical_view()
-    
-    
+    # TODO DEHACKIFY
+    self.historical_view = self.circuit.get_historical_view()
+    for elt_name, elt in self.vis_descriptor.get_temporal_elements().iteritems():
+      vis_root = VisualizerRoot(self.historical_view, elt)
+      vis_frame = TemporalOverview(None, self, elt_name, self.historical_view, vis_root)
+      self.frames.append(vis_frame)
+      
     app.MainLoop()
   
   def exit(self):
@@ -84,12 +89,14 @@ class ChisualizerManager(object):
     self.circuit.reset(cycles)
     self.cycle = 0
     self.snapshots = []
+    self.historical_view.set_views_list(self.snapshots)
     self.refresh_visualizers()
     
   def circuit_fwd(self, cycles=1):
     logging.info("Clock circuit (%i cycles)", cycles)
     self.circuit.snapshot_save(str(self.cycle))
     self.snapshots.append((self.cycle, self.circuit.current_to_value_dict()))
+    self.historical_view.set_views_list(self.snapshots)
     self.cycle += self.circuit.clock(cycles)
     self.refresh_visualizers()
     
@@ -99,6 +106,7 @@ class ChisualizerManager(object):
       logging.info("Revert circuit (%i cycles)", cycles)
       self.cycle = self.snapshots.pop()[0]
       self.circuit.snapshot_restore(str(self.cycle))
+      self.historical_view.set_views_list(self.snapshots)
       self.refresh_visualizers()
     else:
       logging.warn("No more snapshots to revert")
