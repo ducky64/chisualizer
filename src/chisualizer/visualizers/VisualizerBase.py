@@ -122,9 +122,7 @@ class FramedVisualizer(AbstractVisualizer):
     self.border_size = self.static_attr(DataTypes.IntAttr, 'border_size', valid_min=1).get()
     self.border_color = self.dynamic_attr(DataTypes.StringAttr, 'border_color')
     
-    self.label = self.static_attr(DataTypes.StringAttr, 'label').get()
-    if not self.label:
-      self.label = None
+    self.label = self.dynamic_attr(DataTypes.StringAttr, 'label')
     self.label_size = self.static_attr(DataTypes.IntAttr,'label_size', valid_min=1).get()
     self.label_font = self.static_attr(DataTypes.StringAttr,'label_font').get()
     self.label_color = self.dynamic_attr(DataTypes.StringAttr, 'label_color')
@@ -142,10 +140,11 @@ class FramedVisualizer(AbstractVisualizer):
       cr.select_font_face(self.label_font,
                           cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
       cr.set_font_size(self.label_size)
-      if self.label is None:
+      if not self.label.get():
         _, _, _, _, self.label_width, _ = cr.text_extents(string.strip(self.path_component, "_. "))
       else:
-        _, _, _, _, self.label_width, _ = cr.text_extents(self.label)
+        # TODO: better labeling so labels don't affect element size
+        _, _, _, _, self.label_width, _ = cr.text_extents(self.label.get())
       _, _, _, self.label_height, _, _ = cr.text_extents('X')
       
       width = max(self.element_width, self.label_width)
@@ -197,10 +196,10 @@ class FramedVisualizer(AbstractVisualizer):
       cr.set_font_size(self.label_size)
       cr.move_to(rect.left() + self.frame_margin,
                  rect.top() + self.top_height - border_offset)
-      if self.label is None:
+      if not self.label.get():
         cr.show_text(string.strip(self.path_component, "_. "))
       else:
-        cr.show_text(self.label)
+        cr.show_text(self.label.get())
 
       if not self.collapsed:
         elements.extend(self.draw_element_cairo(cr, element_rect, depth))
@@ -225,8 +224,8 @@ class FramedVisualizer(AbstractVisualizer):
 
   def wx_prefix(self):
     prefix = string.strip(self.path_component, "_. ")
-    if self.label:
-      prefix += "(%s)" % self.label
+    if self.label.get():
+      prefix += "(%s)" % self.label.get()
     return prefix
 
   def wx_defaultaction(self):

@@ -2,7 +2,7 @@ import logging
 import subprocess
 import string
 
-from Common import Circuit, CircuitNode, CircuitView
+from Common import Circuit, CircuitNode, CircuitView, TemporalNode
 from ValueDictView import ValueDictView
 
 def result_to_list(res):
@@ -47,6 +47,10 @@ class ChiselEmulatorSubprocess(Circuit):
     if reset:
       self.reset(1)
       logging.debug("Reset circuit")
+      
+    self.cycle = 0
+    self.temporal_nodes_count = 0
+    self.temporal_node = self.create_temporal_node()
 
   def command(self, op, *args):
     """Sends a command to the emulator, and returns the output string."""
@@ -74,12 +78,80 @@ class ChiselEmulatorSubprocess(Circuit):
     out.extend(self.wires)
     out.extend(self.mems)
     return out
+
+  def create_temporal_node(self):
+    self.temporal_nodes_count += 1
+    return ChiselTemporalNode(self.current_to_value_dict(),
+                              self.temporal_nodes_count, 
+                              self.cycle)
+
+  def update_temporal_node(self):
+    self.snapshot_save(self.temporal_node.get_snapshot_state())
+    self.temporal_node.update(self.current_to_value_dict())
+
+  def get_current_temporal_node(self):
+    return self.temporal_node
+
+  def do_modified_callback(self):
+    # TODO: This can probably be made more efficient
+    self.update_temporal_node()
+    if self.temporal_node.get_next_time() is not None:
+      prev_temporal_node = self.temporal_node
+      self.temporal_node = self.create_temporal_node()
+      self.temporal_node.prev_mod = prev_temporal_node
+      if prev_temporal_node.get_next_mod() is not None:
+        self.temporal_node.next_mod = prev_temporal_node.next_mod
+      prev_temporal_node.next_mod = self.temporal_node 
+    super(ChiselEmulatorSubprocess, self).do_modified_callback()
+    
+  def navigate_next_mod(self):
+    if self.temporal_node.get_next_mod() is not None:
+      self.update_temporal_node()
+      self.temporal_node = self.temporal_node.get_next_mod()
+      self.snapshot_restore(self.temporal_node.get_snapshot_state())
+    else:
+      logging.warn("No next mod")
+  
+  def navigate_prev_mod(self):
+    if self.temporal_node.get_prev_mod() is not None:
+      self.update_temporal_node()
+      self.temporal_node = self.temporal_node.get_prev_mod()
+      self.snapshot_restore(self.temporal_node.get_snapshot_state())
+    else:
+      logging.warn("No prev mod")
+
+  def navigate_back(self):
+    if self.temporal_node.get_prev_time() is not None:
+      self.update_temporal_node()
+      self.temporal_node = self.temporal_node.get_prev_time()
+      self.snapshot_restore(self.temporal_node.get_snapshot_state())
+    else:
+      logging.warn("No snapshots to revert")
+
+  def navigate_fwd(self, cycles):
+    # TODO: arbitrary cycles
+    self.update_temporal_node()
+    assert cycles == 1
+    if self.temporal_node.get_next_time() is None:
+      self.clock(1)
+    else:
+      self.temporal_node = self.temporal_node.get_next_time()
+      self.snapshot_restore(self.temporal_node.get_snapshot_state())
   
   def reset(self, cycles):
+    self.cycle = 0
+    self.temporal_nodes_count = 0
+    self.temporal_node = self.create_temporal_node()
     return result_to_int(self.command("reset", cycles))
   
   def clock(self, cycles):
-    return result_to_int(self.command("clock", cycles))
+    cycles = result_to_int(self.command("clock", cycles)) 
+    self.cycle += cycles
+    prev_temporal_node = self.temporal_node
+    self.temporal_node = self.create_temporal_node()
+    self.temporal_node.prev_time = prev_temporal_node
+    prev_temporal_node.next_time = self.temporal_node
+    return cycles
 
   def current_to_value_dict(self):
     rtn = {}
@@ -97,7 +169,7 @@ class ChiselEmulatorSubprocess(Circuit):
     width_dict = {}
     for node_name in self.wires:
       width_dict[node_name] = result_to_int(self.command('wire_width', node_name))
-    return ValueDictView(width_dict)
+    return ChiselHistoricalView(width_dict, self)
   
   def get_current_view(self):
     return ChiselCircuitView(self)
@@ -239,3 +311,46 @@ class ChiselMemElement(ChiselNode):
            and result_ok(self.api.command('propagate')))
     self.api.do_modified_callback()
     return rtn
+
+class ChiselHistoricalView(ValueDictView):
+  def __init__(self, width_dict, circuit):
+    super(ChiselHistoricalView, self).__init__(width_dict)
+    self.circuit = circuit
+
+  def get_current_temporal_node(self):
+    return self.circuit.get_current_temporal_node()
+
+class ChiselTemporalNode(TemporalNode):
+  """A node associated with a particular state in time."""
+  def __init__(self, value_dict, snapshot, cycle):
+    self.update(value_dict)
+    self.snapshot = snapshot
+    self.cycle = cycle
+    self.prev_time = None
+    self.next_time = None
+    self.prev_mod = None
+    self.next_mod = None
+    
+  def update(self, value_dict):
+    self.value_dict = value_dict
+    
+  def get_historical_state(self):
+    return self.value_dict
+  
+  def get_snapshot_state(self):
+    return self.snapshot
+  
+  def get_label(self):
+    return str(self.cycle)
+  
+  def get_prev_time(self):
+    return self.prev_time
+
+  def get_next_time(self):
+    return self.next_time
+
+  def get_prev_mod(self):
+    return self.prev_mod
+  
+  def get_next_mod(self):
+    return self.next_mod

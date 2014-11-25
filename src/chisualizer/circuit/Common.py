@@ -73,6 +73,10 @@ class CircuitView(object):
     raise NotImplementedError
   
 class HistoricalCircuitView(CircuitView):
+  def get_current_temporal_node(self):
+    """Returns the current temporal node of the circuit."""
+    raise NotImplementedError
+  
   def set_view(self, state):
     """Sets this view to some (historical) circuit state. State currently
     can be anything.
@@ -145,4 +149,35 @@ class CircuitNode(object):
   def get_child_reference(self, child_path):
     """Returns a ChiselApiNode of some subpath under this node.
     """
+    raise NotImplementedError
+  
+class TemporalNode(object):
+  """A node associated with a particular state in time."""
+  def get_historical_state(self):
+    """Returns an object suitable to be fed into the historical view's 
+    set_state."""
+    raise NotImplementedError
+  
+  def get_snapshot_state(self):
+    """Returns an object suitable for snapshot restoring."""
+    raise NotImplementedError
+  
+  def get_label(self):
+    """A string to describe this node."""
+    raise NotImplementedError
+  
+  def get_prev_time(self):
+    """Returns a TemporalNode of the previous timestep, or None."""
+    raise NotImplementedError
+
+  def get_next_time(self):
+    """Returns a TemporalNode of the next timestep, or None."""
+    raise NotImplementedError
+
+  def get_prev_mod(self):
+    """Returns a TemporalNode of the previous modification, or None."""
+    raise NotImplementedError
+  
+  def get_next_mod(self):
+    """Returns a TemporalNode of the next modification, or None."""
     raise NotImplementedError

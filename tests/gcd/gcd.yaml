@@ -60,8 +60,6 @@ lib:
 display:
   gcd:
     !Ref {ref: gcd, path: GCD}
-  gcd_overview:
-    !Ref {ref: gcd_overview, path: GCD}
 
 temporal:
   gcd:

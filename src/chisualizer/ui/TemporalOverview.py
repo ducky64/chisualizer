@@ -36,7 +36,6 @@ class TemporalOverviewPanel(wx.Panel):
     self.vis_root = vis_root
     
     self.scale = 1
-    self.center = (0, 0)  # center of visualization, in visualizer coords
     self.mouse_vis = (0, 0)   # mouse position, in visualizer coords
     
     self.need_visualizer_refresh = True
@@ -50,10 +49,14 @@ class TemporalOverviewPanel(wx.Panel):
     char = evt.GetKeyCode()
     if char == ord('r'):
       self.manager.circuit_reset()
-    elif char == wx.WXK_RIGHT:
-      self.manager.circuit_fwd()
     elif char == wx.WXK_LEFT:
+      self.manager.circuit_prev_mod()
+    elif char == wx.WXK_RIGHT:
+      self.manager.circuit_next_mod()
+    elif char == wx.WXK_UP:
       self.manager.circuit_back()
+    elif char == wx.WXK_DOWN:
+      self.manager.circuit_fwd()
     elif char == ord('s'):
       cur_val = -1
       dlg = wx.TextEntryDialog(None, 'Step', 'Cycles to step', "1")
@@ -81,8 +84,6 @@ class TemporalOverviewPanel(wx.Panel):
     delta = evt.GetWheelRotation() / evt.GetWheelDelta()
     scale_factor = 1.2 ** delta
     self.scale = self.scale * scale_factor
-    self.center = (-self.mouse_vis[0] + (self.mouse_vis[0] + self.center[0])/scale_factor,
-                   -self.mouse_vis[1] + (self.mouse_vis[1] + self.center[1])/scale_factor)
     self.vis_refresh()
 
   def OnMouseMotion(self, evt):
@@ -134,7 +135,7 @@ class TemporalOverviewPanel(wx.Panel):
                         cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
     cr.set_font_size(10)
     cr.move_to(0, height - 50)
-    cr.show_text("Center %.1f, %.1f; Scale: %.2f" % (self.center[0], self.center[1], self.scale))
+    cr.show_text("Scale: %.2f" % self.scale)
     cr.move_to(0, height - 40)
     cr.show_text("Mouse: %.1f, %.1f" % self.mouse_vis)
     cr.move_to(0, height - 30)
@@ -149,8 +150,6 @@ class TemporalOverviewPanel(wx.Panel):
     y = y - height / 2
     x = x / self.scale
     y = y / self.scale
-    x = x - self.center[0]
-    y = y - self.center[1]
     return (x, y) 
 
   def get_mouseover_elements(self, x, y):
@@ -174,8 +173,8 @@ class TemporalOverviewPanel(wx.Panel):
     
       cr.translate(0.5, 0.5)
       cr.save()
+      cr.translate(width/2, height/2)
       cr.scale(self.scale, self.scale)
-      cr.translate(*self.center)
       
       timer_draw = time.time()
       self.draw_visualizer(cr)
@@ -188,10 +187,10 @@ class TemporalOverviewPanel(wx.Panel):
                           cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
       cr.set_font_size(10)
       cr.move_to(0, height - 15)
-      cr.show_text("Cycle %i, render: %.2f ms" %
+      cr.show_text("Cycle %s, render: %.2f ms" %
                    (self.manager.get_circuit_cycle(), timer_draw*1000))
       cr.move_to(0, height - 5)
-      cr.show_text("(<-) back one cycle, (->) forward one cycle, (s) variable cycle step, (r) cycle in reset, (mousewheel) zoom, (p) save to SVG")
+      cr.show_text("(up) back one cycle, (down) forward one cycle, (s) variable cycle step, (r) cycle in reset, (mousewheel) zoom, (p) save to SVG")
       
       self.visualizer_dc = dc
       self.need_visualizer_refresh = False
@@ -199,29 +198,70 @@ class TemporalOverviewPanel(wx.Panel):
     return self.visualizer_dc
 
   def draw_visualizer(self, cr):
-    timer_update = 0.0
-    timer_lay = 0.0
-    timer_draw = 0.0
-    curr_y = 0
-    
-    for _, view in self.circuit_view.get_all_views():
-      self.circuit_view.set_view(view)
+    timers = [0, 0, 0]
+    left_x = right_x = bot_y = top_y = 0
+    current_temporal_node = self.circuit_view.get_current_temporal_node()
+      
+    def draw_visualizer_at(temporal_node, layout_process_fn):
+      self.circuit_view.set_view(temporal_node.get_historical_state())
       
       timer = time.time()
+      self.vis_root.visualizer.apply_attr_overloads(None, {"label": str(temporal_node.get_label())})
       self.vis_root.update()
-      timer_update += time.time() - timer
-      
+      timers[0] += time.time() - timer
+        
       timer = time.time()
-      layout = self.vis_root.layout_cairo(cr).zeroed_topleft().translated(0, curr_y)
-      timer_lay += time.time() - timer
-      curr_y += layout.height()
-      
+      layout = layout_process_fn(self.vis_root.layout_cairo(cr).centered_origin())
+      timers[1] += time.time() - timer
+        
       timer = time.time()
       self.elements = self.vis_root.draw_cairo(cr, layout)
-      timer_draw += time.time() - timer
+      timers[2] += time.time() - timer
+      
+      return layout
+    
+    def iter_draw(iterations, next_node_fn, start_coord, layout_process_fn_fn, coord_increment_fn):
+      temporal_node = next_node_fn(current_temporal_node)
+      while iterations > 0 and temporal_node is not None:
+        layout = draw_visualizer_at(temporal_node, layout_process_fn_fn(start_coord))
+        start_coord = coord_increment_fn(start_coord, layout)
+        temporal_node = next_node_fn(temporal_node)
+        iterations -= 1
+    
+    self.vis_root.visualizer.apply_attr_overloads(None, {"label_color": "green"})
+    self.vis_root.visualizer.apply_attr_overloads(None, {"border_color": "green"})
+    center_layout = draw_visualizer_at(current_temporal_node, lambda layout: layout)
+    
+    # Draw nodes, prev by time
+    iter_draw(10,
+              lambda node: node.get_prev_time(),
+              center_layout.top(),
+              lambda coord: lambda layout: layout.aligned_bottom(coord),
+              lambda coord, layout: coord - layout.height())
+    
+    # Draw nodes, next by time
+    iter_draw(10,
+              lambda node: node.get_next_time(),
+              center_layout.bottom(),
+              lambda coord: lambda layout: layout.aligned_top(coord),
+              lambda coord, layout: coord + layout.height())
+    
+    # Draw nodes, prev by mod
+    iter_draw(1,
+              lambda node: node.get_prev_mod(),
+              center_layout.left(),
+              lambda coord: lambda layout: layout.aligned_right(coord),
+              lambda coord, layout: coord - layout.width())
+    
+    # Draw nodes, next by mod
+    iter_draw(1,
+              lambda node: node.get_next_mod(),
+              center_layout.right(),
+              lambda coord: lambda layout: layout.aligned_left(coord),
+              lambda coord, layout: coord + layout.width())
     
     logging.debug("draw_visualizer: layout time: %.2f ms, draw time: %.2f ms" %
-                 (timer_lay*1000, timer_draw*1000))
+                 (timers[1]*1000, timers[2]*1000))
     
   def save_svg(self, filename):
     # TODO: refactor to avoid calling desc.layout here

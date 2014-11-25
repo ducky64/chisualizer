@@ -52,9 +52,6 @@ class ChisualizerManager(object):
     self.circuit = circuit
     self.circuit.register_modified_callback(self.refresh_visualizers)
     
-    self.cycle = 0
-    self.snapshots = []
-    
     self.frames = []
     
   def run(self):
@@ -82,33 +79,24 @@ class ChisualizerManager(object):
       frame.vis_refresh()
   
   def get_circuit_cycle(self):
-    return self.cycle
+    return self.circuit.get_current_temporal_node().get_label()
   
   def circuit_reset(self, cycles=1):
-    logging.info("Reset circuit (%i cycles)", cycles)
     self.circuit.reset(cycles)
-    self.cycle = 0
-    self.snapshots = []
-    self.historical_view.set_views_list(self.snapshots)
+    self.refresh_visualizers()
+  
+  def circuit_prev_mod(self):
+    self.circuit.navigate_prev_mod()
     self.refresh_visualizers()
     
+  def circuit_next_mod(self):
+    self.circuit.navigate_next_mod()
+    self.refresh_visualizers()
+  
   def circuit_fwd(self, cycles=1):
-    logging.info("Clock circuit (%i cycles)", cycles)
-    self.circuit.snapshot_save(str(self.cycle))
-    self.snapshots.append((self.cycle, self.circuit.current_to_value_dict()))
-    self.historical_view.set_views_list(self.snapshots)
-    self.cycle += self.circuit.clock(cycles)
+    self.circuit.navigate_fwd(cycles)
     self.refresh_visualizers()
     
-  def circuit_back(self, cycles=1):
-    assert cycles == 1, "TODO generalize to multicycles"
-    if self.snapshots:
-      logging.info("Revert circuit (%i cycles)", cycles)
-      self.cycle = self.snapshots.pop()[0]
-      self.circuit.snapshot_restore(str(self.cycle))
-      self.historical_view.set_views_list(self.snapshots)
-      self.refresh_visualizers()
-    else:
-      logging.warn("No more snapshots to revert")
-      
-      
+  def circuit_back(self):
+    self.circuit.navigate_back()
+    self.refresh_visualizers()

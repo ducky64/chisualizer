@@ -35,8 +35,17 @@ class Rectangle:
                      (self.right() - self.center_horiz(),
                      self.bottom() - self.center_vert()))
 
-  def zeroed_topleft(self):
-    return self.translated(-self.left(), -self.top())
+  def aligned_bottom(self, coord):
+    return self.translated(0, -self.bottom() + coord)
+
+  def aligned_top(self, coord):
+    return self.translated(0, -self.top() + coord)
+
+  def aligned_left(self, coord):
+    return self.translated(-self.left() + coord, 0)
+
+  def aligned_right(self, coord):
+    return self.translated(-self.right() + coord, 0)
 
   def translated(self, dx, dy):
     return Rectangle((self.left() + dx, self.top() + dy),
