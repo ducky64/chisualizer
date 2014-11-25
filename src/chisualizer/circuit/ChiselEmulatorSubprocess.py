@@ -1,6 +1,7 @@
 import logging
 import subprocess
 import string
+import atexit
 
 from Common import Circuit, CircuitNode, CircuitView, TemporalNode
 from ValueDictView import ValueDictView
@@ -38,6 +39,7 @@ class ChiselEmulatorSubprocess(Circuit):
     self.p = subprocess.Popen(emulator_path,
                               stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                               stderr=subprocess.STDOUT)
+    atexit.register(self.p.terminate)
 
     self.wires = result_to_list(self.command("list_wires"))
     self.mems =  result_to_list(self.command("list_mems"))
