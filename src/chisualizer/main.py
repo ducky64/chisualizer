@@ -11,12 +11,11 @@ try:
 except:
   haveWxCairo = False
 
-from chisualizer.circuit.ChiselDummyApi import ChiselDummyApi
+from chisualizer.circuit.DummyCircuit import DummyCircuit
 from chisualizer.circuit.ChiselEmulatorSubprocess import ChiselEmulatorSubprocess
-
 from chisualizer.descriptor.YamlDescriptor import YamlDescriptor
 
-from chisualizer.ui.Manager import ChisualizerManager, VisualizerRoot
+from chisualizer.ui.Manager import ChisualizerManager
 
 def run():
   if not haveWxCairo:
@@ -49,7 +48,7 @@ def run():
     assert False
     
   if args.emulator == "dummy":  
-    api = ChiselDummyApi()
+    api = DummyCircuit()
   else:
     emulator_cmd_list = [args.emulator]
     if args.emulator_args:

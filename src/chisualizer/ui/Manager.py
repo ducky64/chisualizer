@@ -11,15 +11,15 @@ from chisualizer.util import Rectangle
 
 class VisualizerRoot(object):
   """Root of the visualizer descriptor tree."""
-  def __init__(self, circuit, vis_descriptor):
+  def __init__(self, circuit_view, vis_descriptor):
     """Initialize this descriptor from a file and given a ChiselApi object."""
     # Hacks to get this to behave as a AbstractVisualizer
     # TODO: FIX, perhaps with guard node
     self.root = self
     self.path = ""
     
-    self.api = circuit
-    self.node = self.api.get_root_node()
+    self.circuit_view = circuit_view
+    self.node = self.circuit_view.get_root_node()
     self.theme = DarkTheme()
 
     self.visualizer = vis_descriptor.instantiate(self, valid_subclass=AbstractVisualizer)
@@ -59,7 +59,7 @@ class ChisualizerManager(object):
   def run(self):
     app = wx.App(False)
     for elt_name, elt in self.vis_descriptor.get_display_elements().iteritems():
-      vis_root = VisualizerRoot(self.circuit, elt)
+      vis_root = VisualizerRoot(self.circuit.get_current_view(), elt)
       vis_frame = ChisualizerFrame(None, self, elt_name, self.circuit, vis_root)
       self.frames.append(vis_frame)
     app.MainLoop()

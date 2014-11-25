@@ -29,6 +29,79 @@ def result_ok(res):
   else:
     return False
 
+class ChiselEmulatorSubprocess(Circuit):
+  def __init__(self, emulator_path, reset=True):
+    """Starts the emulator subprocess."""
+    super(ChiselEmulatorSubprocess, self).__init__()
+    
+    self.p = subprocess.Popen(emulator_path,
+                              stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                              stderr=subprocess.STDOUT)
+
+    self.wires = result_to_list(self.command("list_wires"))
+    self.mems =  result_to_list(self.command("list_mems"))
+    logging.debug("Found wires: %s" % self.wires)
+    logging.debug("Found mems: %s" % self.mems)
+    
+    if reset:
+      self.reset(1)
+      logging.debug("Reset circuit")
+
+  def command(self, op, *args):
+    """Sends a command to the emulator, and returns the output string."""
+    # sanity check - extra newlines will break the protocol
+    assert isinstance(op, basestring)
+    cmd = op
+    for arg in args:
+      cmd += ' ' + str(arg)
+    if cmd.find('\n') != -1:
+      raise ValueError("Command contains unexpected newline: '%s'" % cmd)
+        
+    self.p.stdin.write(cmd + '\n')
+    self.p.stdin.flush();
+    out = self.p.stdout.readline().strip()
+    if out.startswith('error'):
+      raise ValueError("Command '%s' returned error: '%s'" % (cmd, out))
+    logging.debug("API: '%s' -> '%s'", cmd, out)
+    return out;
+  
+  def has_node(self, node):
+    return node in self.wires or node in self.mems
+
+  def get_nodes_list(self):
+    out = []
+    out.extend(self.wires)
+    out.extend(self.mems)
+    return out
+  
+  def reset(self, cycles):
+    return result_to_int(self.command("reset", cycles))
+  
+  def clock(self, cycles):
+    return result_to_int(self.command("clock", cycles))
+
+  def snapshot_save(self, name):
+    self.command("referenced_snapshot_save", name)
+  
+  def snapshot_restore(self, name):
+    self.command("referenced_snapshot_restore", name)
+    
+  def get_historical_view(self):
+    raise NotImplementedError
+  
+  def get_current_view(self):
+    return ChiselCircuitView(self)
+    
+  def close(self):
+    self.command("quit")
+
+class ChiselCircuitView(CircuitView):
+  def __init__(self, parent):
+    self.parent = parent
+    
+  def get_root_node(self):
+    return ChiselNodePlaceholder(self.parent, "")
+  
 class ChiselNode(CircuitNode):
   def __str__(self):
     return "%s: %s" % (self.__class__.__name__, self.path)
@@ -156,67 +229,3 @@ class ChiselMemElement(ChiselNode):
            and result_ok(self.api.command('propagate')))
     self.api.do_modified_callback()
     return rtn
-
-class ChiselEmulatorSubprocess(Circuit):
-  def __init__(self, emulator_path, reset=True):
-    """Starts the emulator subprocess."""
-    super(ChiselEmulatorSubprocess, self).__init__()
-    
-    self.p = subprocess.Popen(emulator_path,
-                              stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                              stderr=subprocess.STDOUT)
-
-    self.wires = result_to_list(self.command("list_wires"))
-    self.mems =  result_to_list(self.command("list_mems"))
-    logging.debug("Found wires: %s" % self.wires)
-    logging.debug("Found mems: %s" % self.mems)
-    
-    if reset:
-      self.reset(1)
-      logging.debug("Reset circuit")
-
-  def command(self, op, *args):
-    """Sends a command to the emulator, and returns the output string."""
-    # sanity check - extra newlines will break the protocol
-    assert isinstance(op, basestring)
-    cmd = op
-    for arg in args:
-      cmd += ' ' + str(arg)
-    if cmd.find('\n') != -1:
-      raise ValueError("Command contains unexpected newline: '%s'" % cmd)
-        
-    self.p.stdin.write(cmd + '\n')
-    self.p.stdin.flush();
-    out = self.p.stdout.readline().strip()
-    if out.startswith('error'):
-      raise ValueError("Command '%s' returned error: '%s'" % (cmd, out))
-    logging.debug("API: '%s' -> '%s'", cmd, out)
-    return out;
-  
-  def has_node(self, node):
-    return node in self.wires or node in self.mems
-
-  def get_nodes_list(self):
-    out = []
-    out.extend(self.wires)
-    out.extend(self.mems)
-    return out
-  
-  def reset(self, cycles):
-    return result_to_int(self.command("reset", cycles))
-  
-  def clock(self, cycles):
-    return result_to_int(self.command("clock", cycles))
-  
-  def get_root_node(self):
-    return ChiselNodePlaceholder(self, "")
-
-  def snapshot_save(self, name):
-    self.command("referenced_snapshot_save", name)
-  
-  def snapshot_restore(self, name):
-    self.command("referenced_snapshot_restore", name)
-    
-  def close(self):
-    self.command("quit")
-    

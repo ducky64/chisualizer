@@ -24,11 +24,14 @@ class Circuit(object):
     for callback_fn in self.modified_callback_fns:
       callback_fn()
       
-  def get_historical_view(self):
-    """Returns a """
-    raise NotImplementedError
-  
   def get_current_view(self):
+    """Returns a CircuitView object viewing the circuit state at the current
+    timestep."""
+    raise NotImplementedError
+      
+  def get_historical_view(self):
+    """Returns a HistoricalCircuitView object with the ability to view
+    circuit state in the past."""
     raise NotImplementedError
 
   def reset(self, cycles):
@@ -58,13 +61,30 @@ class Circuit(object):
     host, the host should terminate."""
     raise NotImplementedError
 
+class CircuitView(object):
+  """
+  Interface definition for a circuit view - provides access (read at least, 
+  write if applicable) to the state of the circuit at some time step.
+  """  
+  def get_root_node(self):
+    """Returns a CircuitNode reference to the root node. Likely, that node
+    will be a dummy path holder.
+    """
+    raise NotImplementedError
+  
+class HistoricalCircuitView(CircuitView):
+  def set_view(self, state):
+    """Sets this view to some (historical) circuit state. 
+    """
+    raise NotImplementedError
+  
 class CircuitNode(object):
   """
   Interface definition for a circuit node (wire/register/memory/whatever) tied
   to a particular CircuitView.
   """
   @staticmethod
-  def join_path(self, base_path, child_path):
+  def join_path(base_path, child_path):
     """Joins a base path and a child path, handling special functionality (like
     .__up__), and returning the combined path as a string,
     """
@@ -125,21 +145,3 @@ class CircuitNode(object):
     """Returns a ChiselApiNode of some subpath under this node.
     """
     raise NotImplementedError
-
-class CircuitView(object):
-  """
-  Interface definition for a circuit view - provides access (read at least, 
-  write if applicable) to the state of the circuit at some time step.
-  """  
-  def get_root_node(self):
-    """Returns a CircuitNode reference to the root node. Likely, that node
-    will be a dummy path holder.
-    """
-    raise NotImplementedError
-  
-class HistoricalCircuitView(CircuitView):
-  def set_view(self, state):
-    """Sets this view to some (historical) circuit state. 
-    """
-    raise NotImplementedError
-  
