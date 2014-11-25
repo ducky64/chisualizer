@@ -54,10 +54,7 @@ make run
 Note that the above is actually shorthand for the actual command to run the Chisualizer:
 \begin{verbatim}
 python ../../src/main.py  --emulator emulator/emulator --visualizer_desc gcd.yaml
-pkill emulator
 \end{verbatim}
-
-(the pkill is necessary because of a bug where the spawned emulator subprocess does not stop when Chisualizer is terminated, and instead proceeds to eat up all your CPU)
 
 You can navigate around the visualization using the mousewheel to zoom in and out. The circuit can be stepped forward and backwards in time using the arrow keys. Additional commands are listed at the bottom of the window.
 
