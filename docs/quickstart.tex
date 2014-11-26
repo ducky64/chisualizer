@@ -107,7 +107,7 @@ This shows a more realistic design with some notable features:
 Chisualizer can also visualize VCD dumps in the same block diagram style. Just pass "\texttt{--vcd }(vcd filename)" instead of "\texttt{--emulator }(emulator binary)" for the command line arguments.
 
 \section{Visualizer Descriptor Language Reference}
-Visualizer descriptors are how you tell Chisualizer how to render your circuit. They're written in a domain-specific language on top of YAML (of which JSON is a subset). You can see the examples ( \texttt{gcd.yaml} and \texttt{fix3stage.yaml}) as some examples.
+Visualizer descriptors are how you tell Chisualizer how to render your circuit. They're written in a domain-specific language on top of YAML (of which JSON is a subset). Take a look at the source for the visualizations above (\texttt{tests/gcd/gcd.yaml} and \texttt{tests/fix-tile/fix3stage.yaml}) - one of the goals is that users should be able to learn by example.
 
 The main concept is that visualizers (the visual representation of a node, module, or general circuit thing) are composable and semi-automatically placed and sized. Composable means you can put visualizers inside (some) visualizers, and semi-automatically placed and sized means that you only specify relative placement and the system will automatically determine the actual raw coordinates and required sizing. This is because working with raw coordinates, while powerful, is time-consuming and not amenable to change.
 
@@ -124,7 +124,7 @@ At the top level is a mapping (or dict, if you prefer) of:
 \end{itemize}
 
 \subsection{Basic Visualizers}
-You're probably now wondering, "what's a \texttt{Visualizer}"? \texttt{Visualizers} are tagged mappings like such:
+You're probably now wondering, "what's a \texttt{Visualizer}"? \texttt{Visualizer}s are tagged mappings like such:
 \begin{verbatim}
 !TextBox {path: .state, template: gcd_state_map}
 \end{verbatim}
@@ -136,7 +136,7 @@ A complete listing of Visualizers follows:
   Only path, modifiers, and template are important, the rest control visual properties and have sensible defaults.
   \begin{itemize}
     \item \texttt{path} (\texttt{String}, static): The path component for this visualizer, joined to its parent's \texttt{path}. Use \texttt{.\_\_up\_\_} to go one level up from the parent (to the previous dot).
-    \item \texttt{modifiers} (\texttt{list[Modifiers]}, static): A list of \texttt{Modifiers} (objects that can modify either this \texttt{Visualizer}'s or a child's attributes based on circuit data). Current only applicable to \texttt{MemoryArrays}.
+    \item \texttt{modifiers} (\texttt{list[Modifiers]}, static): A list of \texttt{Modifier}s (objects that can modify either this \texttt{Visualizer}'s or a child's attributes based on circuit data). Current only applicable to \texttt{MemoryArray}s.
     \item \texttt{template} (\texttt{String}/ref, static): Inherit attributes from a \texttt{Template} object.
     
     \item \texttt{frame\_style} (\texttt{String} [\texttt{none}, \texttt{frame}], static): Whether this Visualizer should be rendered with a graphical frame (margin) around it.
@@ -159,11 +159,11 @@ A complete listing of Visualizers follows:
     \item \texttt{text\_color} (\texttt{String/color}, static): Color for the text.
   \end{itemize}
   \item \texttt{LineGrid} \\
-  \texttt{LineGrid} is a container of \texttt{Visualizers}, putting them next to either other in a line that goes either horizontally (\texttt{dir=row}) or vertically (\texttt{dir=col}). \\
+  \texttt{LineGrid} is a container of \texttt{Visualizer}s, putting them next to either other in a line that goes either horizontally (\texttt{dir=row}) or vertically (\texttt{dir=col}). \\
   \todo{Add a picture to describe this concept}
   \begin{itemize}
     \item \texttt{dir} (\texttt{String} [\texttt{row}, \texttt{col}], static): Whether cells are arranged left to right (\texttt{row}) or top to bottom (\texttt{col}).
-    \item \texttt{cells} (\texttt{list[Visualizer]}, static): Children \texttt{Visualizers} to arrange in a line.
+    \item \texttt{cells} (\texttt{list[Visualizer]}, static): Children \texttt{Visualizer}s to arrange in a line.
   \end{itemize}  
   \item \texttt{MultiView} \\
   \texttt{MultiView} allows the user to interactively switch between different \texttt{Visualizer}s. Useful for being able to change on demand between overview and detail views.
@@ -231,7 +231,7 @@ This data type resolves to an integer. Currently, only YAML integers (static) ar
 \todo{Add dynamic integer objects}
 
 \subsection {Templates}
-\texttt{Templates} are a \texttt{mapping} of attributes to values which are inherited by any object inheriting it. These \texttt{template} objects are available:
+\texttt{Template}s are a \texttt{mapping} of attributes to values which are inherited by any object inheriting it. These \texttt{template} objects are available:
 \begin{itemize}
   \item \texttt{Template} \\
   A \texttt{Template}, nothing special to see here.
