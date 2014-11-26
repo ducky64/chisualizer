@@ -6,17 +6,6 @@ class Circuit(object):
   def __init__(self):
     self.modified_callback_fns = []
   
-  def has_node(self, node):
-    """Returns whether node is API-accessible in the host."""
-    raise NotImplementedError
-    
-  def get_nodes_list(self):
-    """Returns a list of API-accessible nodes in the circuit.
-    Depending on the optimization level during synthesis, some nodes may not
-    be accessible.
-    """
-    raise NotImplementedError
-  
   def register_modified_callback(self, callback_fn):
     self.modified_callback_fns.append(callback_fn)
   

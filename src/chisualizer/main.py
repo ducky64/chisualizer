@@ -13,6 +13,7 @@ except:
 
 from chisualizer.circuit.DummyCircuit import DummyCircuit
 from chisualizer.circuit.ChiselEmulatorSubprocess import ChiselEmulatorSubprocess
+from chisualizer.circuit.VcdCircuit import VcdCircuit
 from chisualizer.descriptor.YamlDescriptor import YamlDescriptor
 
 from chisualizer.ui.Manager import ChisualizerManager
@@ -23,10 +24,12 @@ def run():
     sys.exit(1)
     
   parser = argparse.ArgumentParser(description="Chisualizer, a block-diagram-style RTL visualizer")
-  parser.add_argument('--emulator', '-e', required=True,
+  parser.add_argument('--emulator', '-e',
                       help="Command to invoke the Chisel API compliant emulator with (or 'dummy').")
   parser.add_argument('--emulator_args', '-a', nargs='*',
                       help="Arguments to pass into the emulator.")
+  parser.add_argument('--vcd',
+                      help="VCD file to view.")
   parser.add_argument('--visualizer_desc', '-d', required=True,
                       help="Path to the visualizer descriptor XML file.")
   parser.add_argument('--emulator_reset', metavar='-r', type=bool, default=True,
@@ -47,19 +50,26 @@ def run():
   else:
     assert False
     
-  if args.emulator == "dummy":  
-    api = DummyCircuit()
+  if args.emulator and args.vcd:
+    raise ValueError("Cannot specify both a VCD and emulator")
+  elif args.emulator:
+    if args.emulator == "dummy":  
+      circuit = DummyCircuit()
+    else:
+      emulator_cmd_list = [args.emulator]
+      if args.emulator_args:
+        emulator_cmd_list.extend(args.emulator_args)
+      circuit = ChiselEmulatorSubprocess(emulator_cmd_list, reset=args.emulator_reset)
+  elif args.vcd:
+    circuit = VcdCircuit(args.vcd) 
   else:
-    emulator_cmd_list = [args.emulator]
-    if args.emulator_args:
-      emulator_cmd_list.extend(args.emulator_args)
-    api = ChiselEmulatorSubprocess(emulator_cmd_list, reset=args.emulator_reset)
+    raise ValueError("Must specify either emulator executable path or VCD file")
   
   vis_descriptor = YamlDescriptor()
   vis_descriptor.read_descriptor(os.path.dirname(__file__) + "/vislib.yaml")
   vis_descriptor.read_descriptor(args.visualizer_desc)
 
-  ChisualizerManager(vis_descriptor, api).run()
+  ChisualizerManager(vis_descriptor, circuit).run()
 
 if __name__ == "__main__":
   run()
