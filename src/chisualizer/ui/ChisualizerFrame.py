@@ -70,7 +70,7 @@ class ChisualizerPanel(wx.Panel):
           pass
       self.manager.circuit_fwd(cur_val)
     elif char == ord('p'):
-      self.save_svg("%s_%i_%s.svg" % (self.title,
+      self.save_svg("%s_%s_%s.svg" % (self.title,
                                       self.manager.get_circuit_cycle(),
                                       time.strftime("%y%m%d_%H%M%S")))
     elif char == ord('q'):
@@ -219,7 +219,7 @@ class ChisualizerPanel(wx.Panel):
     
   def save_svg(self, filename):
     # TODO: refactor to avoid calling desc.layout here
-    self.vis_root.set_theme(LightTheme())
+    self.vis_root.set_theme(DarkTheme())
       
     f = file(filename, 'w')
     surface_test = cairo.SVGSurface(f, 1, 1)  # dummy surface to get layout size

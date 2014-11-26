@@ -1,9 +1,11 @@
 \documentclass[11pt]{article}
 \usepackage{graphicx}
 \usepackage{hyperref}
+\usepackage{xcolor}
+\newcommand{\todo}[1]{\textcolor{red}{\textbf{TODO:} #1}}
 
 \title{\textbf{Chisualizer Quick Start \& Reference}}
-\author{\includegraphics[scale=0.025]{bigduck} Ducky}
+\author{\includegraphics[scale=0.025]{images/bigduck} Ducky}
 \date{\today}
 \begin{document}
 
@@ -32,7 +34,13 @@ If, for whatever reason, you don't know where the Chisualizer repository is, it'
   \item Bundle subelements, normally accessed in Chisel through a dot (.), require an underscore (\_) in Chisualizer. So gcd.io.in.ready becomes gcd.io\_in\_ready - this is because of an issue with Chisel's name resolution system and requires an upstream fix.
 \end{itemize}
 
-\section{Quick Start Example: GCD}
+\section{Quick Start Example: GCD in Interactive Mode}
+\begin{figure}[h!]
+  \centering
+    \includegraphics[scale=.5]{images/gcd_1_141126_121620}
+  \caption{GCD Visualization}
+\end{figure}
+
 \subsection{Building}
 Clone the Chisualizer repository to your location of choice.
 \begin{verbatim}
@@ -53,7 +61,7 @@ make run
 
 Note that the above is actually shorthand for the actual command to run the Chisualizer:
 \begin{verbatim}
-python ../../src/main.py  --emulator emulator/emulator --visualizer_desc gcd.yaml
+python ../../src/main.py --emulator emulator/emulator --visualizer_desc gcd.yaml
 \end{verbatim}
 
 You can navigate around the visualization using the mousewheel to zoom in and out. The circuit can be stepped forward and backwards in time using the up and down arrow keys. Additional commands are listed at the bottom of the window.
@@ -62,12 +70,26 @@ You can right-click elements to bring up a context menu to perform actions, like
 
 Try running the GCD of two numbers (say, 1337 and 42) by changing the state of the input operands and valid signal, then stepping until the calculation completes. Note that you can only change saved state (register values) - the circuit automatically updates (propagates values from registers) after each modification.
 
+\todo{Add section on temporal overviews}
+
 \section{A More Complex Example: DREAMER 3-stage}
+\begin{figure}[h!]
+  \centering
+    \includegraphics[scale=.25]{images/full3stage_0_141126_121155}
+  \caption{DREAMER 3-stage Tile Visualization}
+\end{figure}
+
 Unlike GCD, DREAMER (a NoC manycore processor) code isn't publicly available. I'm not sure if the emulator builds easily either, so this will also be a tutorial of how to run Chisualizer with a dummy emulator. Dummy mode is where there is no actual backing circuit - every request for a node returns a width of 32 bits, a depth of 16 elements, and a value of zero. Try running the DREAMER visualizer:
 From the Chisualizer repository base directory, run:
 \begin{verbatim}
 cd chisualizer/tests/fix-tile
 ./chisualizer-run-dummy.sh
+\end{verbatim}
+
+which is shorthand for
+
+\begin{verbatim}
+python ../../src/main.py --emulator dummy --visualizer_desc "fix3stage.yaml"
 \end{verbatim}
 
 This shows a more realistic design with some notable features:
@@ -78,6 +100,11 @@ This shows a more realistic design with some notable features:
   \item In "full3stage", you can see memory element highlighting in the regfile. The element being referred to by io\_reads\_*.adr is being highlighted with a green box.
   \item The mechanisms for these will be described in the Visualizer Descriptor Language Reference below.
 \end{itemize}
+
+\section{Viewing VCD Traces: ???}
+\todo{Add an example where VCD dumps can be viewed. Sodor?}
+
+Chisualizer can also visualize VCD dumps in the same block diagram style. Just pass "\texttt{--vcd }(vcd filename)" instead of "\texttt{--emulator }(emulator binary)" for the command line arguments.
 
 \section{Visualizer Descriptor Language Reference}
 Visualizer descriptors are how you tell Chisualizer how to render your circuit. They're written in a domain-specific language on top of YAML (of which JSON is a subset). You can see the examples ( \texttt{gcd.yaml} and \texttt{fix3stage.yaml}) as some examples.
@@ -133,7 +160,7 @@ A complete listing of Visualizers follows:
   \end{itemize}
   \item \texttt{LineGrid} \\
   \texttt{LineGrid} is a container of \texttt{Visualizers}, putting them next to either other in a line that goes either horizontally (\texttt{dir=row}) or vertically (\texttt{dir=col}). \\
-  TODO: There will be a picture here to help describe this concept sometime.
+  \todo{Add a picture to describe this concept}
   \begin{itemize}
     \item \texttt{dir} (\texttt{String} [\texttt{row}, \texttt{col}], static): Whether cells are arranged left to right (\texttt{row}) or top to bottom (\texttt{col}).
     \item \texttt{cells} (\texttt{list[Visualizer]}, static): Children \texttt{Visualizers} to arrange in a line.
@@ -149,8 +176,8 @@ A complete listing of Visualizers follows:
     \item \texttt{dir} (\texttt{String} [\texttt{row}, \texttt{col}], static): Direction of element index increment.
     \item \texttt{rows} (\texttt{Int}, static): Number of rows to display.
     \item \texttt{cols} (\texttt{Int}, static): Number of rows to display.
-    \item \texttt{offset} (\texttt{Int}, dynamic): Offset (in element index) of the array. TODO: Well, it's supposed to be dynamic, anyways.
-    \item \texttt{offset\_anchor} (\texttt{Int}, static): Percentage anchor of the offset. 0 would mean the offset is anchored at the beginning of the visible array, while 50 would mean the center. \\ TODO: This may be changed to a float between 0 and 1.
+    \item \texttt{offset} (\texttt{Int}, dynamic): Offset (in element index) of the array. \todo{Dynamic Ints aren't added yet}
+    \item \texttt{offset\_anchor} (\texttt{Int}, static): Percentage anchor of the offset. 0 would mean the offset is anchored at the beginning of the visible array, while 50 would mean the center. \todo{This may be changed to a float between 0 and 1}
     \item \texttt{cell} (\texttt{Visualizer}, static): Visualizer to instantiate for each memory element visible.
   \end{itemize}
 \end{itemize}
@@ -200,8 +227,8 @@ These special semantic meanings are available (denoted in the references above a
 \end{itemize}
   
 \subsubsection {Int}
-This data type resolves to an integer. Currently, only YAML integers (static) are available. \\
-TODO: add dynamic integer objects.
+This data type resolves to an integer. Currently, only YAML integers (static) are available.
+\todo{Add dynamic integer objects}
 
 \subsection {Templates}
 \texttt{Templates} are a \texttt{mapping} of attributes to values which are inherited by any object inheriting it. These \texttt{template} objects are available:
