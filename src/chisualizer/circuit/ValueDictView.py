@@ -4,8 +4,9 @@ class ValueDictView(HistoricalCircuitView):
   """
   View circuit state based on a value dict (from node paths to values
   """
-  def __init__(self, width_dict):
+  def __init__(self, circuit, width_dict):
     self.value_dict = {}
+    self.circuit = circuit
     self.width_dict = width_dict
 
   def set_view(self, state):
@@ -13,6 +14,9 @@ class ValueDictView(HistoricalCircuitView):
   
   def get_root_node(self):
     return ValueDictNode(self, "")
+
+  def get_current_temporal_node(self):
+    return self.circuit.get_current_temporal_node()
 
 class ValueDictNode(CircuitNode):
   def __init__(self, view, path):

@@ -193,7 +193,7 @@ class ChiselEmulatorSubprocess(Circuit):
     width_dict = {}
     for node_name in self.wires:
       width_dict[node_name] = result_to_int(self.command('wire_width', node_name))
-    return ChiselHistoricalView(width_dict, self)
+    return ValueDictView(self, width_dict)
   
   def get_current_view(self):
     return ChiselCircuitView(self)
@@ -335,14 +335,6 @@ class ChiselMemElement(ChiselNode):
            and result_ok(self.api.command('propagate')))
     self.api.do_modified_callback()
     return rtn
-
-class ChiselHistoricalView(ValueDictView):
-  def __init__(self, width_dict, circuit):
-    super(ChiselHistoricalView, self).__init__(width_dict)
-    self.circuit = circuit
-
-  def get_current_temporal_node(self):
-    return self.circuit.get_current_temporal_node()
 
 class ChiselTemporalNode(TemporalNode):
   """A node associated with a particular state in time."""

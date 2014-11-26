@@ -1,0 +1,8 @@
+v1.0, 20121119 -- Initial release.
+v1.01, 20130206 -- Mistake. Copy of initial release.
+v1.02, 20130206 -- Handle uppercase x,z : patch from Scott Chin.
+v1.03, 20130919 -- Patch by Sylvain Guilley : fix bugs in list_sigs
+v1.04, 20140228 -- Better description.
+v1.05, 20140228 -- Better description.
+
+

@@ -6,17 +6,6 @@ class Circuit(object):
   def __init__(self):
     self.modified_callback_fns = []
   
-  def has_node(self, node):
-    """Returns whether node is API-accessible in the host."""
-    raise NotImplementedError
-    
-  def get_nodes_list(self):
-    """Returns a list of API-accessible nodes in the circuit.
-    Depending on the optimization level during synthesis, some nodes may not
-    be accessible.
-    """
-    raise NotImplementedError
-  
   def register_modified_callback(self, callback_fn):
     self.modified_callback_fns.append(callback_fn)
   
@@ -56,24 +45,6 @@ class Circuit(object):
 
   def reset(self, cycles):
     """Hold circuit in reset for some cycles."""
-    raise NotImplementedError
-  
-  def clock(self, cycles):
-    """Clocks circuit for some cycles."""
-    raise NotImplementedError
-
-  def current_to_value_dict(self):
-    """Returns the current circuit state as a value dict, which can be loaded
-    into a ValueDictView."""
-    raise NotImplementedError
-
-  def snapshot_save(self, name):
-    """Saves a snapshot of the current state under name"""
-    raise NotImplementedError
-  
-  def snapshot_restore(self, name):
-    """Restores a previously saved snapshot under name to the current state.
-    Raises an exception if not successful."""
     raise NotImplementedError
   
   def close(self):
