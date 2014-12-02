@@ -72,17 +72,19 @@ lib:
     cell: !TextBox {template: rv32_inst}
   datapath_imem:
     !MultiLineGrid
-    frame_style: none
+    label: Memory (Instruction View)
     dir: row
     cells:
     - !MemoryArray
       template: imem_bank
       path: .__up__.__up__.memory.data_bank0
+      border_style: none
       label: "Bank 0"
       modifiers: !CondArrayIndexModifier {index_path: .__up__.io_core_ports_0_req_bits_addr, index_eval: "x/8", cond_path: .__up__.io_core_ports_0_req_bits_addr, cond_eval: "x%8<4", template: modifier_mem_read}
     - !MemoryArray
       template: imem_bank
       path: .__up__.__up__.memory.data_bank1
+      border_style: none
       label: "Bank 1"
       modifiers: !CondArrayIndexModifier {index_path: .__up__.io_core_ports_0_req_bits_addr, index_eval: "x/8", cond_path: .__up__.io_core_ports_0_req_bits_addr, cond_eval: "x%8>=4", template: modifier_mem_read}
   datapath_regfile:
@@ -106,23 +108,25 @@ lib:
     cell: !TextBox {template: text_hexadecimal}
   datapath_dmem:
     !MultiLineGrid
-    frame_style: none
+    label: Memory (Data View)
     dir: row
     cells:
     - !MemoryArray
       template: dmem_bank
       path: .__up__.__up__.memory.data_bank0
+      border_style: none
       label: "Bank 0"
       modifiers: !CondArrayIndexModifier {index_path: .__up__.io_core_ports_1_req_bits_addr, index_eval: "x/8", cond_path: .__up__.io_core_ports_1_req_bits_addr, cond_eval: "x%8<4", template: modifier_mem_read}
     - !MemoryArray
       template: dmem_bank
       path: .__up__.__up__.memory.data_bank1
+      border_style: none
       label: "Bank 1"
       modifiers: !CondArrayIndexModifier {index_path: .__up__.io_core_ports_1_req_bits_addr, index_eval: "x/8", cond_path: .__up__.io_core_ports_1_req_bits_addr, cond_eval: "x%8>=4", template: modifier_mem_read}
 
   datapath_imem_interface:
     !MultiLineGrid
-    label: Instr. Mem
+    label: Instruction Memory
     dir: col
     cells:
     - - !TextBox {path:  .io_core_ports_0_req_valid, template: io_valid}
@@ -174,7 +178,7 @@ lib:
         - !TextBox {path: .alu_out, template: text_hexadecimal}
   datapath_dmem_interface:
     !MultiLineGrid
-    label: Data. Mem
+    label: Data Memory
     dir: col
     cells:
     - - !TextBox {path:  .io_core_ports_1_req_valid, template: io_valid}

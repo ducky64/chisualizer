@@ -86,7 +86,7 @@ lib:
     !Template
     modify_attrs:
       border_style: border
-      border_color: red
+      border_color: yellow
 
   readyvalid_color:
     !DictString

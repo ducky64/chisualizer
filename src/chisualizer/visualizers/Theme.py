@@ -28,9 +28,6 @@ class Theme(object):
                   'pink': (1, 0, 1, 1),
                   'white': (1, 1, 1, 1),
                   'grey': (.5, .5, .5, 1),
-                       
-                  'bool_0': (1, 0, 0, 1),
-                  'bool_1': (0, 1, 0, 1),
                   }
     if desc in theme_dict:
       return theme_dict[desc]
@@ -47,9 +44,6 @@ class DarkTheme(Theme):
   
   def color(self, desc):
     theme_dict = {'border': (0, 0.4, 0.6),
-                  
-                  'bool_0': (1, .7, .7, 1),
-                  'bool_1': (.7, 1, .7, 1),
                   }
     if desc in theme_dict:
       return theme_dict[desc]
@@ -67,8 +61,14 @@ class LightTheme(Theme):
   def color(self, desc):
     theme_dict = {'border': (.2, .5, .8),
                   
-                  'bool_0': (.7, 0, 0, 1),
-                  'bool_1': (0, .7, 0, 1),
+                  'red': (.7, 0, 0, 1),
+                  'yellow': (.7, .7, 0, 1),
+                  'green': (0, .7, 0, 1),
+                  'cyan': (0, .7, .7, 1),
+                  'blue': (0, 0, .7, 1),
+                  'pink': (.7, 0, .7, 1),
+                  'white': (.7, .7, .7, 1),
+                  'grey': (.35, .35, .35, 1),
                   }
     if desc in theme_dict:
       return theme_dict[desc]

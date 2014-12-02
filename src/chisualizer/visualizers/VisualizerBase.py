@@ -115,7 +115,7 @@ class FramedVisualizer(AbstractVisualizer):
     super(FramedVisualizer, self).__init__(elt, parent, **kwargs)
 
     self.frame_style = self.static_attr(DataTypes.StringAttr, 'frame_style', valid_set=['none', 'frame']).get()
-    self.frame_margin = self.static_attr(DataTypes.IntAttr, 'frame_margin', valid_min=1).get()
+    self.frame_margin = self.static_attr(DataTypes.IntAttr, 'frame_margin', valid_min=0).get()
 
     
     self.border_style = self.dynamic_attr(DataTypes.StringAttr, 'border_style', valid_set=['none', 'border'])

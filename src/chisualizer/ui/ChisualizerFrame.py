@@ -219,7 +219,7 @@ class ChisualizerPanel(wx.Panel):
     
   def save_svg(self, filename):
     # TODO: refactor to avoid calling desc.layout here
-    self.vis_root.set_theme(DarkTheme())
+    self.vis_root.set_theme(LightTheme())
       
     f = file(filename, 'w')
     surface_test = cairo.SVGSurface(f, 1, 1)  # dummy surface to get layout size
