@@ -31,7 +31,7 @@ class ValueDictNode(CircuitNode):
     return self.view.width_dict[self.path]
   
   def get_depth(self):
-    raise NotImplementedError("ValueDict cannot yet save array-types")
+    return 32
 
   def has_value(self):
     return self.path in self.view.value_dict
@@ -43,7 +43,8 @@ class ValueDictNode(CircuitNode):
     return self.view.value_dict[self.path]
   
   def get_subscript_reference(self, subscript):
-    raise NotImplementedError("ValueDict cannot yet save array-types")
+    # TODO make this better
+    return ValueDictNode(self.view, self.path + "[" + str(subscript) + "]")
   
   def get_child_reference(self, child_path):
     return ValueDictNode(self.view, self.join_path(self.path, child_path))

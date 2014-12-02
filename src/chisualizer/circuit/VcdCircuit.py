@@ -40,8 +40,6 @@ class VcdCircuit(Circuit):
                                         tv_list=nets_tv_dict['tv'],
                                         size=int(net_dict['size'], 10))
 
-    for node_name in self.nodes.iterkeys():
-      logging.info(node_name)
     logging.info("%i nodes total", len(self.nodes))
 
     self.initial_temporal_node = self.create_initial_temporal_node()
@@ -55,15 +53,21 @@ class VcdCircuit(Circuit):
     self.historical_view = ValueDictView(self, self.width_dict)
     self.current_view.set_view(self.current_temporal_node.get_historical_state())
 
-  def create_initial_temporal_node(self):
+  def create_initial_temporal_node(self, cycle=0):
     # TODO: refactor so they reference common data structure instead of two
     # dicts (for efficiency reasons - constant term savings).
     tv_positions = {}
     state = {}
     for node_name, vcd_node in self.nodes.iteritems():
-      state[node_name] = vcd_val_to_int(vcd_node.tv_list[0][1])
-      tv_positions[node_name] = 0
-    return VcdTemporalNode(self, None, 0, tv_positions, state)
+      prev_idx = 0
+      for idx, tv_pair in enumerate(vcd_node.tv_list):
+        if tv_pair[0] > cycle:
+          break
+        prev_idx = idx
+      
+      state[node_name] = vcd_val_to_int(vcd_node.tv_list[prev_idx][1])
+      tv_positions[node_name] = prev_idx
+    return VcdTemporalNode(self, None, cycle, tv_positions, state)
 
   def get_current_temporal_node(self):
     return self.current_temporal_node
@@ -92,12 +96,14 @@ class VcdCircuit(Circuit):
   def navigate_fwd(self, cycles=None):
     if cycles is None:
       cycles = 1
-    while cycles > 0:
+    if cycles == 1:
       self.current_temporal_node = self.current_temporal_node.get_next_time()
       assert self.current_temporal_node is not None
-      cycles -= 1
+    else:
+      target_cyc = self.current_temporal_node.cycle + cycles
+      self.current_temporal_node = self.create_initial_temporal_node(target_cyc)
     self.current_view.set_view(self.current_temporal_node.get_historical_state())
-
+      
   def reset(self, cycles):
     self.current_temporal_node = self.initial_temporal_node()
     self.current_view.set_view(self.current_temporal_node.get_historical_state())
