@@ -10,22 +10,39 @@ VcdNode = namedtuple('VcdNode', ['vcd_key', 'tv_list', 'size'])
 
 def vcd_val_to_int(vcd_val_str):
   assert isinstance(vcd_val_str, basestring)
-  return int(vcd_val_str, 2)
+  if vcd_val_str.find('x') >= 0:
+    logging.warn("Value contains 'x', converting to 0")
+    vcd_val_str = vcd_val_str.replace('x', '0')
+  if vcd_val_str.find('z') >= 0:
+    logging.warn("Value contains 'z', converting to 0")
+    vcd_val_str = vcd_val_str.replace('z', '0')
+    
+  try:
+    return int(vcd_val_str, 2)
+  except ValueError as e:
+    logging.error("Unable to decode VCD value '%s'" % vcd_val_str)
+    raise e
 
 class VcdCircuit(Circuit):
   def __init__(self, vcd_filename):
     super(VcdCircuit, self).__init__()
+    logging.info("Parsing VCD file '%s'..." % vcd_filename)
     self.parsed_vcd = parse_vcd(vcd_filename)
+    logging.info("Done parsing '%s'" % vcd_filename)
   
     self.nodes = {}
     
     for vcd_key, nets_tv_dict in self.parsed_vcd.iteritems():
       for net_dict in nets_tv_dict['nets']:
         node_name = net_dict['hier'] + '.' + net_dict['name']
-        assert node_name not in self.nodes
+        assert node_name not in self.nodes, "duplicate name: '%s': %s" % (orig_node_name, net_dict)
         self.nodes[node_name] = VcdNode(vcd_key=vcd_key,
                                         tv_list=nets_tv_dict['tv'],
                                         size=int(net_dict['size'], 10))
+
+    for node_name in self.nodes.iterkeys():
+      logging.info(node_name)
+    logging.info("%i nodes total", len(self.nodes))
 
     self.initial_temporal_node = self.create_initial_temporal_node()
     self.current_temporal_node = self.initial_temporal_node

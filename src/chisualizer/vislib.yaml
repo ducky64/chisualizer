@@ -65,6 +65,17 @@ lib:
       1: {text: "T", text_color: green}
       default: {text: "T*", text_color: green}
   
+  modifier_mem_read:
+    !Template
+    modify_attrs:
+      border_style: border
+      border_color: green
+  modifier_mem_write:
+    !Template
+    modify_attrs:
+      border_style: border
+      border_color: red
+
   readyvalid_color:
     !DictString
     mapping:
