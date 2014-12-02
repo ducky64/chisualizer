@@ -71,7 +71,7 @@ class TemporalOverviewPanel(wx.Panel):
           pass
       self.manager.circuit_fwd(cur_val)
     elif char == ord('p'):
-      self.save_svg("%s_%i_%s.svg" % (self.title,
+      self.save_svg("%s_%s_%s.svg" % (self.title,
                                       self.manager.get_circuit_cycle(),
                                       time.strftime("%y%m%d_%H%M%S")))
     elif char == ord('q'):
@@ -272,21 +272,24 @@ class TemporalOverviewPanel(wx.Panel):
     surface_test = cairo.SVGSurface(f, 1, 1)  # dummy surface to get layout size
     # TODO make cross platform, 
     cr_test = cairo.Context(surface_test)
+    self.vis_root.visualizer.apply_attr_overloads(None, {"label": str("1")})
     self.vis_root.update()
     layout = self.vis_root.layout_cairo(cr_test)
     surface_test.finish()
     
     f = file(filename, 'w')
-    surface = cairo.SVGSurface(f, layout.width()+2, layout.height()+2)
+    surface = cairo.SVGSurface(f, layout.width()+2, layout.height()*7+2)
     cr = cairo.Context(surface)
     
     cr.set_source_rgba(*self.vis_root.get_theme().background_color())
-    cr.rectangle(0, 0, layout.width()+2, layout.height()+2)
+    cr.rectangle(0, 0, layout.width()+2, layout.height()*7+2)
     cr.fill()
     
     cr.translate(1, 1)
+    cr.translate(layout.width()/2, layout.height()*3.5)
     cr.save()
-    self.vis_root.draw_cairo(cr, layout)
+    #self.vis_root.draw_cairo(cr, layout)
+    self.draw_visualizer(cr)
     
     surface.finish()
     f.close()

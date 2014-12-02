@@ -41,7 +41,7 @@ class CondArrayIndexModifier(ArrayIndexModifier):
     self.cond_eval = self.static_attr(DataTypes.StringAttr, 'cond_eval').get()
     self.cond_node = parent.get_circuit_node().get_child_reference(self.cond_path_component)
     if not self.cond_node.has_value():
-      elt.parse_error("cond_path node '%s' has no value" % self.node)
+      elt.parse_error("cond_path node '%s' has no value" % self.cond_node)
   
   def apply_to(self, target):
     cond = eval(self.cond_eval, {}, {'x': self.cond_node.get_value()})

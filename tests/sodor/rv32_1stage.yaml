@@ -49,7 +49,9 @@ lib:
       8: {text: xor, text_color: green}
       9: {text: slt, text_color: green}
       10: {text: sltu, text_color: green}
-      11: {text: copy2, text_color: green}
+      11: {text: copy1, text_color: green}
+      default: {text: "???", text_color: red}
+
   pc_sel:
     !DictTemplate
     mapping: 
