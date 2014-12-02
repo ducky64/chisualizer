@@ -35,7 +35,7 @@ class VcdCircuit(Circuit):
     for vcd_key, nets_tv_dict in self.parsed_vcd.iteritems():
       for net_dict in nets_tv_dict['nets']:
         node_name = net_dict['hier'] + '.' + net_dict['name']
-        assert node_name not in self.nodes, "duplicate name: '%s': %s" % (orig_node_name, net_dict)
+        assert node_name not in self.nodes, "duplicate name: '%s': %s" % (node_name, net_dict)
         self.nodes[node_name] = VcdNode(vcd_key=vcd_key,
                                         tv_list=nets_tv_dict['tv'],
                                         size=int(net_dict['size'], 10))
