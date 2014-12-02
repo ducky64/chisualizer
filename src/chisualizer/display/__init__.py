@@ -1,2 +1,3 @@
 import Modifier
 import VisualizerToString
+import VisualizerToInt

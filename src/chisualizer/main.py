@@ -59,6 +59,7 @@ def run():
       emulator_cmd_list = [args.emulator]
       if args.emulator_args:
         emulator_cmd_list.extend(args.emulator_args)
+        print emulator_cmd_list
       circuit = ChiselEmulatorSubprocess(emulator_cmd_list, reset=args.emulator_reset)
   elif args.vcd:
     circuit = VcdCircuit(args.vcd) 

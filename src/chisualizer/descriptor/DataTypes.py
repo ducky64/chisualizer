@@ -182,17 +182,20 @@ class IntAttr(SingleElementAttr):
     elif isinstance(attr_value_elt, Number):
       return int(attr_value_elt)
     elif isinstance(attr_value_elt, ParsedElement):
-      from chisualizer.display.VisualizerToString import VisualizerToString
+      from chisualizer.display.VisualizerToInt import VisualizerToInt # TODO: HACKY
       return attr_value_elt.instantiate(self.parent, 
-                                        valid_subclass=VisualizerToString)
+                                        valid_subclass=VisualizerToInt)
     else:
       self.parse_error("Invalid type in '%s': %s"
                        % (attr_value_elt, attr_value_elt.__class__.__name__),
                        exc_cls=VisualizerParseValidationError)
   
   def value_elt_to_data(self, value_elt, static=False):
+    from chisualizer.display.VisualizerToInt import VisualizerToInt # TODO: HACKY
     if isinstance(value_elt, int):
       conv = value_elt
+    elif isinstance(value_elt, VisualizerToInt):
+      conv = value_elt.get_int()
     else:
       assert False, "Unknown type: %s" % value_elt.__class__.__name__ 
     

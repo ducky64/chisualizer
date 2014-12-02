@@ -20,14 +20,17 @@ class ArrayIndexModifier(Modifier):
   index."""
   def __init__(self, elt, parent):
     super(ArrayIndexModifier, self).__init__(elt, parent)
-    self.path_component = self.static_attr(DataTypes.StringAttr, 'index_path').get()    
-    self.node = parent.get_circuit_node().get_child_reference(self.path_component)
-    if not self.node.has_value():
-      elt.parse_error("index_path node '%s' has no value" % self.node)
+    self.path_component = self.static_attr(DataTypes.StringAttr, 'index_path').get()
+    self.index_eval = self.static_attr(DataTypes.StringAttr, 'index_eval').get()    
+    self.index_node = parent.get_circuit_node().get_child_reference(self.path_component)
+    if not self.index_node.has_value():
+      elt.parse_error("index_path node '%s' has no value" % self.index_node)
     
   def get_array_index(self):
     """Returns the array index to modify"""
-    return self.node.get_value()
+    index = eval(self.index_eval, {}, {'x': self.index_node.get_value()})
+    assert isinstance(index, int)
+    return index
   
 @Common.tag_register('CondArrayIndexModifier')
 class CondArrayIndexModifier(ArrayIndexModifier):
@@ -35,16 +38,14 @@ class CondArrayIndexModifier(ArrayIndexModifier):
   def __init__(self, elt, parent):
     super(CondArrayIndexModifier, self).__init__(elt, parent)
     self.cond_path_component = self.static_attr(DataTypes.StringAttr, 'cond_path').get()    
+    self.cond_eval = self.static_attr(DataTypes.StringAttr, 'cond_eval').get()
     self.cond_node = parent.get_circuit_node().get_child_reference(self.cond_path_component)
     if not self.cond_node.has_value():
       elt.parse_error("cond_path node '%s' has no value" % self.node)
-    
-  def get_array_index(self):
-    """Returns the array index to modify"""
-    return self.node.get_value()
   
   def apply_to(self, target):
-    if self.cond_node.get_value() != 0:
+    cond = eval(self.cond_eval, {}, {'x': self.cond_node.get_value()})
+    assert isinstance(cond, bool)
+    if cond:
       super(CondArrayIndexModifier, self).apply_to(target)
-    
     

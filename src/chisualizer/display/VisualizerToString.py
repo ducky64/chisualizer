@@ -1,8 +1,11 @@
+import logging
 import math
+import subprocess
 
 from chisualizer.visualizers.VisualizerBase import AbstractVisualizer
 import chisualizer.Base as Base
 from chisualizer.descriptor import *
+from distutils import cmd
 
 class VisualizerToString(Base.Base):
   """Abstract base class for "functions" converting Chisel node values to
@@ -156,6 +159,64 @@ class DictString(VisualizerToString):
       return True
     else:
       return super(DictString, self).set_from_string(in_text)
+    
+@Common.tag_register('SubprocessString')
+class SubprocessString(VisualizerToString):
+  """TODO: docs"""
+  subprocess_dict = {}
+  @classmethod
+  def create_subprocess(cls, cmd_attr):
+    if cmd in cls.subprocess_dict:
+      return cls.subprocess_dict[cmd]
+    try:
+      return subprocess.Popen(cmd_attr.get(),
+                              stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                              stderr=subprocess.STDOUT)
+    except OSError as e:
+      cmd_attr.parse_error("Failed to open subprocess: %s" % e)
+  
+  def __init__(self, element, parent):
+    super(SubprocessString, self).__init__(element, parent)
+    
+    self.subprocess_cmd_attr = self.static_attr(DataTypes.StringAttr, 'subprocess') 
+    self.cmd_to_text_attr = self.static_attr(DataTypes.StringAttr, 'cmd_to_text')
+    self.cmd_to_text = self.cmd_to_text_attr.get()
+    
+    # Should not contain newline - breaks the protocol
+    if self.cmd_to_text.find('\n') != -1:
+      self.cmd_to_text_attr.parse_error("Unexpected newline")
+    
+    self.length = self.static_attr(DataTypes.IntAttr, 'length', valid_min=1).get()
+    self.length_char_attr = self.static_attr(DataTypes.StringAttr, 'length_char')
+    self.length_char = self.length_char_attr.get()
+    if len(self.length_char) > 1:
+      self.length_char_attr.parse_error("Must be single character")
+      
+    self.p = self.create_subprocess(self.subprocess_cmd_attr)
+  
+  def command(self, cmd):
+    """Sends a command to the subprocess, and returns the output string.
+    The expected protocol is that each command ends with a newline, and
+    each response ends with a newline 
+    """
+    self.p.stdin.write(cmd + '\n')
+    self.p.stdin.flush();
+    out = self.p.stdout.readline().strip()
+    logging.debug("SubprocessDisplay: '%s' -> '%s'", cmd, out)
+    return out
+  
+  def get_string(self):
+    if not self.node.has_value():
+      return None
+    
+    value = self.node.get_value()
+    return self.command(self.cmd_to_text % value)
+  
+  def get_longest_strings(self):
+    return [self.length_char * self.length]
+    
+  def set_from_string(self, in_text):
+    return super(SubprocessString, self).set_from_string(in_text)
     
 @Common.desugar_tag('DictTemplate')
 def desugar_dict_template(parsed_element, registry):

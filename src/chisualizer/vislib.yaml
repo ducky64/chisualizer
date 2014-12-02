@@ -1,12 +1,4 @@
 defaults:
-  NumericalString:
-    !Template
-    path: ""
-    charmap: 0123456789abcdefghijklmnopqrstuvwxyz
-    prefix: ""
-  DictString:
-    !Template
-    path: ""
   FramedBase:
     !Template
     path: ""
@@ -42,6 +34,26 @@ defaults:
     !Template
     border_style: border
     
+  NumericalString:
+    !Template
+    path: ""
+    charmap: 0123456789abcdefghijklmnopqrstuvwxyz
+    prefix: ""
+  DictString:
+    !Template
+    path: ""
+  SubprocessString:
+    !Template
+    path: ""
+    length_char: "_"
+
+  ArrayIndexModifier:
+    !Template
+    index_eval: x
+  CondArrayIndexModifier:
+    !Template
+    cond_eval: "x != 0"
+
 lib:
   text_binary:
     !Template
