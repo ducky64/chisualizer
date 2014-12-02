@@ -145,7 +145,7 @@ class DictString(VisualizerToString):
       return self.default
   
   def get_longest_strings(self):
-    longest_strings = list(self.mapping_to_int.iterkeys())
+    longest_strings = list(self.mapping_to_string.itervalues())
     if self.default is not None:
       longest_strings.append(self.default)
     return longest_strings

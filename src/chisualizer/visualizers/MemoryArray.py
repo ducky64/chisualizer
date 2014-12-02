@@ -83,10 +83,10 @@ class MemoryArray(FramedVisualizer):
         # currently too many cells after
         for _ in xrange(self.cells_max - render_max):
           self.cells.pop(-1)
-      if self.cells_min > render_min:
-        # currently too many cells after
-        for _ in xrange(self.cells_min - render_min):
-          self.cells.pop(-1)        
+      if self.cells_min < render_min:
+        # currently too many cells before
+        for _ in xrange(render_min - self.cells_min):
+          self.cells.pop(0)        
       self.cells[:0] = pre
       self.cells.extend(post)
     else:

@@ -1,4 +1,40 @@
 lib:
+  io_ctl_exc:
+    !DictTemplate
+    mapping:
+      0: {text: "!exc", text_color: grey}
+      1: {text: "exc", text_color: red}
+    label: " "
+  io_ctl_stall:
+    !DictTemplate
+    mapping:
+      0: {text: "!stall", text_color: grey}
+      1: {text: "stall", text_color: red}
+    label: " "
+  io_valid:
+    !DictTemplate
+    mapping:
+      0: {text: "!valid", text_color: red}
+      1: {text: "valid", text_color: green}
+    label: " "
+  io_mem_fcn:
+    !DictTemplate
+    mapping:
+      0: {text: "ld", text_color: green}
+      1: {text: "st", text_color: yellow}
+    label: " "
+  io_mem_typ:
+    !DictTemplate
+    mapping:
+      0: {text: "none", text_color: grey}
+      1: {text: "byte", text_color: green}
+      2: {text: "hword", text_color: green}
+      3: {text: "word", text_color: green}
+      4: {text: "??", text_color: green}
+      5: {text: "byte", text_color: green}
+      6: {text: "hword", text_color: green}
+      7: {text: "word", text_color: green}
+    label: " "
   alu_op:
     !DictTemplate
     mapping:
@@ -24,68 +60,106 @@ lib:
       4: {text: EXC, text_color: cyan}
   rv32_inst:
     !Template
-    text: !SubprocessString {subprocess: "/opt/riscv/bin/riscv-dis", cmd_to_text: "DASM(0x%x)", length: 30}
+    text: !SubprocessString {subprocess: "/opt/riscv/bin/riscv-dis", cmd_to_text: "DASM(0x%x)", length: 24}
 
-  control:
+  imem_bank:
+    !Template
+    path: .__up__.__up__.memory.data_bank0
+    offset: !NumericalInt {path: .__up__.io_core_ports_0_req_bits_addr, value_eval: "x/8"}
+    dir: row
+    cols: 1
+    rows: 8
+    cell: !TextBox {template: rv32_inst}
+  datapath_imem:
     !MultiLineGrid
-    label: Control
+    frame_style: none
     dir: row
     cells:
-    - !TextBox {path: .io_ctl_stall, template: text_bool}
-    - !TextBox {path: .io_ctl_exception, template: text_bool}
+    - !MemoryArray
+      template: imem_bank
+      path: .__up__.__up__.memory.data_bank0
+      label: "Bank 0"
+      modifiers: !CondArrayIndexModifier {index_path: .__up__.io_core_ports_0_req_bits_addr, index_eval: "x/8", cond_path: .__up__.io_core_ports_0_req_bits_addr, cond_eval: "x%8<4", template: modifier_mem_read}
+    - !MemoryArray
+      template: imem_bank
+      path: .__up__.__up__.memory.data_bank1
+      label: "Bank 1"
+      modifiers: !CondArrayIndexModifier {index_path: .__up__.io_core_ports_0_req_bits_addr, index_eval: "x/8", cond_path: .__up__.io_core_ports_0_req_bits_addr, cond_eval: "x%8>=4", template: modifier_mem_read}
+  datapath_regfile:
+    !MemoryArray
+    path: .regfile
+    dir: row
+    cols: 4
+    rows: 8
+    modifiers:
+    - !ArrayIndexModifier {index_path: .__up__.rs1_addr, template: modifier_mem_read}
+    - !ArrayIndexModifier {index_path: .__up__.rs2_addr, template: modifier_mem_read}
+    - !CondArrayIndexModifier {index_path: .__up__.wb_addr, cond_path: .__up__.io_ctl_rf_wen, template: modifier_mem_write}
+    cell: !TextBox {template: text_hexadecimal}
+  dmem_bank:
+    !Template
+    path: .__up__.__up__.memory.data_bank0
+    offset: !NumericalInt {path: .__up__.io_core_ports_1_req_bits_addr, value_eval: "x/8"}
+    dir: row
+    cols: 1
+    rows: 8
+    cell: !TextBox {template: text_hexadecimal}
+  datapath_dmem:
+    !MultiLineGrid
+    frame_style: none
+    dir: row
+    cells:
+    - !MemoryArray
+      template: dmem_bank
+      path: .__up__.__up__.memory.data_bank0
+      label: "Bank 0"
+      modifiers: !CondArrayIndexModifier {index_path: .__up__.io_core_ports_1_req_bits_addr, index_eval: "x/8", cond_path: .__up__.io_core_ports_1_req_bits_addr, cond_eval: "x%8<4", template: modifier_mem_read}
+    - !MemoryArray
+      template: dmem_bank
+      path: .__up__.__up__.memory.data_bank1
+      label: "Bank 1"
+      modifiers: !CondArrayIndexModifier {index_path: .__up__.io_core_ports_1_req_bits_addr, index_eval: "x/8", cond_path: .__up__.io_core_ports_1_req_bits_addr, cond_eval: "x%8>=4", template: modifier_mem_read}
 
+  datapath_imem_interface:
+    !MultiLineGrid
+    label: Instr. Mem
+    dir: col
+    cells:
+    - - !TextBox {path:  .io_core_ports_0_req_valid, template: io_valid}
+      - !TextBox {path:  .io_core_ports_0_req_bits_fcn, template: io_mem_fcn}
+      - !TextBox {path:  .io_core_ports_0_req_bits_typ, template: io_mem_typ}
+    - !TextBox {path: .io_core_ports_0_req_bits_addr, label: addr, template: text_hexadecimal}
+    - !TextBox {path: .io_core_ports_0_req_bits_data, label: req data, template: text_hexadecimal}
+    - !TextBox {path: .io_core_ports_0_resp_bits_data, label: resp data, template: text_hexadecimal}
   datapath_pc:
     !MultiLineGrid
     label: PC
-    dir: row
+    dir: col
     cells:
-    - !MemoryArray
-      path: .__up__.__up__.memory.data_bank0
-      label: "Bank 0"
-      offset: !NumericalInt {path: .__up__.io_core_ports_0_req_bits_addr, value_eval: "x/8"}
-      dir: row
-      cols: 1
-      rows: 8
-      modifiers:
-      - !CondArrayIndexModifier {index_path: .__up__.io_core_ports_0_req_bits_addr, index_eval: "x/8", cond_path: .__up__.io_core_ports_0_req_bits_addr, cond_eval: "x%2==0", template: modifier_mem_read}
-      cell: !TextBox {template: text_hexadecimal}
-    - !MemoryArray
-      path: .__up__.__up__.memory.data_bank1
-      offset: !NumericalInt {path: .__up__.io_core_ports_0_req_bits_addr, value_eval: "x/8"}
-      label: "Bank 1"
-      dir: row
-      cols: 1
-      rows: 8
-      modifiers:
-      - !CondArrayIndexModifier {index_path: .__up__.io_core_ports_0_req_bits_addr, index_eval: "x/8", cond_path: .__up__.io_core_ports_0_req_bits_addr, cond_eval: "x%2==1", template: modifier_mem_read}
-      cell: !TextBox {template: text_hexadecimal}
-    - - !TextBox {path: .pc_reg, template: text_hexadecimal}
-      - !TextBox {path: .io_ctl_pc_sel, template: pc_sel}
-      - !TextBox {path: .pc_next, template: text_hexadecimal}
-      - !TextBox {path: .inst, template: text_hexadecimal}
-      - !TextBox {path: .inst, template: rv32_inst}
-  datapath_regfile:
+    - - !TextBox {path: .io_ctl_stall, template: io_ctl_stall}
+      - !TextBox {path: .io_ctl_exception, template: io_ctl_exc}
+    - !TextBox {path: .pc_reg, template: text_hexadecimal}
+    - !TextBox {path: .io_ctl_pc_sel, template: pc_sel}
+    - !TextBox {path: .pc_next, template: text_hexadecimal}
+  datapath_decode:
     !MultiLineGrid
-    label: Register File
-    dir: row
+    label: Decode
+    dir: col
     cells:
-    - !MemoryArray
-      path: .regfile
-      dir: row
-      cols: 4
-      rows: 8
-      modifiers:
-      - !ArrayIndexModifier {index_path: .__up__.rs1_addr, template: modifier_mem_read}
-      - !ArrayIndexModifier {index_path: .__up__.rs2_addr, template: modifier_mem_read}
-      - !CondArrayIndexModifier {index_path: .__up__.wb_addr, cond_path: .__up__.io_ctl_rf_wen, template: modifier_mem_write}
-      cell: !TextBox {template: text_hexadecimal}
-    - - - !TextBox {path: .rs1_addr, template: text_decimal}
-        - !TextBox {path: .rs1_data, template: text_hexadecimal}
-      - - !TextBox {path: .rs2_addr, template: text_decimal}
-        - !TextBox {path: .rs2_data, template: text_hexadecimal}
-      - !TextBox {path: .io_ctl_rf_wen, template: text_bool}
-      - - !TextBox {path: .wb_addr, template: text_decimal}
-        - !TextBox {path: .wb_data, template: text_hexadecimal}
+    - !TextBox {path: .inst, template: text_hexadecimal}
+    - !TextBox {path: .inst, template: rv32_inst}
+  datapath_regfile_interface:
+    !MultiLineGrid
+    label: Regfile
+    dir: col
+    cells:
+    - - !TextBox {path: .rs1_addr, template: text_decimal}
+      - !TextBox {path: .rs1_data, template: text_hexadecimal}
+    - - !TextBox {path: .rs2_addr, template: text_decimal}
+      - !TextBox {path: .rs2_data, template: text_hexadecimal}
+    - !TextBox {path: .io_ctl_rf_wen, template: text_bool}
+    - - !TextBox {path: .wb_addr, template: text_decimal}
+      - !TextBox {path: .wb_data, template: text_hexadecimal}
   datapath_alu:
     !MultiLineGrid
     label: ALU
@@ -94,32 +168,38 @@ lib:
     - !TextBox {path: .io_ctl_alu_fun, template: alu_op}
     - - - !TextBox {path: .alu_op1, template: text_decimal}
         - !TextBox {path: .alu_op2, template: text_decimal}
-    - - !TextBox {path: .alu_out, template: text_decimal}
-  datapath_dmem:
+        - !TextBox {path: .alu_out, template: text_decimal}
+      - - !TextBox {path: .alu_op1, template: text_hexadecimal}
+        - !TextBox {path: .alu_op2, template: text_hexadecimal}
+        - !TextBox {path: .alu_out, template: text_hexadecimal}
+  datapath_dmem_interface:
     !MultiLineGrid
-    label: Data Memory
+    label: Data. Mem
     dir: col
     cells:
-    - - !TextBox {path: .io_dmem_req_bits_addr, label: "addr", template: text_hexadecimal}
-      - !TextBox {path: .io_ctl_debug_dmem_val, label: "valid", template: text_bool}
-    - !TextBox {path: .io_dmem_resp_bits_data, label: "resp", template: text_hexadecimal}
-  datapath:
-    !MultiLineGrid
-    label: Datapath
-    dir: row
-    cells:
-    - !Ref {ref: datapath_pc}
-    - !Ref {ref: datapath_regfile}
-    - !Ref {ref: datapath_alu}
-    - !Ref {ref: datapath_dmem}
+    - - !TextBox {path:  .io_core_ports_1_req_valid, template: io_valid}
+      - !TextBox {path:  .io_core_ports_1_req_bits_fcn, template: io_mem_fcn}
+      - !TextBox {path:  .io_core_ports_1_req_bits_typ, template: io_mem_typ}
+    - !TextBox {path: .io_core_ports_1_req_bits_addr, label: addr, template: text_hexadecimal}
+    - !TextBox {path: .io_core_ports_1_req_bits_data, label: req data, template: text_hexadecimal}
+    - !TextBox {path: .io_core_ports_1_resp_bits_data, label: resp data, template: text_hexadecimal}
 
   rv32_1stage_top:
     !MultiLineGrid
+    frame_style: none
     dir: col
     cells:
-    - !Ref {ref: control, path: .c}
-    - !Ref {ref: datapath, path: .d} 
+    - - !Ref {ref: datapath_imem}
+      - !Ref {ref: datapath_regfile}
+      - !Ref {ref: datapath_dmem}
+    - - !Ref {ref: datapath_imem_interface, path: .__up__.__up__.memory}
+      - !Ref {ref: datapath_pc}
+      - !Ref {ref: datapath_decode}
+      - !Ref {ref: datapath_regfile_interface}
+      - !Ref {ref: datapath_alu}
+      - !Ref {ref: datapath_dmem_interface, path: .__up__.__up__.memory}
 
 display:
   main:
-    !Ref {ref: rv32_1stage_top, path: Top.tile.core}
+    !Ref {ref: rv32_1stage_top, path: Top.tile.core.d}
+
