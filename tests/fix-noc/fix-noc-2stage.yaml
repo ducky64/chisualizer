@@ -1,0 +1,206 @@
+lib:
+  checkx:
+    !DictTemplate
+    mapping:
+      0: {text: "✕", text_color: red}
+      1: {text: "✓", text_color: green}
+
+  text_fix_alu_op:
+    !DictTemplate
+    mapping:
+      0: {text_color: grey, text: NOP}
+      1: {text_color: red, text: RST}
+      2: {text_color: blue, text: LIT}
+      3: {text_color: blue, text: LITH}
+      4: {text_color: blue, text: RND}
+      5: {text_color: blue, text: EAT}
+      6: {text_color: blue, text: NOT}
+      7: {text_color: blue, text: AND}
+      8: {text_color: blue, text: OR}
+      9: {text_color: blue, text: XOR}
+      10: {text_color: blue, text: EQ}
+      11: {text_color: blue, text: NEQ}
+      12: {text_color: blue, text: MUX}
+      13: {text_color: blue, text: LSH}
+      14: {text_color: blue, text: RSH}
+      15: {text_color: blue, text: ARSH}
+      16: {text_color: blue, text: MSK}
+      17: {text_color: blue, text: CAT}
+      18: {text_color: blue, text: ADD}
+      19: {text_color: blue, text: SUB}
+      20: {text_color: blue, text: LT}
+      21: {text_color: blue, text: GTE}
+      22: {text_color: blue, text: MUL}
+      23: {text_color: blue, text: LOG2}
+      24: {text_color: blue, text: LD}
+      25: {text_color: blue, text: ST}
+      26: {text_color: blue, text: LDI}
+      27: {text_color: blue, text: STI}
+
+  fix_pipeline_idle:
+    !DictTemplate
+    mapping:
+      0: {text: "actv", text_color: green}
+      1: {text: "idle", text_color: red}
+  fix_alu:
+    !MultiLineGrid
+    dir: col
+    cells:
+    - - !TextBox {path: .io_op, template: text_fix_alu_op}
+      - !TextBox {path: .io_lit, template: text_hexadecimal}
+    - - - !TextBox {path: .io_x, template: text_hexadecimal}
+        - !TextBox {path: .io_y, template: text_hexadecimal}
+        - !TextBox {path: .io_z, template: text_hexadecimal}
+      - - !TextBox {path: .io_result, template: text_hexadecimal}
+        - !TextBox {path: .io_cond, template: text_bool}
+  fix_rf_interface_x:
+    !MultiLineGrid
+    dir: col
+    cells:
+    - - !TextBox {path: .io_reads_0_adr, label: r0 adr, template: text_decimal}
+      - !TextBox {path: .io_reads_0_dat, label: r0 dat, template: text_hexadecimal}
+    - - !TextBox {path: .io_reads_1_adr, label: r1 adr, template: text_decimal}
+      - !TextBox {path: .io_reads_1_dat, label: r1 adr, template: text_hexadecimal}
+    - - !TextBox {path: .io_reads_2_adr, label: r2 adr, template: text_decimal}
+      - !TextBox {path: .io_reads_2_dat, label: r2 adr, template: text_hexadecimal}
+  fix_rf_interface_wb:
+    !MultiLineGrid
+    dir: col
+    cells:
+    - - !TextBox {path: .io_writes_0_is, label: " ", template: checkx}
+      - !TextBox {path: .io_writes_0_adr, label: w0 adr, template: text_decimal}
+      - !TextBox {path: .io_writes_0_dat, label: w0 dat, template: text_hexadecimal}
+  fix_pipeline_pif:
+    !MultiLineGrid
+    label: PreIFetch
+    dir: col
+    cells:
+    - - !TextBox {path: .idle_PIF, template: fix_pipeline_idle}
+      - !TextBox {path: .PC_PIF, template: text_hexadecimal}
+  fix_pipeline_x:
+    !MultiLineGrid
+    label: Execute
+    dir: col
+    cells:
+    - - !TextBox {path: .idle_X, template: fix_pipeline_idle}
+      - !TextBox {path: .PC_X, template: text_hexadecimal}
+    - - !Ref {ref: fix_rf_interface_x, path: .regfile}
+      - !Ref {ref: fix_alu, path: .alu}
+  fix_pipeline_wb:
+    !MultiLineGrid
+    label: WriteBack
+    dir: col
+    cells:
+    - - !TextBox {path: .idle_WB, template: fix_pipeline_idle}
+      - !TextBox {path: .PC_WB, template: text_hexadecimal}
+    - - !Ref {ref: fix_rf_interface_wb, path: .regfile}
+  fix_pipeline:
+    !MultiLineGrid
+    label: pipeline
+    dir: col
+    cells:
+    - - !MemoryArray
+        path: .regfile.mem
+        dir: row
+        rows: 8
+        cols: 4
+        modifiers:
+        - !ArrayIndexModifier {index_path: .__up__.io_reads_0_adr, template: modifier_mem_read}
+        - !ArrayIndexModifier {index_path: .__up__.io_reads_1_adr, template: modifier_mem_read}
+        - !ArrayIndexModifier {index_path: .__up__.io_reads_2_adr, template: modifier_mem_read}
+        - !CondArrayIndexModifier {index_path: .__up__.io_writes_0_adr, cond_path: .__up__.io_writes_0_is, template: modifier_mem_write}
+        cell: !TextBox {template: text_hexadecimal}
+    - - !Ref {ref: fix_pipeline_x}
+      - !Ref {ref: fix_pipeline_wb}
+
+  fix_portio:
+    !Template
+    frame_style: none
+  fix_portio_left:
+    !MultiLineGrid
+    template: fix_portio
+    dir: col
+    cells:
+    - !TextBox {path: _in_bits, template: text_hexadecimal}
+    - !Ref {ref: readyvalid_in_left, path: _in}
+    - !Ref {ref: readyvalid_out_left, path: _out}
+    - !TextBox {path: _out_bits, template: text_hexadecimal}
+  fix_portio_right:
+    !MultiLineGrid
+    template: fix_portio
+    dir: col
+    cells:
+    - !TextBox {path: _out_bits, template: text_hexadecimal}
+    - !Ref {ref: readyvalid_out_right, path: _out}
+    - !Ref {ref: readyvalid_in_right, path: _in}
+    - !TextBox {path: _in_bits, template: text_hexadecimal}
+  fix_portio_up:
+    !MultiLineGrid
+    template: fix_portio
+    dir: row
+    cells:
+    - !TextBox {path: _in_bits, template: text_hexadecimal}
+    - !Ref {ref: readyvalid_in_up, path: _in}
+    - !Ref {ref: readyvalid_out_up, path: _out}
+    - !TextBox {path: _out_bits, template: text_hexadecimal}
+  fix_portio_down:
+    !MultiLineGrid
+    template: fix_portio
+    dir: row
+    cells:
+    - !TextBox {path: _out_bits, template: text_hexadecimal}
+    - !Ref {ref: readyvalid_out_down, path: _out}
+    - !Ref {ref: readyvalid_in_down, path: _in}
+    - !TextBox {path: _in_bits, template: text_hexadecimal}
+
+  core_overview_idle:
+    !DictTemplate
+    mapping:
+      0: {text: "✓", text_color: green}
+      1: {text: "✕", text_color: red}
+    frame_margin: 0
+  fix_core_overview:
+    !MultiLineGrid
+    frame_style: none
+    dir: col
+    cells:
+    - !TextBox {path: .PC_PIF, template: text_hexadecimal}
+    - - !TextBox {path: .num_target_cycles_loCount, label: tc_lo, template: text_hexadecimal}
+      - !TextBox {path: .num_target_cycles_hiCount, label: tc_hi, template: text_hexadecimal}
+    - - !TextBox {path: .idle_PIF, label: P, template: core_overview_idle}
+      - !TextBox {path: .idle_X, label: X, template: core_overview_idle}
+      - !TextBox {path: .idle_WB, label: W, template: core_overview_idle}
+
+  fix_core:
+    !MultiView
+    label: Core
+    views:
+      overview: !Ref {ref: fix_core_overview}
+      pipeline: !Ref {ref: fix_pipeline}
+
+  fix_overview:
+    !MultiLineGrid
+    dir: col
+    cells:
+    - !Ref {ref: fix_portio_up, label: N, path: .router.io_ports_1}
+    - - !Ref {ref: fix_portio_left, label: W, path: .router.io_ports_0}
+      - !Ref {ref: fix_core}
+      - !Ref {ref: fix_portio_right, label: E, path: .router.io_ports_2}
+    - !Ref {ref: fix_portio_down, label: S, path: .router.io_ports_3}
+
+  fix_network:
+    !MultiLineGrid
+    frame_style: none
+    dir: col
+    cells: 
+    - - !Ref {ref: fix_overview, path: .Fix2Stage_2}
+      - !Ref {ref: fix_overview, path: .Fix2Stage_3}
+    - - !Ref {ref: fix_overview, path: .Fix2Stage_0}
+      - !Ref {ref: fix_overview, path: .Fix2Stage_1}
+
+display:
+  fix_grid:
+    !Ref {ref: fix_network, path: FixGrid}
+  fix_tile:
+    !Ref {ref: fix_pipeline, path: FixGrid.Fix2Stage_0}
+
