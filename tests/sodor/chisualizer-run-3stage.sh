@@ -1,1 +1,1 @@
-python ~/git/chisualizer/src/main.py  --emulator "/home/ducky/git/riscv-sodor/emulator/rv32_3stage/emulator" --emulator_args "+api" "+loadmem=/home/ducky/git/riscv-sodor/emulator/rv32_3stage/output/lw.hex" --visualizer_desc "/home/ducky/git/chisualizer/tests/sodor/rv32_3stage.yaml" --log_level info
+python ../../src/main.py  --emulator "../../../riscv-sodor/emulator/rv32_3stage/emulator" --visualizer_desc "rv32_3stage.yaml" --emulator_args "+api" "+loadmem=../../../riscv-sodor/emulator/rv32_3stage/output/lw.hex" --log_level info
