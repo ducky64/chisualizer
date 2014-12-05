@@ -201,6 +201,3 @@ lib:
 display:
   fix_grid:
     !Ref {ref: fix_network, path: FixGrid}
-  fix_tile:
-    !Ref {ref: fix_pipeline, path: FixGrid.Fix2Stage_0}
-

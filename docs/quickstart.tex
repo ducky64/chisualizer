@@ -12,16 +12,18 @@
 \maketitle
 
 \section{Prerequisites}
+\label{sec:prereqs}
 The following software needs to be installed:
 \begin{itemize}
   \item \href{https://www.python.org/download/releases/2.7/}{Python 2.7}
   \item \href{http://wxpython.org/download.php}{wxPython}
   \item \href{http://cairographics.org/pycairo/}{pyCairo}
+  \item \href{http://pyyaml.org/wiki/PyYAML}{PyYAML}
 \end{itemize}
 
 On a Debian or Ubuntu Linux machine, this command should install all the prereqs:
 \begin{verbatim}
-sudo apt-get python-wxgtk2.8 python-cairo
+sudo apt-get python-wxgtk2.8 python-cairo python-yaml
 \end{verbatim}
 
 On a Windows machine, you should be able to download the prereqs from the relevant sites. Note that the examples are reliant on Make and g++, which are not available standard on Windows machines. \\
@@ -31,15 +33,22 @@ If, for whatever reason, you don't know where the Chisualizer repository is, it'
 
 \section{Known Issues}
 \begin{itemize}
-  \item Bundle subelements, normally accessed in Chisel through a dot (.), require an underscore (\_) in Chisualizer. So gcd.io.in.ready becomes gcd.io\_in\_ready - this is because of an issue with Chisel's name resolution system and requires an upstream fix.
+  \item (Chisel designs only) Bundle subelements, normally accessed in Chisel through a dot (.), require an underscore (\_) in Chisualizer. So gcd.io.in.ready becomes gcd.io\_in\_ready - this is because of an issue with Chisel's name resolution system and requires an upstream fix.
 \end{itemize}
 
 \section{Quick Start Example: GCD in Interactive Mode}
 \begin{figure}[h!]
   \centering
-    \includegraphics[scale=.5]{images/gcd_1_141126_121620}
+    \includegraphics[scale=.4]{images/gcd_39_141201_212348}
   \caption{GCD Visualization}
 \end{figure}
+\begin{figure}[h!]
+  \centering
+    \includegraphics[scale=.4]{images/gcd_36_141202_001658}
+  \caption{GCD Temporal Overview}
+\end{figure}
+
+\textbf{Important}: This section depends on Make and g++, typically Linux utilities. You also need \href{http://www.scala-sbt.org/}{SBT} installed. An example Windows users can run with only the prerequisites (Section \ref{sec:prereqs}) is in Section \ref{sec:example_dreamer}.
 
 \subsection{Building}
 Clone the Chisualizer repository to your location of choice.
@@ -72,39 +81,49 @@ Try running the GCD of two numbers (say, 1337 and 42) by changing the state of t
 
 \todo{Add section on temporal overviews}
 
-\section{A More Complex Example: DREAMER 3-stage}
+\section{Example: DREAMER Network-on-Chip}
+\label{sec:example_dreamer}
 \begin{figure}[h!]
   \centering
-    \includegraphics[scale=.25]{images/full3stage_0_141126_121155}
-  \caption{DREAMER 3-stage Tile Visualization}
+    \includegraphics[scale=.4]{images/fix_grid_3628_141202_150821}
+  \caption{DREAMER NoC Visualization}
+\end{figure}
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[scale=.4]{images/fix_tile_3628_141202_151223}
+  \caption{Tile Microarchitectural Visualization}
 \end{figure}
 
 Unlike GCD, DREAMER (a NoC manycore processor) code isn't publicly available. I'm not sure if the emulator builds easily either, so this will also be a tutorial of how to run Chisualizer with a dummy emulator. Dummy mode is where there is no actual backing circuit - every request for a node returns a width of 32 bits, a depth of 16 elements, and a value of zero. Try running the DREAMER visualizer:
 From the Chisualizer repository base directory, run:
 \begin{verbatim}
-cd chisualizer/tests/fix-tile
+cd chisualizer/tests/fix-noc
 ./chisualizer-run-dummy.sh
 \end{verbatim}
 
 which is shorthand for
 
 \begin{verbatim}
-python ../../src/main.py --emulator dummy --visualizer_desc "fix3stage.yaml"
+python ../../src/main.py  --emulator dummy --visualizer_desc "fix-noc-2stage.yaml"
 \end{verbatim}
 
 This shows a more realistic design with some notable features:
 \begin{itemize}
-  \item "Symbols" can be created using Unicode characters - like the directional arrows on the ready/valid
+  \item Symbols can be created using Unicode characters - like the directional arrows on the ready/valid
   \item You can have multiple windows showing different visualizations. All these are linked - so modifying state or stepping cycles on one will update all the others.
-  \item In "multi3stage", if you right click anywhere, you can choose different views. The default is the "router" overview view, but you can also switch to the "full" detailed view.
-  \item In "full3stage", you can see memory element highlighting in the regfile. The element being referred to by io\_reads\_*.adr is being highlighted with a green box.
+  \item In each tile's Core, if you right click anywhere, you can choose different views. The default is the ``overview'' view, but you can also switch to the ``pipeline'' microarchitectural view.
+  \item In the ``pipeline'' view, you can see memory element highlighting in the regfile. The element being read is highlighted in green, and the element being written is highlighted in yellow.
   \item The mechanisms for these will be described in the Visualizer Descriptor Language Reference below.
 \end{itemize}
+
+\section{Example: RISC-V ``Sodor'' Processors}
+Section to be written, and examples to be productionized (i.e. easier to build).
 
 \section{Viewing VCD Traces: ???}
 \todo{Add an example where VCD dumps can be viewed. Sodor?}
 
-Chisualizer can also visualize VCD dumps in the same block diagram style. Just pass "\texttt{--vcd }(vcd filename)" instead of "\texttt{--emulator }(emulator binary)" for the command line arguments.
+Chisualizer can also visualize VCD dumps in the same block diagram style. Just pass ``\texttt{--vcd }(vcd filename)'' instead of ``\texttt{--emulator }(emulator binary)'' for the command line arguments. Optional arguments are ``\texttt{--vcd\_timescale }(timescale)'' (which scales the VCD time by some units) and ``\texttt{--vcd\_start\_cycle }(start cycle)'' (the cycle to start the visualization on, after scaling.
 
 \section{Visualizer Descriptor Language Reference}
 Visualizer descriptors are how you tell Chisualizer how to render your circuit. They're written in a domain-specific language on top of YAML (of which JSON is a subset). Take a look at the source for the visualizations above (\texttt{tests/gcd/gcd.yaml} and \texttt{tests/fix-tile/fix3stage.yaml}) - one of the goals is that users should be able to learn by example.
