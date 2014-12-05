@@ -203,14 +203,17 @@ class TemporalOverviewPanel(wx.Panel):
     current_temporal_node = self.circuit_view.get_current_temporal_node()
     self.elements = []
     
-    def draw_visualizer_at(temporal_node, layout_process_fn):
+    def draw_visualizer_at(temporal_node, layout_process_fn, green=False):  # TODO DEHACKIFY
       self.circuit_view.set_view(temporal_node.get_historical_state())
       
       timer = time.time()
-      self.vis_root.visualizer.apply_attr_overloads(None, {"label": str(temporal_node.get_label())})
       self.vis_root.update()
       timers[0] += time.time() - timer
-        
+      self.vis_root.visualizer.apply_attr_overloads(None, {"label": str(temporal_node.get_label())})
+      if green:
+        self.vis_root.visualizer.apply_attr_overloads(None, {"label_color": "green"})
+        self.vis_root.visualizer.apply_attr_overloads(None, {"border_color": "green"})
+      
       timer = time.time()
       layout = layout_process_fn(self.vis_root.layout_cairo(cr).centered_origin())
       timers[1] += time.time() - timer
@@ -229,9 +232,7 @@ class TemporalOverviewPanel(wx.Panel):
         temporal_node = next_node_fn(temporal_node)
         iterations -= 1
     
-    self.vis_root.visualizer.apply_attr_overloads(None, {"label_color": "green"})
-    self.vis_root.visualizer.apply_attr_overloads(None, {"border_color": "green"})
-    center_layout = draw_visualizer_at(current_temporal_node, lambda layout: layout)
+    center_layout = draw_visualizer_at(current_temporal_node, lambda layout: layout, green=True)
     
     # Draw nodes, prev by time
     iter_draw(10,
