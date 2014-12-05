@@ -30,6 +30,10 @@ def run():
                       help="Arguments to pass into the emulator.")
   parser.add_argument('--vcd',
                       help="VCD file to view.")
+  parser.add_argument('--vcd_start_cycle', type=int, default=0,
+                      help="VCD start cycle (post-scaling).")
+  parser.add_argument('--vcd_timescale', type=int, default=1,
+                      help="Divide all VCD times by this amount.")
   parser.add_argument('--visualizer_desc', '-d', required=True,
                       help="Path to the visualizer descriptor XML file.")
   parser.add_argument('--emulator_reset', metavar='-r', type=bool, default=True,
@@ -62,7 +66,8 @@ def run():
         print emulator_cmd_list
       circuit = ChiselEmulatorSubprocess(emulator_cmd_list, reset=args.emulator_reset)
   elif args.vcd:
-    circuit = VcdCircuit(args.vcd) 
+    circuit = VcdCircuit(args.vcd, timescale_divisor=args.vcd_timescale,
+                         start_cycle=args.vcd_start_cycle) 
   else:
     raise ValueError("Must specify either emulator executable path or VCD file")
   
