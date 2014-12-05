@@ -18,10 +18,6 @@ class ElementAttr(object):
     self.attr_values = self.create_value_list(element.get_attr_list(attr_name))
     self.dynamic = dynamic
     self.overloads = []
-    
-  def update(self):
-    """Call to update dynamic values."""
-    raise NotImplementedError()
 
   def apply_overload(self, overload):
     assert self.dynamic
@@ -54,9 +50,6 @@ class ObjectAttr(ElementAttr):
   def __init__(self, parent, element, attr_name, dynamic):
     super(ObjectAttr, self).__init__(parent, element, attr_name, dynamic)
 
-  def update(self):
-    pass
-
   def create_value_list(self, attr_value_list):
     return attr_value_list
 
@@ -83,9 +76,6 @@ class SingleElementAttr(ElementAttr):
     list. Raises an error if static if False but the element is dynamic."""
     raise NotImplementedError()
 
-  def update(self):
-    self.dynamic_value = self.get_value(True)
-    
   def get_value(self, dynamic):
     for value_elt in self.get_value_list():
       conv = self.value_elt_to_data(value_elt, static=not dynamic)
@@ -96,7 +86,7 @@ class SingleElementAttr(ElementAttr):
 
   def get(self):
     if self.dynamic:
-      return self.dynamic_value
+      return self.get_value(True)
     else:
       return self.get_value(False)
   

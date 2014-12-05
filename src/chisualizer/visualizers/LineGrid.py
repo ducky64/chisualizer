@@ -15,8 +15,7 @@ class LineGrid(FramedVisualizer):
                               % cell)
       self.cells.append(cell.instantiate(self, valid_subclass=AbstractVisualizer))
 
-  def update(self):
-    super(LineGrid, self).update()
+  def update_children(self):
     for cell in self.cells:
       cell.update()
 

@@ -79,7 +79,7 @@ lib:
   imem_bank:
     !Template
     path: .__up__.__up__.memory.data_bank0
-    offset: !NumericalInt {path: .__up__.io_core_ports_0_req_bits_addr, value_eval: "x/8"}
+    offset: !NumericalInt {path: .__up__.__up__.core.dpath.io_imem_debug_if_pc, value_eval: "x/8"}
     dir: row
     cols: 1
     rows: 8
@@ -258,6 +258,7 @@ lib:
     label: Fetch
     cells: 
     - !TextBox {path: .io_imem_debug_if_pc, label: pc, template: text_hexadecimal}
+    - !TextBox {path: .io_ctl_pc_sel, label: sel, template: pc_sel}
 
   temporal_exec:
     !MultiLineGrid

@@ -70,14 +70,19 @@ class AbstractVisualizer(Base.Base):
     """Called once per visualizer update (before the layout phase), refreshing
     my attrs dict based on new circuit values / modifiers / whatever.
     Classes with elements should also have their children update."""
-    for modifier in self.modifiers:
-      self.apply_modifier(modifier)
-      
-    # Update attrs - common infrastructure
     for dynamic_attr in self.dynamic_attrs.itervalues():
-      dynamic_attr.update()
       dynamic_attr.clear_overloads()
     
+    self.update_children()
+          
+    for modifier in self.modifiers:
+      self.apply_modifier(modifier)
+  
+  def update_children(self):
+    """Updates my children, if necessary. Called between when this object clears
+    its overloads / udpates its attributes and when it applies modifiers."""
+    pass
+  
   def layout_cairo(self, cr):
     """Computes (and stores) the layout for this object when drawing with Cairo.
     Returns a tuple (width, height) of the minimum size of this object.

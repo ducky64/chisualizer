@@ -1,1 +1,1 @@
-python ../../src/main.py  --emulator "../../../riscv-sodor/emulator/rv32_3stage/emulator" --visualizer_desc "rv32_3stage.yaml" --emulator_args "+api" "+loadmem=../../../riscv-sodor/emulator/rv32_3stage/output/lw.hex" --log_level info
+python ../../src/main.py  --emulator "../../../riscv-sodor/emulator/rv32_3stage/emulator" --visualizer_desc "rv32_3stage.yaml" --emulator_args "+api" "+loadmem=../../../riscv-sodor/install/riscv-bmarks/vvadd.riscv.hex" --log_level info

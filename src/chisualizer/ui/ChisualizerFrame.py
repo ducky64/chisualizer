@@ -214,8 +214,8 @@ class ChisualizerPanel(wx.Panel):
     self.elements = self.vis_root.draw_cairo(cr, layout)
     timer_draw = time.time() - timer_draw
     
-    logging.debug("draw_visualizer: layout time: %.2f ms, draw time: %.2f ms" %
-                 (timer_lay*1000, timer_draw*1000))
+    logging.debug("draw_visualizer: update: %.2f ms, layout: %.2f ms, draw: %.2f ms" %
+                 (timer_update * 1000, timer_lay*1000, timer_draw*1000))
     
   def save_svg(self, filename):
     # TODO: refactor to avoid calling desc.layout here

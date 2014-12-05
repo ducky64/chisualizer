@@ -30,12 +30,11 @@ class MemoryArray(FramedVisualizer):
     else:
       super(MemoryArray, self).apply_modifier(modifier) 
 
-  def update(self):
-    super(MemoryArray, self).update()
+  def update_children(self):
     self.update_cells()
     for cell in self.cells:
       cell.update()
-
+    
   def update_cells(self):
     def instantiate_cell(addr):
       inst_node_ref = self.node.get_subscript_reference(addr)
