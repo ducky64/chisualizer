@@ -64,6 +64,7 @@ class VcdCircuit(Circuit):
   
     self.nodes = {}
     working_bundles = {}
+    self.memory_depths = {} # TODO: refactor
     
     for vcd_key, nets_tv_dict in self.parsed_vcd.iteritems():
       for net_dict in nets_tv_dict['nets']:
@@ -77,9 +78,6 @@ class VcdCircuit(Circuit):
         if bracket_begin >= 0 and bracket_end >= 0 and bracket_begin < bracket_end:
           # This deals with ModelSim VCDs which derp bundles into single bits.
           node_name_stripped = node_name[:bracket_begin]
-          if node_name_stripped not in working_bundles:
-            working_bundles[node_name_stripped] = {} # map high bit to VcdBundleElem
-          bundle = working_bundles[node_name_stripped]
           
           index = node_name[bracket_begin+1:bracket_end]
           delim = index.find(':')
@@ -91,10 +89,21 @@ class VcdCircuit(Circuit):
             end = int(end_str)
           else:
             begin = end = int(index)
-          assert begin >= end
-          assert begin not in bundle
           
-          bundle[begin] = VcdBundleElem(begin, end, parsed_node)
+          if begin == end and parsed_node.size > 1:
+            # Special case for memory element "wires".
+            assert node_name not in self.nodes, "duplicate name: '%s': %s" % (node_name, net_dict)
+            self.memory_depths[node_name_stripped] = max(self.memory_depths.get(node_name_stripped, 1), begin+1)
+            self.nodes[node_name] = parsed_node
+          else:
+            if node_name_stripped not in working_bundles:
+              working_bundles[node_name_stripped] = {} # map high bit to VcdBundleElem
+            bundle = working_bundles[node_name_stripped]
+          
+            assert begin >= end
+            assert begin not in bundle
+          
+            bundle[begin] = VcdBundleElem(begin, end, parsed_node)
         else:
           assert node_name not in self.nodes, "duplicate name: '%s': %s" % (node_name, net_dict)
           self.nodes[node_name] = parsed_node
@@ -123,6 +132,9 @@ class VcdCircuit(Circuit):
       
     logging.info("%i bundles found", len(self.bundles))  
     logging.debug("Bundles found: %s", self.bundles.keys())
+    
+    logging.info("%i memories inferred", len(self.memory_depths))
+    
     self.initial_temporal_node = self.create_initial_temporal_node(start_cycle)
     self.current_temporal_node = self.initial_temporal_node
 
@@ -133,8 +145,8 @@ class VcdCircuit(Circuit):
       assert node_name not in self.width_dict
       self.width_dict[node_name] = vcd_bundle.size
   
-    self.current_view = ValueDictView(self, self.width_dict)
-    self.historical_view = ValueDictView(self, self.width_dict)
+    self.current_view = ValueDictView(self, self.width_dict, self.memory_depths)
+    self.historical_view = ValueDictView(self, self.width_dict, self.memory_depths)
     self.current_view.set_view(self.current_temporal_node.get_historical_state())
 
   def create_initial_temporal_node(self, cycle=0):
