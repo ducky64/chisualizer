@@ -122,13 +122,16 @@ class VcdCircuit(Circuit):
         if largest is None:
           largest = bundle_elem.high
         else:
+          # Checks to ensure contiguous signals - currently parser can't fill in signals
           assert bundle_elem.high == prev - 1, "prev %i, next high %i" % (prev, bundle_elem.high)
         prev = bundle_elem.low 
         sorted_elems.append(bundle_elem)
-      assert prev == 0
-      bundle = VcdBundle(sorted_elems, largest)
-      assert node_name not in self.bundles 
-      self.bundles[node_name] = bundle
+      if not prev == 0:
+        logging.warn("Incomplete signal: %s (%i:%i), discarding", node_name, largest, prev)
+      else:
+        bundle = VcdBundle(sorted_elems, largest)
+        assert node_name not in self.bundles 
+        self.bundles[node_name] = bundle
       
     logging.info("%i bundles found", len(self.bundles))  
     logging.debug("Bundles found: %s", self.bundles.keys())
