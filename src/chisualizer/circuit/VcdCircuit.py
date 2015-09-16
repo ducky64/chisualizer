@@ -31,7 +31,7 @@ def vcd_node_next(cycle, curr_idx, node):
     if node.tv_list[curr_idx+1][0] > cycle:
       break
     curr_idx += 1
-  assert curr_idx == len(node.tv_list) - 1 or node.tv_list[curr_idx+1][0] > cycle 
+  assert curr_idx == len(node.tv_list) - 1 or node.tv_list[curr_idx+1][0] > cycle
   return curr_idx, node.tv_list[curr_idx][1]
 
 def vcd_bundle_next(cycle, curr_idx, bundle):
